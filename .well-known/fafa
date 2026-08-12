@@ -1,0 +1,19 @@
+# FAF Agent Card (.fafa) — faf-trinity reference server
+# Media type: application/vnd.fafa+yaml
+# This is a reference/template identity card — faf-trinity is a GitHub
+# template repo, not a deployed service. There is no live endpoint;
+# forks are expected to replace this file with their own real identity.
+# Every scalar quoted, matching the live convention on faf.one/.well-known/fafa.
+
+version: "1.0"
+agent:
+  name: "faf-trinity"
+  displayName: "faf-trinity — reference chassis"
+  vendor: "template"
+  version: "0.1.0"
+  description: >-
+    Reference identity card for the faf-trinity MCP server template.
+    Demonstrates the .fafa shape a real forked server would fill in with
+    its own agent's true identity, capabilities, and live endpoints.
+  status: "reference-only"
+  license: "MIT"

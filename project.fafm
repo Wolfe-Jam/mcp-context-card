@@ -1,0 +1,44 @@
+# application/vnd.fafm+yaml — faf-trinity project memory
+# Real, dogfooded memory about this repo's own build — not a static example.
+# This file itself is one of the three artifacts the repo demonstrates.
+version: "1.1"
+profile: "knowledge"
+namepoint: "@faf-trinity:public"
+created: "2026-08-12T00:00:00Z"
+last_etched: "2026-08-12T00:00:00Z"
+retention: "forever"
+
+index:
+  - "faf-trinity — the chassis for context, memory & agent in MCP"
+  - "lineage — direct successor to mcp-project-context, not mcp-better"
+  - "build-status — Phase 1 of 5, scaffold + real artifacts"
+
+memory:
+  facts:
+    - text: "faf-trinity extends mcp-project-context's single-format pattern (context injection) to all three IANA-registered FAF formats — .faf, .fafm, .fafa — plus both proven exposure mechanisms."
+      id: "faf-trinity-scope"
+      type: "reference"
+      priority: "high"
+      tags: ["scope", "trinity"]
+      source: "PLANET-FAF/07-PROJECTS/faf-trinity/PLAN.md"
+      verification_status: "verified"
+
+    - text: "Both exposure mechanisms this repo demonstrates — MCP Server Card _meta and a self-published ai-catalog.json — are already proven live in production at faf.one and context.faf.one before this repo existed."
+      id: "mechanisms-already-proven"
+      type: "reference"
+      priority: "high"
+      tags: ["mcp", "ai-catalog", "precedent"]
+      links: ["faf-trinity-scope"]
+      source: "INTEL/trinity-venue-fit-matrix-faf-fafm-fafa-2026-08-10.md"
+      verification_status: "verified"
+
+    - text: "This repo is a GitHub template, not an npm package — MIT, fork-and-own posture, same as mcp-project-context. No badge, no separate MCP server package, until real outside pull justifies it."
+      id: "distribution-model"
+      type: "reference"
+      priority: "standard"
+      tags: ["distribution", "mit"]
+      source: "PLANET-FAF/07-PROJECTS/faf-trinity/PLAN.md"
+      verification_status: "verified"
+  sessions: []
+  preferences: {}
+  custom: {}
