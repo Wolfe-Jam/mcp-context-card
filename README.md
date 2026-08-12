@@ -4,6 +4,8 @@
 
 This reference implementation shows an MCP server exposing all three IANA-registered FAF formats — `.faf` (context), `.fafm` (memory), `.fafa` (agent identity) — through two mechanisms already proven live in production, not invented for this repo.
 
+⭐ Bookmarks it for you, helps other devs find it too.
+
 ## Problem
 
 MCP servers today have no standard way to answer "who am I, what do I remember, what's my project." Every server that wants this invents its own ad-hoc shape.
