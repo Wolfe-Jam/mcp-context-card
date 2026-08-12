@@ -1,0 +1,23 @@
+{
+  "name": "faf-trinity",
+  "version": "0.1.0",
+  "main": "index.js",
+  "scripts": {
+    "demo": "tsx demo.ts",
+    "catalog": "tsx src/catalog-gen.ts"
+  },
+  "keywords": ["mcp", "model-context-protocol", "faf", "context", "memory", "agent"],
+  "author": "wolfejam / FAF",
+  "license": "MIT",
+  "description": "The chassis for context, memory & agent in MCP",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  },
+  "type": "module",
+  "private": "true"
+}
