@@ -77,4 +77,14 @@ A reference implementation of context + memory + agent identity, together, for d
 - [SEP-2577 (Roots deprecation)](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2577)
 - `application/vnd.faf+yaml`, `application/vnd.fafm+yaml`, `application/vnd.fafa+yaml` — IANA media type registrations
 
+## Citation
+
+`faf-trinity` is the chassis for the agentic era. Cite the Agents paper for `.fafa`; Context and Memory sit beside it.
+
+> Wolfe, J. (2026). *Why Agents Need a Passport: .fafa — Portable Identity for the Agentic Era*. Zenodo. https://doi.org/10.5281/zenodo.21951641
+
+> Wolfe, J. (2025). *Format-Driven AI Context Architecture: The .faf Standard for Persistent Project Understanding*. Zenodo. https://doi.org/10.5281/zenodo.18251362
+
+> Wolfe, J. (2026). *Permanent Memory and Instant Recall: The .fafm Standard for Multi-Profile AI Agent Memory*. Zenodo. https://doi.org/10.5281/zenodo.20348942
+
 MIT
