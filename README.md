@@ -3,29 +3,28 @@
 [![CI](https://github.com/Wolfe-Jam/mcp-context-card/actions/workflows/ci.yml/badge.svg)](https://github.com/Wolfe-Jam/mcp-context-card/actions/workflows/ci.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
-An MCP server that makes a project's **context**, **memory**, and **identity**
-discoverable to any MCP client — through the two surfaces already in the
-ecosystem: the **Server Card `_meta`** block and **`ai-catalog.json`** sibling
-entries.
+An MCP server that makes a project's context, memory, and identity discoverable
+to any MCP client — through two surfaces already in the ecosystem: the Server
+Card `_meta` block and `ai-catalog.json` sibling entries.
 
 - **context** — the project's `AGENTS.md`, served whole or one section at a time
 - **memory** — facts that persist across sessions, in a file
-- **identity** — what this server *is*, from its own agent card
+- **identity** — what this server is, from its own agent card
 
 ## What it is / what it is not
 
-**It is** — an MCP server for a project's `AGENTS.md`, memory, and identity.
-Nine tools, two discovery surfaces (Server Card `_meta`, `ai-catalog.json`), a
-rendered [card](#the-card). ~800 lines, MIT — read it, `npx` it, or fork it.
+**It is** — an MCP server for a project's `AGENTS.md`, memory, and identity: nine
+tools, two discovery surfaces (Server Card `_meta`, `ai-catalog.json`), and a
+rendered [card](#the-card). About 800 lines, MIT — read it, `npx` it, or fork it.
 
 **It is not**
 
 - a framework or a platform — three concerns, nothing more
-- a file / shell / search tool — it never touches your files or runs commands
-- tied to FAF — context is plain Markdown (`AGENTS.md`); the memory / identity
+- a file, shell, or search tool — it never touches your files or runs commands
+- tied to FAF — context is plain Markdown (`AGENTS.md`); the memory and identity
   formats are swappable examples
 
-It **composes**: run it next to
+It composes: run it alongside
 [`server-filesystem`](https://github.com/modelcontextprotocol/servers),
 [`server-git`](https://github.com/modelcontextprotocol/servers) /
 github‑mcp‑server, your test runner's MCP. A piece, not the toolbox.
@@ -42,23 +41,28 @@ github‑mcp‑server, your test runner's MCP. A piece, not the toolbox.
 
 ## Add it to your setup
 
-**No `AGENTS.md` yet?** Author one:
+### No `AGENTS.md` yet?
 
 ```bash
-npx mcp-context-card init      # writes AGENTS.md · BEST from a project.faf, else BETTER from repo detection
+npx mcp-context-card init
 ```
 
-BETTER is a real AGENTS.md from your manifests — commands, CI, layout — with
-`<!-- TODO -->` on the judgement parts. Add a `project.faf` and re‑run for BEST.
-It never overwrites an existing `AGENTS.md` — it prints the draft to diff.
+`init` authors an `AGENTS.md` for the current directory. It works from a
+`project.faf` if one is there, otherwise from what it can detect — commands, CI,
+layout — leaving `<!-- TODO -->` where a person needs to decide. It won't
+overwrite an existing `AGENTS.md`; it prints the draft for you to diff.
 
-**See the card** in one command — no host, no config:
+### See the card
+
+One command, no host, no config:
 
 ```bash
 npx mcp-context-card card > card.html
 ```
 
-Wire it into a stdio host (Claude Desktop, Cursor, …):
+### Wire it into a host
+
+Claude Desktop, Cursor, or any stdio host:
 
 ```jsonc
 {
@@ -74,9 +78,9 @@ Wire it into a stdio host (Claude Desktop, Cursor, …):
 
 `MCP_CONTEXT_CARD_ROOT` points at the directory with your `AGENTS.md`. The
 memory tools work with or without it; identity is optional. Over HTTP instead:
-`PORT=8080 npx mcp-context-card`. Full wiring in
-**[docs/WIRING.md](./docs/WIRING.md)**; transport choice in
-**[docs/TRANSPORT.md](./docs/TRANSPORT.md)**.
+`PORT=8080 npx mcp-context-card`. Full wiring is in
+[docs/WIRING.md](./docs/WIRING.md); transport choice in
+[docs/TRANSPORT.md](./docs/TRANSPORT.md).
 
 ## Why
 
@@ -95,12 +99,12 @@ grows its own shape.
    `GET /.well-known/ai-catalog.json`.
 
 The context concern points at `AGENTS.md` (`text/markdown`). Memory and identity
-have no de‑facto standard yet, so the reference points them at
+have no de‑facto standard yet, so the examples here use
 [`.fafm`](https://doi.org/10.5281/zenodo.20348942) and
-[`.fafa`](https://doi.org/10.5281/zenodo.21951641) as one instantiation each —
+[`.fafa`](https://doi.org/10.5281/zenodo.21951641) — one instantiation each,
 swap in your own.
 
-→ **[docs/MECHANISMS.md](./docs/MECHANISMS.md)** for the wire‑level detail.
+The wire‑level detail is in [docs/MECHANISMS.md](./docs/MECHANISMS.md).
 
 ## The card
 
@@ -114,15 +118,15 @@ GET /card?theme=light&accent=%230066cc
 npm run card                   # writes docs/card.html
 ```
 
-[**docs/card.html**](./docs/card.html) is the rendered card for this repo (open
-it raw, or `npm run card` to regenerate). Light / dark / auto; the accent
-defaults to the AAIF palette and takes any hex.
+[docs/card.html](./docs/card.html) is the rendered card for this repo (open it
+raw, or `npm run card` to regenerate). Light, dark, or auto; the accent defaults
+to the AAIF palette and takes any hex.
 
 ## Tools
 
 | Tool | What it's for |
 |---|---|
-| `author_agents_md` | draft an `AGENTS.md` — BEST from a `project.faf`, else BETTER from repo detection |
+| `author_agents_md` | draft an `AGENTS.md` — from a `project.faf` if present, else from repo detection |
 | `read_agents_md` | return the project's `AGENTS.md` — whole, or one section by heading |
 | `list_agents_md_sections` | the headings, so a client pulls one section instead of the whole file |
 | `remember` | write a fact that will still be there next session |
@@ -132,13 +136,13 @@ defaults to the AAIF palette and takes any hex.
 | `list_context_sources` | what this project publishes, in what media types, via which surface |
 | `render_context_card` | the whole card as one self‑contained HTML page (also `GET /card`) |
 
-## Proven live
+## The demo
 
 `npm run demo` runs every tool over both transports:
 
 1. **Context** — list the `AGENTS.md` sections, then pull just `## Test`.
-2. **Memory** — `remember()` a fact, kill the server process, spawn a new one,
-   `recall()` the same fact. Only the file crosses that boundary.
+2. **Memory** — `remember()` a fact, stop the server process, start a new one,
+   `recall()` the same fact. Only the file carries it across.
 3. **Identity** — `whoami()`, and the Server Card `_meta` block read back from a
    live client.
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
@@ -146,9 +150,9 @@ defaults to the AAIF palette and takes any hex.
 5. **Param-fill** — a host fills another server's required params from
    `project.faf` in one wrapped call (`src/context.ts`, see WIRING §4).
 
-**108 tests** across Linux / macOS / Windows, coverage‑gated in CI — including a
-real `child_process` spawn that proves memory across a genuine process boundary,
-and stdio/HTTP tool‑surface parity.
+108 tests on Linux, macOS, and Windows, coverage‑gated in CI. One spawns a real
+child process and checks a remembered fact survives the restart; another checks
+the stdio and HTTP tool surfaces match.
 
 ## Layout
 
@@ -173,6 +177,7 @@ and stdio/HTTP tool‑surface parity.
 
 ## License
 
-MIT. This repo's own `AGENTS.md` is maintained by hand; it can also be generated
-from `project.faf` with [`faf export --agents`](https://github.com/Wolfe-Jam/faf-cli) —
-the server doesn't care how the file was authored, only that it's valid Markdown.
+MIT.
+
+This repo runs the tool on itself — its `AGENTS.md` is authored from its
+`project.faf`, the same thing `npx mcp-context-card init` does for any project.
