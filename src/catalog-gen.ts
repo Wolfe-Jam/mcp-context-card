@@ -9,7 +9,7 @@
  */
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseFaf } from "./faf/parse-faf.js";
 import { parseFafm } from "./faf/parse-fafm.js";
 import { parseFafa } from "./faf/parse-fafa.js";
@@ -70,7 +70,7 @@ export function buildCatalog(root: string) {
 }
 
 // Direct run → write the file.
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const root = join(dirname(fileURLToPath(import.meta.url)), "..");
   const catalog = buildCatalog(root);
   writeFileSync(

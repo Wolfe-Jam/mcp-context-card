@@ -23,7 +23,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { contextFieldsFromProjectFaf } from "./context.js";
 import { recall, remember } from "./memory.js";
 import { trinityMeta, whoami } from "./identity.js";
@@ -178,7 +178,8 @@ export async function serve(transport: Transport, root: string = ROOT): Promise<
   return server;
 }
 
-// Direct `tsx src/server.ts` (and the tsx-spawned demo child) → stdio.
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Direct run (incl. the demo's spawned child) → stdio. pathToFileURL keeps
+// this correct on Windows, where argv[1] is a `C:\...` path.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   await serve(new StdioServerTransport());
 }
