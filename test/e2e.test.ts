@@ -6,7 +6,7 @@
  */
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
+import { spawn, execFileSync } from "node:child_process";
 import { once } from "node:events";
 import type { AddressInfo } from "node:net";
 import { createServer as createNetServer } from "node:net";
@@ -123,6 +123,21 @@ describe("e2e — real child process", () => {
     } finally {
       child.kill("SIGKILL");
       await once(child, "exit").catch(() => {});
+      fx.cleanup();
+    }
+  });
+
+  test("`card` subcommand: renders the target dir's card to stdout, then exits", () => {
+    const fx = fixture();
+    try {
+      const out = execFileSync(runner.command, [...runner.base, "card", "--theme", "dark"], {
+        env: { ...process.env, MCP_CONTEXT_CARD_ROOT: fx.root },
+        encoding: "utf8",
+      });
+      assert.match(out, /^<!doctype html>/);
+      assert.match(out, /data-theme="dark"/);
+      assert.match(out, /Context — AGENTS\.md/);
+    } finally {
       fx.cleanup();
     }
   });

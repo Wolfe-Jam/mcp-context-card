@@ -12,6 +12,61 @@ entries.
 - **memory** — facts that persist across sessions, in a file
 - **identity** — what this server *is*, from its own agent card
 
+## What it is / what it is not
+
+**It is** — an MCP server for a project's `AGENTS.md`, memory, and identity.
+Eight tools, two discovery surfaces (Server Card `_meta`, `ai-catalog.json`), a
+rendered [card](#the-card). ~600 lines, MIT — read it, `npx` it, or fork it.
+
+**It is not**
+
+- a framework or a platform — three concerns, nothing more
+- a file / shell / search tool — it never touches your files or runs commands
+- tied to FAF — context is plain Markdown (`AGENTS.md`); the memory / identity
+  formats are swappable examples
+
+It **composes**: run it next to
+[`server-filesystem`](https://github.com/modelcontextprotocol/servers),
+[`server-git`](https://github.com/modelcontextprotocol/servers) /
+github‑mcp‑server, your test runner's MCP. A piece, not the toolbox.
+
+## Who it's for
+
+| You want… | Reach for |
+|---|---|
+| your agent to pull *one* `AGENTS.md` section on demand, not the whole file | `read_agents_md` · `list_agents_md_sections` |
+| a persistent notepad for your agent — survives restarts, no setup | `remember` · `recall` · `forget` |
+| a shareable view of what your MCP server exposes to agents | `GET /card` · `npx mcp-context-card card` |
+| the two‑surface discovery pattern to copy into your own server | read `src/` |
+
+## Add it to your setup
+
+Render your project's card in one command — no host, no config:
+
+```bash
+npx mcp-context-card card > card.html
+```
+
+Wire it into a stdio host (Claude Desktop, Cursor, …):
+
+```jsonc
+{
+  "mcpServers": {
+    "context-card": {
+      "command": "npx",
+      "args": ["-y", "mcp-context-card"],
+      "env": { "MCP_CONTEXT_CARD_ROOT": "/abs/path/to/your/project" }
+    }
+  }
+}
+```
+
+`MCP_CONTEXT_CARD_ROOT` points at the directory with your `AGENTS.md`. The
+memory tools work with or without it; identity is optional. Over HTTP instead:
+`PORT=8080 npx mcp-context-card`. Full wiring in
+**[docs/WIRING.md](./docs/WIRING.md)**; transport choice in
+**[docs/TRANSPORT.md](./docs/TRANSPORT.md)**.
+
 ## Why
 
 `AGENTS.md` is the de-facto standard for telling a coding agent how to work in a
@@ -51,35 +106,6 @@ npm run card                   # writes docs/card.html
 [**docs/card.html**](./docs/card.html) is the rendered card for this repo (open
 it raw, or `npm run card` to regenerate). Light / dark / auto; the accent
 defaults to the AAIF palette and takes any hex.
-
-## Run it
-
-```bash
-npx mcp-context-card                 # stdio — what an MCP host spawns
-npx mcp-context-card --http          # stateless Streamable HTTP on :3000
-PORT=8080 npx mcp-context-card       # HTTP on :8080 (a hosted deploy sets PORT)
-```
-
-### Point it at your project
-
-```jsonc
-// claude_desktop_config.json  ·  ~/.cursor/mcp.json  ·  any stdio host
-{
-  "mcpServers": {
-    "context-card": {
-      "command": "npx",
-      "args": ["-y", "mcp-context-card"],
-      "env": { "MCP_CONTEXT_CARD_ROOT": "/path/to/your/project" }
-    }
-  }
-}
-```
-
-`MCP_CONTEXT_CARD_ROOT` is the directory holding `AGENTS.md`, `project.fafm`, and
-`.well-known/fafa`. Omit it to run against the server's own bundled files.
-
-Full host wiring in **[docs/WIRING.md](./docs/WIRING.md)**; transport choice in
-**[docs/TRANSPORT.md](./docs/TRANSPORT.md)**.
 
 ## Tools
 
@@ -124,7 +150,7 @@ and stdio/HTTP tool‑surface parity.
 | `src/identity.ts` | `whoami` + the `_meta` context block |
 | `src/catalog-gen.ts` | writes `ai-catalog.json` from the same three sources |
 | `src/transport/http.ts` | the stateless Streamable HTTP app (Hono) |
-| `src/bin.ts` | dual‑transport entry point |
+| `src/bin.ts` | the entry point — `stdio` · `--http` · `card` |
 
 ## Related
 
