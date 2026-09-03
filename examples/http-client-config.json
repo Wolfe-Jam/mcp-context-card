@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "trinity": {
+      "url": "https://your-host.example/mcp"
+    }
+  }
+}

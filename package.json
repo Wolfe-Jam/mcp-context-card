@@ -15,26 +15,42 @@
   "license": "MIT",
   "type": "module",
   "private": true,
+  "//private": "flip to false at publish time — GO-gated. prepublishOnly is the build/test latch.",
   "bin": {
     "mcp-trinity": "dist/bin.js"
   },
   "main": "dist/server.js",
+  "types": "dist/server.d.ts",
+  "exports": {
+    ".": "./dist/server.js",
+    "./server": "./dist/server.js",
+    "./context": "./dist/context.js",
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=22"
+  },
   "files": [
     "dist",
+    "docs",
     "project.faf",
     "project.fafm",
     ".well-known",
+    "server.json",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "prepublishOnly": "npm run clean && npm run build && npm run typecheck && npm test",
     "start": "node dist/bin.js",
     "start:http": "node dist/bin.js --http",
     "dev": "tsx src/bin.ts",
     "demo": "tsx demo.ts",
     "catalog": "tsx src/catalog-gen.ts",
+    "catalog:check": "tsx src/catalog-gen.ts && git diff --exit-code -- .well-known/ai-catalog.json",
     "test": "node --import tsx --test \"test/*.test.ts\"",
     "test:coverage": "node --import tsx --test --experimental-test-coverage --test-coverage-exclude=\"test/**\" --test-coverage-exclude=\"demo.ts\" --test-coverage-lines=90 --test-coverage-functions=85 --test-coverage-branches=80 \"test/*.test.ts\"",
     "typecheck": "tsc --noEmit"

@@ -14,5 +14,8 @@ jobs:
         with: { node-version: '22', cache: 'npm' }
       - run: npm ci
       - run: npm run typecheck
+      - run: npm run build
       - run: npm run test:coverage
       - run: npm run demo
+      - run: npm run catalog:check
+        if: runner.os == 'Linux'

@@ -1,0 +1,18 @@
+# docker compose -f examples/compose.yaml up --build
+services:
+  trinity:
+    build:
+      context: ..
+      dockerfile: examples/Dockerfile
+    ports:
+      - "3000:3000"
+    # Point at a real project instead of the bundled reference files:
+    # volumes:
+    #   - ./my-project:/project:ro
+    # environment:
+    #   MCP_TRINITY_ROOT: /project
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 3

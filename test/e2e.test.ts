@@ -67,9 +67,8 @@ describe("e2e — real child process", () => {
       const tools = (await c.listTools()).tools.map((t) => t.name).sort();
       assert.deepEqual(tools, ["describe_project", "recall", "remember", "whoami"]);
 
-      const card = JSON.parse(
-        (await c.readResource({ uri: "mcp-trinity://server-card" })).contents[0].text as string,
-      );
+      const res = await c.readResource({ uri: "mcp-trinity://server-card" });
+      const card = JSON.parse((res.contents[0] as { text: string }).text);
       assert.deepEqual(Object.keys(card._meta), [
         "one.faf/context",
         "one.faf/memory",

@@ -1,90 +1,136 @@
-# faf-trinity
+# mcp-trinity
 
-**faf-trinity — the chassis for context, memory & agent in MCP**
+[![CI](https://github.com/Wolfe-Jam/mcp-trinity/actions/workflows/ci.yml/badge.svg)](https://github.com/Wolfe-Jam/mcp-trinity/actions/workflows/ci.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
-This reference implementation shows an MCP server exposing all three IANA-registered FAF formats — `.faf` (context), `.fafm` (memory), `.fafa` (agent identity) — through two mechanisms already proven live in production, not invented for this repo.
+Reference MCP server for the three things servers keep reinventing — **project
+context**, **persistent memory**, and **agent identity** — exposed through the
+two surfaces already in the ecosystem: the **Server Card `_meta`** block and
+**`ai-catalog.json`** sibling entries.
 
-⭐ Bookmarks it for you, helps other devs find it too.
+Nothing here is new protocol. It is the minimal, legible, tested version of a
+pattern already running in production, small enough to read in one sitting.
 
-## Problem
+## The pattern
 
-MCP servers today have no standard way to answer "who am I, what do I remember, what's my project." Every server that wants this invents its own ad-hoc shape.
+Every MCP server eventually wants to answer three questions:
 
-## Solution
+| Question | Concern |
+|---|---|
+| *What project am I scoped to?* | **context** |
+| *What did I learn last session?* | **memory** |
+| *Who am I, as an agent?* | **identity** |
 
-The same three files back both exposure mechanisms:
+Most servers grow an ad-hoc shape for each. `mcp-trinity` implements all three
+once and exposes them through mechanisms that already exist:
 
+1. **Server Card `_meta`** ([SEP‑2127](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2127)) — one
+   reverse‑DNS‑namespaced key per concern. Readable in‑band as an MCP resource
+   (`mcp-trinity://server-card`) and out‑of‑band at
+   `GET /.well-known/mcp/server-card`.
+2. **`ai-catalog.json`** — sibling entries keyed by media type, one per concern,
+   at `GET /.well-known/ai-catalog.json`.
+
+The worked example uses three IANA‑registered formats — `.faf` (context),
+`.fafm` (memory), `.fafa` (identity) — but the artifacts are swappable. The
+mechanism is the contribution; the formats are one instantiation.
+
+→ **[docs/MECHANISMS.md](./docs/MECHANISMS.md)** for the wire‑level detail.
+
+## Run it
+
+```bash
+npx mcp-trinity                 # stdio — what an MCP host spawns
+npx mcp-trinity --http          # stateless Streamable HTTP on :3000
+PORT=8080 npx mcp-trinity       # HTTP on :8080 (a hosted deploy sets PORT)
 ```
-project.faf ──┐
-project.fafm ─┼──►  Server Card _meta   (one.faf/context, one.faf/memory, one.faf/agent)
-.fafa ────────┘  └► ai-catalog.json     (3 sibling entries, same 3 files)
+
+Or as a dependency:
+
+```bash
+npm i mcp-trinity
 ```
 
-Neither mechanism is new protocol surface — both are already running in production at `faf.one` and `context.faf.one`, months before this repo existed. This extracts the minimal, forkable pattern from a full production app down to something you can read in one sitting.
+### Claude Desktop / Cursor / any stdio host
 
-## What's actually proven, not just described
+```jsonc
+{
+  "mcpServers": {
+    "trinity": { "command": "npx", "args": ["-y", "mcp-trinity"] }
+  }
+}
+```
+
+By default the server reads its own bundled `project.faf` / `project.fafm` /
+`.well-known/fafa`. Point it at a real project with an env var:
+
+```jsonc
+{
+  "mcpServers": {
+    "trinity": {
+      "command": "npx",
+      "args": ["-y", "mcp-trinity"],
+      "env": { "MCP_TRINITY_ROOT": "/path/to/your/project" }
+    }
+  }
+}
+```
+
+More host wiring — including the host‑side context‑fill pattern — in
+**[docs/WIRING.md](./docs/WIRING.md)**. Transport choice and the stateless
+design in **[docs/TRANSPORT.md](./docs/TRANSPORT.md)**.
+
+## The four tools
+
+| Tool | Concern | Behaviour |
+|---|---|---|
+| `describe_project` | context | `project_name` is **required**. A plain call hits a wall; a host that read a `.faf` fills it. The deliberate minimal stand‑in for "context a host already has." |
+| `remember` | memory | writes a fact to a `.fafm` file |
+| `recall` | memory | reads a fact back — survives a full process restart, because only the file carries it |
+| `whoami` | identity | returns this server's own `.fafa` as a one‑liner |
+
+## Proven, not described
 
 `npm run demo` runs all three, live:
 
-1. **Context** — the same BEFORE/AFTER pattern as [mcp-project-context](https://github.com/Wolfe-Jam/mcp-project-context): a plain `callTool()` hits a "required, none supplied" wall, then the same call routed through `callToolWithContext()` gets filled from `project.faf`.
-2. **Memory** — `remember()` a fact on one server process, kill that process entirely, spawn a fresh one, `recall()` the same fact. No in-memory state survives that — only the file does. That's the actual claim `.fafm` makes ("memory that survives across sessions"), proven by genuinely crossing a process boundary, not simulated.
-3. **Identity** — `whoami()` reads this server's own `.well-known/fafa`, and the same three files are shown as a Server Card `_meta` block — the second proven exposure mechanism.
+1. **Context** — a plain `callTool()` hits *"project_name required"*; the same
+   call routed through the host‑side fill gets it from `project.faf`.
+2. **Memory** — `remember()` a fact on one server process, kill it entirely,
+   spawn a fresh one, `recall()` the same fact. No in‑memory state survives
+   that — only the file does.
+3. **Identity** — `whoami()` reads the `.fafa`; the Server Card `_meta` block is
+   read back from a live client, over stdio and stateless HTTP alike.
 
-## Render project.faf
+**64 tests** across Linux / macOS / Windows, coverage‑gated in CI — including a
+real `child_process` spawn that proves memory across an actual process
+boundary, and stdio/HTTP tool‑surface parity.
 
-```bash
-npx faf-cli show
-```
+## Layout
 
-Renders `project.faf` as an HTML card. This is what `faf show` does today — `.faf` only. `.fafm`/`.fafa` rendering isn't part of `faf-cli` yet; if that ever ships, it's a bonus, not something this repo is waiting on.
-
-## Demo
-
-```bash
-npm install && npm run demo
-```
-
-## Generate the catalog
-
-```bash
-npm run catalog
-```
-
-Writes `.well-known/ai-catalog.json` from the same three source files (`project.faf`, `project.fafm`, `.well-known/fafa`). Generated, gitignored — run it yourself rather than trust a committed copy that could go stale.
-
-## Core logic
-
-- `src/context.ts` — the param-fill mechanism, generalized from `mcp-project-context` (no domain stub this time)
-- `src/memory.ts` — real, file-backed remember/recall against `project.fafm` itself
-- `src/identity.ts` — `whoami()` + the Server Card `_meta` trinity block
-- `src/catalog-gen.ts` — generates the `ai-catalog.json` sibling entries
-- `src/server.ts` — wires all three into one MCP server
-
-## What this is
-
-A reference implementation of context + memory + agent identity, together, for discussion.
-
-## What this is not
-
-- Not a library or package intended for installation
-- Not an npm package — GitHub template distribution, fork it and own it
-- Not a framework — no plugin system, no API-stability promise
-- Not a full project-context system
+| Path | What |
+|---|---|
+| `src/server.ts` | the MCP server — 4 tools + the Server Card resource |
+| `src/context.ts` | the host‑side param‑fill, generalized from [`mcp-project-context`](https://github.com/Wolfe-Jam/mcp-project-context) |
+| `src/memory.ts` | file‑backed `remember` / `recall` / `forget` against a `.fafm` |
+| `src/identity.ts` | `whoami()` + the `_meta` trinity block |
+| `src/catalog-gen.ts` | writes `ai-catalog.json` from the same three files |
+| `src/transport/http.ts` | the stateless Streamable HTTP app (Hono) |
+| `src/bin.ts` | dual‑transport entry point (`resolveLaunch`) |
+| `src/faf/parse-*.ts` | real YAML parsers for `.faf` / `.fafm` / `.fafa` |
 
 ## Related
 
-- [mcp-project-context](https://github.com/Wolfe-Jam/mcp-project-context) — the direct predecessor, one format (context) instead of three
-- [SEP-2577 (Roots deprecation)](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2577)
-- `application/vnd.faf+yaml`, `application/vnd.fafm+yaml`, `application/vnd.fafa+yaml` — IANA media type registrations
+- [`mcp-project-context`](https://github.com/Wolfe-Jam/mcp-project-context) — the
+  predecessor: one concern (context), not three.
+- [Server Card SEP‑2127](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2127) · [ai-catalog](https://github.com/Agent-Card/ai-catalog)
+- `application/vnd.faf+yaml`, `application/vnd.fafm+yaml`,
+  `application/vnd.fafa+yaml` — IANA media‑type registrations.
 
-## Citation
+## License & citation
 
-`faf-trinity` is the chassis for the agentic era. Cite the Agents paper for `.fafa`; Context and Memory sit beside it.
+MIT.
 
-> Wolfe, J. (2026). *Why Agents Need a Passport: .fafa — Portable Identity for the Agentic Era*. Zenodo. https://doi.org/10.5281/zenodo.21951641
-
-> Wolfe, J. (2025). *Format-Driven AI Context Architecture: The .faf Standard for Persistent Project Understanding*. Zenodo. https://doi.org/10.5281/zenodo.18251362
-
-> Wolfe, J. (2026). *Permanent Memory and Instant Recall: The .fafm Standard for Multi-Profile AI Agent Memory*. Zenodo. https://doi.org/10.5281/zenodo.20348942
-
-MIT
+The three formats used as the worked example are specified in: Wolfe, J. —
+[*.faf*](https://doi.org/10.5281/zenodo.18251362) (context),
+[*.fafm*](https://doi.org/10.5281/zenodo.20348942) (memory),
+[*.fafa*](https://doi.org/10.5281/zenodo.21951641) (identity), Zenodo, 2025–2026.

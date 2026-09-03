@@ -24,5 +24,5 @@ human_context:
   why: MCP servers have no standard answer to "who am I, what do I remember, what's my project", so every server that wants it invents one. This pattern already runs in production at faf.one and context.faf.one, but that's a full app — not something you can read in one sitting and fork. This is the minimal, legible, published version.
   where: github.com/Wolfe-Jam/mcp-trinity
   when: "2026-08-12"
-  how: TypeScript on the MCP SDK. Dual transport in src/bin.ts (stdio default, stateless Streamable HTTP via --http / PORT). remember/recall are real file-backed reads/writes proven across a process boundary in demo.ts and the test suite. See docs/TRANSPORT.md.
-key_files: [package.json, README.md, src/bin.ts, src/server.ts, src/transport/http.ts, demo.ts]
+  how: TypeScript on the MCP SDK. Dual transport in src/bin.ts (stdio default, stateless Streamable HTTP via --http / PORT). The Server Card _meta block and ai-catalog.json are generated from the same three source files — a CI check fails on drift. remember/recall are real file-backed reads/writes proven across a process boundary in demo.ts and the test suite. See docs/MECHANISMS.md, docs/WIRING.md, docs/TRANSPORT.md.
+key_files: [package.json, README.md, docs/MECHANISMS.md, src/server.ts, src/context.ts, src/catalog-gen.ts, src/transport/http.ts, src/bin.ts]

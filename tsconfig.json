@@ -9,5 +9,5 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["src", "demo.ts"]
+  "include": ["src", "test", "demo.ts"]
 }

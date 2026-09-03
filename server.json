@@ -1,0 +1,49 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.wolfe-jam/mcp-trinity",
+  "title": "mcp-trinity",
+  "description": "Reference MCP server for project context, persistent memory, and agent identity — exposed through the Server Card _meta block and ai-catalog.json sibling entries.",
+  "version": "0.2.0",
+  "repository": {
+    "url": "https://github.com/Wolfe-Jam/mcp-trinity",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "mcp-trinity",
+      "version": "0.2.0",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "MCP_TRINITY_ROOT",
+          "description": "Directory holding project.faf / project.fafm / .well-known/fafa. Omitted → the server's own bundled reference copies.",
+          "isRequired": false
+        }
+      ]
+    }
+  ],
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "one.faf/context": {
+        "faf": "./project.faf",
+        "mediaType": "application/vnd.faf+yaml",
+        "iana": "https://www.iana.org/assignments/media-types/application/vnd.faf+yaml"
+      },
+      "one.faf/memory": {
+        "fafm": "./project.fafm",
+        "mediaType": "application/vnd.fafm+yaml",
+        "iana": "https://www.iana.org/assignments/media-types/application/vnd.fafm+yaml"
+      },
+      "one.faf/agent": {
+        "fafa": "./.well-known/fafa",
+        "mediaType": "application/vnd.fafa+yaml",
+        "iana": "https://www.iana.org/assignments/media-types/application/vnd.fafa+yaml"
+      }
+    }
+  }
+}

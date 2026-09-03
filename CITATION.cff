@@ -1,22 +1,22 @@
 cff-version: 1.2.0
 type: software
-message: "If you use faf-trinity in your work, please cite the format papers in `preferred-citation` and `references`. The Agents paper specifies .fafa — who the agent is."
-title: "faf-trinity — chassis for context, memory, and agent in MCP"
+message: "mcp-trinity is a reference implementation. If the FAF formats it uses as the worked example are load-bearing in your work, cite the format papers in `preferred-citation` and `references`."
+title: "mcp-trinity — reference MCP server for context, memory, and agent identity"
 authors:
   - family-names: Wolfe
     given-names: James
     orcid: "https://orcid.org/0009-0007-0801-3841"
     affiliation: "FAF Foundation"
 license: MIT
-repository-code: "https://github.com/Wolfe-Jam/faf-trinity"
-url: "https://faf.one"
+repository-code: "https://github.com/Wolfe-Jam/mcp-trinity"
+url: "https://github.com/Wolfe-Jam/mcp-trinity"
 keywords:
   - mcp
-  - .faf
-  - .fafm
-  - .fafa
-  - agent identity
-  - IANA-registered
+  - model-context-protocol
+  - server-card
+  - ai-catalog
+  - agent-identity
+  - reference-implementation
 preferred-citation:
   type: article
   title: "Why Agents Need a Passport: .fafa — Portable Identity for the Agentic Era"
