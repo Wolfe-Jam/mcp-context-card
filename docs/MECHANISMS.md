@@ -1,6 +1,6 @@
 # Mechanisms
 
-`mcp-trinity` exposes three concerns — context, memory, identity — through two
+`mcp-context-card` exposes three concerns — context, memory, identity — through two
 mechanisms that already exist in the MCP ecosystem. This is the wire‑level
 detail.
 
@@ -20,7 +20,7 @@ client keeps only `serverInfo` / `capabilities` / `instructions` and discards a
 top‑level `_meta`. So the card is served the two ways a client can consume it:
 
 ```
-resources/read  mcp-trinity://server-card       # in band
+resources/read  mcp-context-card://server-card       # in band
 GET /.well-known/mcp/server-card                 # out of band (http transport)
 ```
 
@@ -28,20 +28,20 @@ Both return:
 
 ```jsonc
 {
-  "name": "mcp-trinity",
+  "name": "mcp-context-card",
   "version": "0.2.0",
   "_meta": {
-    "io.github.wolfe-jam.mcp-trinity/context": {
+    "io.github.wolfe-jam.mcp-context-card/context": {
       "source": "AGENTS.md",
       "mediaType": "text/markdown"
     },
-    "io.github.wolfe-jam.mcp-trinity/memory": {
+    "io.github.wolfe-jam.mcp-context-card/memory": {
       "source": "project.fafm",
       "mediaType": "application/vnd.fafm+yaml",
       "iana": "https://www.iana.org/assignments/media-types/application/vnd.fafm+yaml",
       "note": "no de-facto standard for agent memory yet — one instantiation"
     },
-    "io.github.wolfe-jam.mcp-trinity/identity": {
+    "io.github.wolfe-jam.mcp-context-card/identity": {
       "source": ".well-known/fafa",
       "mediaType": "application/vnd.fafa+yaml",
       "iana": "https://www.iana.org/assignments/media-types/application/vnd.fafa+yaml"
@@ -55,7 +55,7 @@ Both return:
 - **`_meta` is the extension point.** SEP‑2127 defines it as
   `additionalProperties: {}`. A consumer that doesn't know a key ignores it.
 - **Keys are reverse‑DNS‑namespaced to the publisher**
-  (`io.github.wolfe-jam.mcp-trinity/context`, not `context`). No collisions, and
+  (`io.github.wolfe-jam.mcp-context-card/context`, not `context`). No collisions, and
   the key's owner is unambiguous. Use a domain or GitHub identity you control.
 - **One key per concern**, each self‑describing: the source file, its media
   type, and — where the media type is IANA‑registered — the anchor. `context`
@@ -72,7 +72,7 @@ Built by `trinityMeta()` in [`src/identity.ts`](../src/identity.ts).
 
 [ai-catalog](https://github.com/Agent-Card/ai-catalog) is a discovery format: a
 publisher lists artifacts, each entry keyed by its **media type** (`type`).
-`mcp-trinity` publishes one entry per concern.
+`mcp-context-card` publishes one entry per concern.
 
 ```
 GET /.well-known/ai-catalog.json
@@ -81,17 +81,17 @@ GET /.well-known/ai-catalog.json
 ```jsonc
 {
   "specVersion": "1.0",
-  "host": { "displayName": "mcp-trinity", "identifier": "https://github.com/Wolfe-Jam/mcp-trinity" },
+  "host": { "displayName": "mcp-context-card", "identifier": "https://github.com/Wolfe-Jam/mcp-context-card" },
   "entries": [
     {
-      "identifier": "urn:air:mcp-trinity:context",
+      "identifier": "urn:air:mcp-context-card:context",
       "type": "text/markdown",
       "mediaType": "text/markdown",
       "description": "…derived from the real AGENTS.md — section count + headings…",
       "url": "./AGENTS.md"
     },
-    { "identifier": "urn:air:mcp-trinity:memory",   "type": "application/vnd.fafm+yaml", "…": "…" },
-    { "identifier": "urn:air:mcp-trinity:identity", "type": "application/vnd.fafa+yaml", "…": "…" }
+    { "identifier": "urn:air:mcp-context-card:memory",   "type": "application/vnd.fafm+yaml", "…": "…" },
+    { "identifier": "urn:air:mcp-context-card:identity", "type": "application/vnd.fafa+yaml", "…": "…" }
   ]
 }
 ```
@@ -105,7 +105,7 @@ GET /.well-known/ai-catalog.json
   (`urn:air:<host>:<concern>`). In ai-catalog's
   [trust‑manifest ADRs](https://github.com/Agent-Card/ai-catalog/tree/main/adr),
   `urn:air` identifiers carry a publisher‑domain‑aligned trust manifest — the
-  entries here align to `github.com/Wolfe-Jam/mcp-trinity`.
+  entries here align to `github.com/Wolfe-Jam/mcp-context-card`.
 - **`description` is derived from real content** — the live AGENTS.md heading
   list, the current fact count, the agent's own description — not a blurb that
   drifts. See `buildCatalog()` in [`src/catalog-gen.ts`](../src/catalog-gen.ts).

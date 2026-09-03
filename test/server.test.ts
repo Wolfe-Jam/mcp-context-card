@@ -28,7 +28,7 @@ test("server: advertises its name + the seven tools", async () => {
   const { root, cleanup } = fixture();
   try {
     const client = await connected(root);
-    assert.equal(client.getServerVersion()?.name, "mcp-trinity");
+    assert.equal(client.getServerVersion()?.name, "mcp-context-card");
     const { tools } = await client.listTools();
     assert.deepEqual(tools.map((t) => t.name).sort(), TOOLS);
     await client.close();
@@ -46,14 +46,14 @@ test("server: the Server Card resource carries the _meta context block", async (
 
     const res = await client.readResource({ uri: SERVER_CARD_URI });
     const card = JSON.parse((res.contents[0] as { text: string }).text);
-    assert.equal(card.name, "mcp-trinity");
+    assert.equal(card.name, "mcp-context-card");
     assert.deepEqual(Object.keys(card._meta), [
-      "io.github.wolfe-jam.mcp-trinity/context",
-      "io.github.wolfe-jam.mcp-trinity/memory",
-      "io.github.wolfe-jam.mcp-trinity/identity",
+      "io.github.wolfe-jam.mcp-context-card/context",
+      "io.github.wolfe-jam.mcp-context-card/memory",
+      "io.github.wolfe-jam.mcp-context-card/identity",
     ]);
-    assert.equal(card._meta["io.github.wolfe-jam.mcp-trinity/context"].source, "AGENTS.md");
-    assert.equal(card._meta["io.github.wolfe-jam.mcp-trinity/context"].mediaType, "text/markdown");
+    assert.equal(card._meta["io.github.wolfe-jam.mcp-context-card/context"].source, "AGENTS.md");
+    assert.equal(card._meta["io.github.wolfe-jam.mcp-context-card/context"].mediaType, "text/markdown");
   } finally {
     cleanup();
   }
@@ -118,7 +118,7 @@ test("server: whoami reads the .fafa", async () => {
   const { root, cleanup } = fixture();
   try {
     const client = await connected(root);
-    assert.match(say(await client.callTool({ name: "whoami", arguments: {} })), /mcp-trinity/);
+    assert.match(say(await client.callTool({ name: "whoami", arguments: {} })), /mcp-context-card/);
     await client.close();
   } finally {
     cleanup();
@@ -148,7 +148,7 @@ test("server: an unknown tool or resource rejects, it doesn't hang", async () =>
   try {
     const client = await connected(root);
     await assert.rejects(client.callTool({ name: "no_such_tool", arguments: {} }));
-    await assert.rejects(client.readResource({ uri: "mcp-trinity://nope" }));
+    await assert.rejects(client.readResource({ uri: "mcp-context-card://nope" }));
     const { tools } = await client.listTools();
     assert.equal(tools.length, 7);
     await client.close();

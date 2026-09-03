@@ -9,7 +9,7 @@ test("parseFaf: reads the project block into typed fields", () => {
   const { root, cleanup } = fixture();
   try {
     const ctx = parseFaf(join(root, "project.faf"));
-    assert.equal(ctx.name, "mcp-trinity");
+    assert.equal(ctx.name, "mcp-context-card");
     assert.equal(ctx.language, "TypeScript");
     assert.equal(ctx.type, "mcp");
     assert.ok(ctx.goal && ctx.goal.length > 0);
@@ -23,7 +23,7 @@ test("parseFaf: exposes tool-schema-keyed field aliases", () => {
   try {
     const { fields } = parseFaf(join(root, "project.faf"));
     // `project.name` is fillable as the param a tool would declare
-    assert.equal(fields.project_name, "mcp-trinity");
+    assert.equal(fields.project_name, "mcp-context-card");
     assert.equal(fields.main_language, "TypeScript");
   } finally {
     cleanup();
@@ -69,7 +69,7 @@ test("parseFaf: `slotignored` stack values don't break the parse", () => {
   try {
     // the fixture's project.faf already has several `stack.* : slotignored`
     const ctx = parseFaf(join(root, "project.faf"));
-    assert.equal(ctx.name, "mcp-trinity");
+    assert.equal(ctx.name, "mcp-context-card");
     assert.equal(ctx.type, "mcp");
   } finally {
     cleanup();

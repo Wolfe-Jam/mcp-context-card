@@ -10,9 +10,9 @@ import { createServer, SERVER_CARD_URI } from "../src/server.js";
 import { fixture } from "./helpers.js";
 
 const META_KEYS = [
-  "io.github.wolfe-jam.mcp-trinity/context",
-  "io.github.wolfe-jam.mcp-trinity/memory",
-  "io.github.wolfe-jam.mcp-trinity/identity",
+  "io.github.wolfe-jam.mcp-context-card/context",
+  "io.github.wolfe-jam.mcp-context-card/memory",
+  "io.github.wolfe-jam.mcp-context-card/identity",
 ];
 
 let fx: ReturnType<typeof fixture>;
@@ -41,7 +41,7 @@ const say = (r: unknown) => (r as any).content[0].text as string;
 
 test("http: MCP works over stateless Streamable HTTP", async () => {
   const client = await httpClient();
-  assert.equal(client.getServerVersion()?.name, "mcp-trinity");
+  assert.equal(client.getServerVersion()?.name, "mcp-context-card");
 
   const { tools } = await client.listTools();
   assert.equal(tools.length, 7);
@@ -64,7 +64,7 @@ test("http: /.well-known/mcp/server-card serves the card out-of-band", async () 
   const r = await fetch(`${base}/.well-known/mcp/server-card`);
   assert.equal(r.status, 200);
   const card = await r.json();
-  assert.equal(card.name, "mcp-trinity");
+  assert.equal(card.name, "mcp-context-card");
   assert.equal(card._meta[META_KEYS[0]].source, "AGENTS.md");
   assert.equal(card._meta[META_KEYS[0]].mediaType, "text/markdown");
 });
@@ -82,7 +82,7 @@ test("http: /.well-known/fafa serves the raw agent card", async () => {
   const r = await fetch(`${base}/.well-known/fafa`);
   assert.equal(r.status, 200);
   assert.match(r.headers.get("content-type") ?? "", /vnd\.fafa\+yaml/);
-  assert.match(await r.text(), /name: "mcp-trinity"/);
+  assert.match(await r.text(), /name: "mcp-context-card"/);
 });
 
 test("http: memory tools round-trip over the wire", async () => {
@@ -123,7 +123,7 @@ test("http: /mcp is genuinely stateless — no session header, independent inits
   const r2 = await fetch(`${base}/mcp`, { method: "POST", headers, body: JSON.stringify(init) });
   assert.equal(r2.status, 200);
   const b2 = await r2.json();
-  assert.equal(b2.result?.serverInfo?.name, "mcp-trinity");
+  assert.equal(b2.result?.serverInfo?.name, "mcp-context-card");
 });
 
 test("http: CORS is open (preflight answered)", async () => {

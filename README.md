@@ -1,6 +1,6 @@
-# mcp-trinity
+# mcp-context-card
 
-[![CI](https://github.com/Wolfe-Jam/mcp-trinity/actions/workflows/ci.yml/badge.svg)](https://github.com/Wolfe-Jam/mcp-trinity/actions/workflows/ci.yml)
+[![CI](https://github.com/Wolfe-Jam/mcp-context-card/actions/workflows/ci.yml/badge.svg)](https://github.com/Wolfe-Jam/mcp-context-card/actions/workflows/ci.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 An MCP server that makes a project's **context**, **memory**, and **identity**
@@ -20,7 +20,7 @@ context. There is no standard way for a server to say "here is my AGENTS.md,
 here is what I remember, here is who I am" — so every server that wants this
 grows its own shape.
 
-`mcp-trinity` answers all three through mechanisms that already exist:
+`mcp-context-card` answers all three through mechanisms that already exist:
 
 1. **Server Card `_meta`** ([SEP‑2127](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2127)) —
    one reverse‑DNS‑namespaced key per concern, readable in‑band as an MCP
@@ -39,9 +39,9 @@ swap in your own.
 ## Run it
 
 ```bash
-npx mcp-trinity                 # stdio — what an MCP host spawns
-npx mcp-trinity --http          # stateless Streamable HTTP on :3000
-PORT=8080 npx mcp-trinity       # HTTP on :8080 (a hosted deploy sets PORT)
+npx mcp-context-card                 # stdio — what an MCP host spawns
+npx mcp-context-card --http          # stateless Streamable HTTP on :3000
+PORT=8080 npx mcp-context-card       # HTTP on :8080 (a hosted deploy sets PORT)
 ```
 
 ### Point it at your project
@@ -52,14 +52,14 @@ PORT=8080 npx mcp-trinity       # HTTP on :8080 (a hosted deploy sets PORT)
   "mcpServers": {
     "trinity": {
       "command": "npx",
-      "args": ["-y", "mcp-trinity"],
-      "env": { "MCP_TRINITY_ROOT": "/path/to/your/project" }
+      "args": ["-y", "mcp-context-card"],
+      "env": { "MCP_CONTEXT_CARD_ROOT": "/path/to/your/project" }
     }
   }
 }
 ```
 
-`MCP_TRINITY_ROOT` is the directory holding `AGENTS.md`, `project.fafm`, and
+`MCP_CONTEXT_CARD_ROOT` is the directory holding `AGENTS.md`, `project.fafm`, and
 `.well-known/fafa`. Omit it to run against the server's own bundled files.
 
 Full host wiring in **[docs/WIRING.md](./docs/WIRING.md)**; transport choice in

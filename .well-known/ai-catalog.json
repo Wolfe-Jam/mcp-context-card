@@ -1,38 +1,38 @@
 {
   "specVersion": "1.0",
   "host": {
-    "displayName": "mcp-trinity",
-    "identifier": "https://github.com/Wolfe-Jam/mcp-trinity"
+    "displayName": "mcp-context-card",
+    "identifier": "https://github.com/Wolfe-Jam/mcp-context-card"
   },
   "entries": [
     {
-      "identifier": "urn:air:mcp-trinity:context",
-      "displayName": "mcp-trinity — project context (AGENTS.md)",
+      "identifier": "urn:air:mcp-context-card:context",
+      "displayName": "mcp-context-card — project context (AGENTS.md)",
       "type": "text/markdown",
       "mediaType": "text/markdown",
       "description": "Agent instructions for this project — 9 section(s): Setup, Build, Test, Layout, Conventions, The invariant, ….",
       "url": "./AGENTS.md"
     },
     {
-      "identifier": "urn:air:mcp-trinity:memory",
-      "displayName": "mcp-trinity — persistent memory (.fafm)",
+      "identifier": "urn:air:mcp-context-card:memory",
+      "displayName": "mcp-context-card — persistent memory (.fafm)",
       "type": "application/vnd.fafm+yaml",
       "mediaType": "application/vnd.fafm+yaml",
       "description": "Cross-session memory — 3 fact(s), profile \"knowledge\". Recall survives a process restart. No de-facto standard for this concern yet.",
       "url": "./project.fafm",
       "_meta": {
-        "io.github.wolfe-jam.mcp-trinity/iana": "https://www.iana.org/assignments/media-types/application/vnd.fafm+yaml"
+        "io.github.wolfe-jam.mcp-context-card/iana": "https://www.iana.org/assignments/media-types/application/vnd.fafm+yaml"
       }
     },
     {
-      "identifier": "urn:air:mcp-trinity:identity",
-      "displayName": "mcp-trinity — agent identity (.fafa)",
+      "identifier": "urn:air:mcp-context-card:identity",
+      "displayName": "mcp-context-card — agent identity (.fafa)",
       "type": "application/vnd.fafa+yaml",
       "mediaType": "application/vnd.fafa+yaml",
       "description": "Reference MCP server that makes a project's context (AGENTS.md), memory, and identity discoverable to any MCP client, through the Server Card _meta block and a self-published ai-catalog.json.",
       "url": "./.well-known/fafa",
       "_meta": {
-        "io.github.wolfe-jam.mcp-trinity/iana": "https://www.iana.org/assignments/media-types/application/vnd.fafa+yaml"
+        "io.github.wolfe-jam.mcp-context-card/iana": "https://www.iana.org/assignments/media-types/application/vnd.fafa+yaml"
       }
     }
   ]

@@ -5,7 +5,7 @@
  *   2. MEMORY    — remember() a fact, kill the server process, spawn a fresh
  *      one, recall() the same fact. Only the file survives that.
  *   3. IDENTITY  — whoami(), and the Server Card _meta block read back from
- *      the `mcp-trinity://server-card` resource.
+ *      the `mcp-context-card://server-card` resource.
  *   4. DISCOVERY — list_context_sources(), then the same server over
  *      stateless Streamable HTTP with its .well-known routes.
  */
@@ -38,7 +38,7 @@ async function connect(): Promise<Client> {
 
 const say = (r: any) => r.content.map((c: any) => c.text).join("\n");
 
-console.log(`\n🔺 mcp-trinity — context, memory & identity, discoverable, proven live\n`);
+console.log(`\n🔺 mcp-context-card — context, memory & identity, discoverable, proven live\n`);
 
 // ── 1. CONTEXT ───────────────────────────────────────────────────────────
 console.log(`${line}\n1. CONTEXT — the client pulls one AGENTS.md section, not the whole file\n${line}`);
@@ -75,11 +75,11 @@ console.log(`\n${line}\n3. IDENTITY — whoami() + the Server Card _meta block (
 {
   const client = await connect();
   console.log(say(await client.callTool({ name: "whoami", arguments: {} })));
-  const cardRes = await client.readResource({ uri: "mcp-trinity://server-card" });
+  const cardRes = await client.readResource({ uri: "mcp-context-card://server-card" });
   const card = JSON.parse((cardRes.contents[0] as { text: string }).text);
-  console.log(`\n· mcp-trinity://server-card → _meta keys: ${Object.keys(card._meta).join(", ")}`);
+  console.log(`\n· mcp-context-card://server-card → _meta keys: ${Object.keys(card._meta).join(", ")}`);
   for (const k of Object.keys(card._meta)) {
-    if (!k.startsWith("io.github.wolfe-jam.mcp-trinity/")) throw new Error(`unexpected _meta key: ${k}`);
+    if (!k.startsWith("io.github.wolfe-jam.mcp-context-card/")) throw new Error(`unexpected _meta key: ${k}`);
   }
   await client.close();
 }

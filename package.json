@@ -1,5 +1,5 @@
 {
-  "name": "mcp-trinity",
+  "name": "mcp-context-card",
   "version": "0.2.0",
   "description": "Reference MCP server: project context, persistent memory, and agent identity — through the two exposure surfaces already in the ecosystem (Server Card _meta, ai-catalog sibling entries).",
   "keywords": [
@@ -17,7 +17,7 @@
   "private": true,
   "//private": "flip to false at publish time — GO-gated. prepublishOnly is the build/test latch.",
   "bin": {
-    "mcp-trinity": "dist/bin.js"
+    "mcp-context-card": "dist/bin.js"
   },
   "main": "dist/server.js",
   "types": "dist/server.d.ts",
@@ -69,7 +69,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Wolfe-Jam/mcp-trinity.git"
+    "url": "git+https://github.com/Wolfe-Jam/mcp-context-card.git"
   },
-  "homepage": "https://github.com/Wolfe-Jam/mcp-trinity"
+  "homepage": "https://github.com/Wolfe-Jam/mcp-context-card"
 }

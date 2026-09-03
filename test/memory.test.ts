@@ -11,7 +11,7 @@ test("parseFafm: reads the authored facts + metadata", () => {
     const m = parseFafm(join(root, "project.fafm"));
     assert.equal(m.profile, "knowledge");
     assert.ok(m.facts.length >= 3);
-    assert.ok(m.facts.find((f) => f.id === "mcp-trinity-scope"));
+    assert.ok(m.facts.find((f) => f.id === "mcp-context-card-scope"));
   } finally {
     cleanup();
   }
@@ -78,7 +78,7 @@ test("remember: preserves comments and doesn't reformat the whole file", () => {
     assert.ok(after.includes("# application/vnd.fafm+yaml"));
     // the authored facts are byte-identical (only last_etched + the new
     // fact should differ) — every authored line still present verbatim
-    const authoredLines = before.split("\n").filter((l) => l.includes("mcp-trinity-scope"));
+    const authoredLines = before.split("\n").filter((l) => l.includes("mcp-context-card-scope"));
     for (const l of authoredLines) assert.ok(after.includes(l), `line churned: ${JSON.stringify(l)}`);
     // new scalars are double-quoted (house convention)
     assert.ok(after.includes('id: "new-fact"'));
@@ -122,8 +122,8 @@ test("remember: updating a fact keeps its other fields (tags, type, priority)", 
   const { root, cleanup } = fixture();
   try {
     const p = join(root, "project.fafm");
-    remember(p, "mcp-trinity-scope", "rewritten text"); // an authored fact with tags
-    const f = recall(p, "mcp-trinity-scope");
+    remember(p, "mcp-context-card-scope", "rewritten text"); // an authored fact with tags
+    const f = recall(p, "mcp-context-card-scope");
     assert.equal(f?.text, "rewritten text");
     assert.deepEqual(f?.tags, ["scope", "agents-md"]); // preserved
     assert.equal(f?.priority, "high"); // preserved

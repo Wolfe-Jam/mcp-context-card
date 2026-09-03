@@ -22,9 +22,9 @@ the versioned, tested, installable server.
 ### Exposure
 
 - Server Card `_meta` block — publisher-namespaced keys
-  (`io.github.wolfe-jam.mcp-trinity/{context,memory,identity}`), one per
+  (`io.github.wolfe-jam.mcp-context-card/{context,memory,identity}`), one per
   concern. `context` points at `AGENTS.md` / `text/markdown`.
-- `mcp-trinity://server-card` MCP resource (in-band) +
+- `mcp-context-card://server-card` MCP resource (in-band) +
   `GET /.well-known/mcp/server-card` (out-of-band, HTTP transport).
 - `GET /.well-known/ai-catalog.json` — three sibling entries, keyed by media
   type, derived from the same three sources. `npm run catalog:check` fails on
@@ -33,7 +33,7 @@ the versioned, tested, installable server.
 ### Transport
 
 - stdio (default) and stateless Streamable HTTP (`--http` / `PORT`);
-  `src/bin.ts` `resolveLaunch()` selects the mode. `MCP_TRINITY_ROOT` points
+  `src/bin.ts` `resolveLaunch()` selects the mode. `MCP_CONTEXT_CARD_ROOT` points
   the server at any project.
 
 ### Engineering
@@ -51,7 +51,7 @@ the versioned, tested, installable server.
 
 ### Since v0.1.0
 
-- Renamed `faf-trinity` → `mcp-trinity`.
+- Renamed `faf-trinity` → `mcp-context-card`.
 - Context concern now leads with `AGENTS.md`, not a FAF format; the FAF formats
   are the worked examples for memory and identity, where no standard exists.
 - The `_meta` block and `catalog-gen` carry real data, not a `console.log` and

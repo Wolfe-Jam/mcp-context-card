@@ -1,18 +1,18 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.wolfe-jam/mcp-trinity",
-  "title": "mcp-trinity",
+  "name": "io.github.wolfe-jam/mcp-context-card",
+  "title": "mcp-context-card",
   "description": "Reference MCP server that makes a project's context (AGENTS.md), memory, and identity discoverable to any MCP client — through the Server Card _meta block and ai-catalog.json sibling entries.",
   "version": "0.2.0",
   "repository": {
-    "url": "https://github.com/Wolfe-Jam/mcp-trinity",
+    "url": "https://github.com/Wolfe-Jam/mcp-context-card",
     "source": "github"
   },
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
-      "identifier": "mcp-trinity",
+      "identifier": "mcp-context-card",
       "version": "0.2.0",
       "runtimeHint": "npx",
       "transport": {
@@ -20,7 +20,7 @@
       },
       "environmentVariables": [
         {
-          "name": "MCP_TRINITY_ROOT",
+          "name": "MCP_CONTEXT_CARD_ROOT",
           "description": "Directory holding project.faf / project.fafm / .well-known/fafa. Omitted → the server's own bundled reference copies.",
           "isRequired": false
         }
@@ -29,17 +29,17 @@
   ],
   "_meta": {
     "io.modelcontextprotocol.registry/publisher-provided": {
-      "io.github.wolfe-jam.mcp-trinity/context": {
+      "io.github.wolfe-jam.mcp-context-card/context": {
         "source": "./AGENTS.md",
         "mediaType": "text/markdown"
       },
-      "io.github.wolfe-jam.mcp-trinity/memory": {
+      "io.github.wolfe-jam.mcp-context-card/memory": {
         "source": "./project.fafm",
         "mediaType": "application/vnd.fafm+yaml",
         "iana": "https://www.iana.org/assignments/media-types/application/vnd.fafm+yaml",
         "note": "no de-facto standard for agent memory yet — one instantiation"
       },
-      "io.github.wolfe-jam.mcp-trinity/identity": {
+      "io.github.wolfe-jam.mcp-context-card/identity": {
         "source": "./.well-known/fafa",
         "mediaType": "application/vnd.fafa+yaml",
         "iana": "https://www.iana.org/assignments/media-types/application/vnd.fafa+yaml"

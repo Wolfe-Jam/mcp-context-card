@@ -17,21 +17,21 @@
   "mcpServers": {
     "trinity": {
       "command": "npx",
-      "args": ["-y", "mcp-trinity"],
-      "env": { "MCP_TRINITY_ROOT": "/abs/path/to/your/project" }
+      "args": ["-y", "mcp-context-card"],
+      "env": { "MCP_CONTEXT_CARD_ROOT": "/abs/path/to/your/project" }
     }
   }
 }
 ```
 
-- **`MCP_TRINITY_ROOT`** — directory holding `AGENTS.md`, `project.fafm`, and
+- **`MCP_CONTEXT_CARD_ROOT`** — directory holding `AGENTS.md`, `project.fafm`, and
   `.well-known/fafa`. Omit it and the server uses its own bundled copies.
 - `stdout` is the JSON‑RPC wire; logging is on `stderr`.
 
 ### Streamable HTTP (remote)
 
 ```bash
-PORT=8080 npx mcp-trinity        # or:  npx mcp-trinity --http
+PORT=8080 npx mcp-context-card        # or:  npx mcp-context-card --http
 ```
 
 ```jsonc
@@ -83,11 +83,11 @@ await client.callTool({ name: "list_context_sources", arguments: {} });
 To serve *your* artifacts:
 
 1. **Replace the three files** — `AGENTS.md`, `project.fafm`, `.well-known/fafa`
-   — with your own, or point `MCP_TRINITY_ROOT` at a directory that has them.
+   — with your own, or point `MCP_CONTEXT_CARD_ROOT` at a directory that has them.
    `AGENTS.md` is the one with a real standard; the other two are swappable.
 2. **Rename the namespace.** `trinityMeta()` in `src/identity.ts` uses
-   `io.github.wolfe-jam.mcp-trinity/*` keys, and `buildCatalog()` in
-   `src/catalog-gen.ts` uses `urn:air:mcp-trinity:*` identifiers. Change both to
+   `io.github.wolfe-jam.mcp-context-card/*` keys, and `buildCatalog()` in
+   `src/catalog-gen.ts` uses `urn:air:mcp-context-card:*` identifiers. Change both to
    a domain or GitHub identity you control ([MECHANISMS.md](./MECHANISMS.md)).
 3. **Swap the media types** in `trinityMeta()` if your memory / identity
    artifacts aren't `.fafm` / `.fafa`. Drop the `iana` field for any that isn't
@@ -105,7 +105,7 @@ target tool's **own** `inputSchema` and fills any declared parameter the caller
 left out that the project context already knows.
 
 ```ts
-import { callToolWithContext, contextFieldsFromProjectFaf } from "mcp-trinity/context";
+import { callToolWithContext, contextFieldsFromProjectFaf } from "mcp-context-card/context";
 
 const fields = contextFieldsFromProjectFaf("/abs/path/to/project.faf");
 // { project_name: "acme-api", main_language: "TypeScript", … }

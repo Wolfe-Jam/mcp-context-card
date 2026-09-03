@@ -1,6 +1,6 @@
 /**
  * Shared types for the three FAF-family formats this server reads.
- * These are the minimal shapes mcp-trinity needs — not the full specs.
+ * These are the minimal shapes mcp-context-card needs — not the full specs.
  * Full specs: application/vnd.faf+yaml, application/vnd.fafm+yaml,
  * application/vnd.fafa+yaml (all IANA-registered).
  */

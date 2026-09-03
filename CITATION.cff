@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 type: software
-message: "If you use mcp-trinity, please cite it as below."
-title: "mcp-trinity — an MCP server for discoverable project context, memory, and identity"
+message: "If you use mcp-context-card, please cite it as below."
+title: "mcp-context-card — an MCP server for discoverable project context, memory, and identity"
 abstract: >-
   A Model Context Protocol server that publishes a project's AGENTS.md,
   cross-session memory, and agent identity through two mechanisms already in the
@@ -11,8 +11,8 @@ authors:
     given-names: James
     orcid: "https://orcid.org/0009-0007-0801-3841"
 license: MIT
-repository-code: "https://github.com/Wolfe-Jam/mcp-trinity"
-url: "https://github.com/Wolfe-Jam/mcp-trinity"
+repository-code: "https://github.com/Wolfe-Jam/mcp-context-card"
+url: "https://github.com/Wolfe-Jam/mcp-context-card"
 keywords:
   - mcp
   - model-context-protocol

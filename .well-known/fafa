@@ -1,4 +1,4 @@
-# Agent identity card (.fafa) — mcp-trinity's own identity
+# Agent identity card (.fafa) — mcp-context-card's own identity
 # Media type: application/vnd.fafa+yaml
 # This is the identity concern's worked example: `whoami` reads this file,
 # and it's the third entry in the Server Card _meta block and ai-catalog.
@@ -6,8 +6,8 @@
 
 version: "1.0"
 agent:
-  name: "mcp-trinity"
-  displayName: "mcp-trinity"
+  name: "mcp-context-card"
+  displayName: "mcp-context-card"
   vendor: "reference"
   version: "0.2.0"
   description: >-

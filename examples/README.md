@@ -10,15 +10,15 @@
 ## stdio
 
 Copy `claude_desktop_config.json` into your host's config, set
-`MCP_TRINITY_ROOT` to a project directory (one holding `AGENTS.md`,
+`MCP_CONTEXT_CARD_ROOT` to a project directory (one holding `AGENTS.md`,
 `project.fafm`, `.well-known/fafa`), and restart the host. Drop the `env`
 block to run against the server's own bundled files.
 
 ## HTTP
 
 ```bash
-docker build -f examples/Dockerfile -t mcp-trinity .
-docker run -p 3000:3000 mcp-trinity
+docker build -f examples/Dockerfile -t mcp-context-card .
+docker run -p 3000:3000 mcp-context-card
 ```
 
 The three discovery routes need no MCP handshake:
@@ -26,12 +26,12 @@ The three discovery routes need no MCP handshake:
 ```console
 $ curl -s localhost:3000/.well-known/mcp/server-card
 {
-  "name": "mcp-trinity",
+  "name": "mcp-context-card",
   "version": "0.2.0",
   "_meta": {
-    "io.github.wolfe-jam.mcp-trinity/context":  { "source": "AGENTS.md",          "mediaType": "text/markdown" },
-    "io.github.wolfe-jam.mcp-trinity/memory":   { "source": "project.fafm",       "mediaType": "application/vnd.fafm+yaml", "iana": "…", "note": "no de-facto standard yet — one instantiation" },
-    "io.github.wolfe-jam.mcp-trinity/identity": { "source": ".well-known/fafa",   "mediaType": "application/vnd.fafa+yaml", "iana": "…" }
+    "io.github.wolfe-jam.mcp-context-card/context":  { "source": "AGENTS.md",          "mediaType": "text/markdown" },
+    "io.github.wolfe-jam.mcp-context-card/memory":   { "source": "project.fafm",       "mediaType": "application/vnd.fafm+yaml", "iana": "…", "note": "no de-facto standard yet — one instantiation" },
+    "io.github.wolfe-jam.mcp-context-card/identity": { "source": ".well-known/fafa",   "mediaType": "application/vnd.fafa+yaml", "iana": "…" }
   }
 }
 
@@ -48,5 +48,5 @@ client at `http://localhost:3000/mcp` with `http-client-config.json`.
 Mount a real project instead of the bundled files:
 
 ```bash
-docker run -p 3000:3000 -v "$PWD:/project:ro" -e MCP_TRINITY_ROOT=/project mcp-trinity
+docker run -p 3000:3000 -v "$PWD:/project:ro" -e MCP_CONTEXT_CARD_ROOT=/project mcp-context-card
 ```

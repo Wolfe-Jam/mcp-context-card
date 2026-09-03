@@ -7,7 +7,7 @@ import { buildCatalog } from "../src/catalog-gen.js";
 import { remember } from "../src/faf/parse-fafm.js";
 import { fixture } from "./helpers.js";
 
-const NS_IANA = "io.github.wolfe-jam.mcp-trinity/iana";
+const NS_IANA = "io.github.wolfe-jam.mcp-context-card/iana";
 
 test("buildCatalog: three sibling entries — context is AGENTS.md/markdown", () => {
   const { root, cleanup } = fixture();
@@ -19,7 +19,7 @@ test("buildCatalog: three sibling entries — context is AGENTS.md/markdown", ()
       ["text/markdown", "application/vnd.fafm+yaml", "application/vnd.fafa+yaml"],
     );
     for (const e of cat.entries) {
-      assert.ok(e.identifier.startsWith("urn:air:mcp-trinity:"));
+      assert.ok(e.identifier.startsWith("urn:air:mcp-context-card:"));
       assert.ok(e.url.startsWith("./"));
       assert.equal(e.type, e.mediaType);
     }
@@ -38,7 +38,7 @@ test("buildCatalog: descriptions derive from real file content", () => {
   const { root, cleanup } = fixture();
   try {
     const cat = buildCatalog(root);
-    assert.equal(cat.host.displayName, "mcp-trinity");
+    assert.equal(cat.host.displayName, "mcp-context-card");
 
     // context entry names real AGENTS.md sections
     const ctx = cat.entries.find((e) => e.type === "text/markdown")!;
@@ -67,7 +67,7 @@ test("buildCatalog: reflects a change to a source file", () => {
 });
 
 test("buildCatalog: synthesises descriptions when sources are absent", () => {
-  const dir = mkdtempSync(join(tmpdir(), "mcp-trinity-bare-"));
+  const dir = mkdtempSync(join(tmpdir(), "mcp-context-card-bare-"));
   try {
     // no AGENTS.md, no fafa; minimal fafm
     writeFileSync(join(dir, "project.fafm"), `version: "1.1"\n`);

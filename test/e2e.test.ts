@@ -26,7 +26,7 @@ async function stdioChild(root: string): Promise<Client> {
     new StdioClientTransport({
       command: runner.command,
       args: runner.base,
-      env: { ...process.env, MCP_TRINITY_ROOT: root, PORT: "" },
+      env: { ...process.env, MCP_CONTEXT_CARD_ROOT: root, PORT: "" },
     }),
   );
   return client;
@@ -63,7 +63,7 @@ describe("e2e — real child process", () => {
     const fx = fixture();
     try {
       const c = await stdioChild(fx.root);
-      assert.equal(c.getServerVersion()?.name, "mcp-trinity");
+      assert.equal(c.getServerVersion()?.name, "mcp-context-card");
       const tools = (await c.listTools()).tools.map((t) => t.name).sort();
       assert.deepEqual(tools, [
         "forget",
@@ -75,12 +75,12 @@ describe("e2e — real child process", () => {
         "whoami",
       ]);
 
-      const res = await c.readResource({ uri: "mcp-trinity://server-card" });
+      const res = await c.readResource({ uri: "mcp-context-card://server-card" });
       const card = JSON.parse((res.contents[0] as { text: string }).text);
       assert.deepEqual(Object.keys(card._meta), [
-        "io.github.wolfe-jam.mcp-trinity/context",
-        "io.github.wolfe-jam.mcp-trinity/memory",
-        "io.github.wolfe-jam.mcp-trinity/identity",
+        "io.github.wolfe-jam.mcp-context-card/context",
+        "io.github.wolfe-jam.mcp-context-card/memory",
+        "io.github.wolfe-jam.mcp-context-card/identity",
       ]);
       await c.close();
     } finally {
@@ -92,7 +92,7 @@ describe("e2e — real child process", () => {
     const fx = fixture();
     const port = await freePort();
     const child = spawn(runner.command, [...runner.base, "--http"], {
-      env: { ...process.env, PORT: String(port), MCP_TRINITY_ROOT: fx.root },
+      env: { ...process.env, PORT: String(port), MCP_CONTEXT_CARD_ROOT: fx.root },
       stdio: ["ignore", "ignore", "pipe"],
     });
     try {
@@ -137,7 +137,7 @@ describe("e2e — real child process", () => {
       // --stdio with PORT set → still stdio, nothing listening on PORT
       const port = await freePort();
       const child = spawn(runner.command, [...runner.base, "--stdio"], {
-        env: { ...process.env, PORT: String(port), MCP_TRINITY_ROOT: fx.root },
+        env: { ...process.env, PORT: String(port), MCP_CONTEXT_CARD_ROOT: fx.root },
         stdio: ["pipe", "pipe", "ignore"],
       });
       await new Promise((r) => setTimeout(r, 1200));

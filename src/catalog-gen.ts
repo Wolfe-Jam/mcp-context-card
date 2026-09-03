@@ -22,13 +22,13 @@ export function buildCatalog(root: string) {
   const fafm = parseFafm(join(root, "project.fafm"));
   const fafa = parseFafa(join(root, ".well-known/fafa"));
 
-  const host = fafa?.name ?? "mcp-trinity";
+  const host = fafa?.name ?? "mcp-context-card";
 
   return {
     specVersion: "1.0",
     host: {
       displayName: host,
-      identifier: "https://github.com/Wolfe-Jam/mcp-trinity",
+      identifier: "https://github.com/Wolfe-Jam/mcp-context-card",
     },
     entries: [
       {

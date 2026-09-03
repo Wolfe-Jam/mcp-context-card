@@ -1,14 +1,14 @@
 # Transport
 
-`mcp-trinity` runs the same server over two transports. The tool surface,
+`mcp-context-card` runs the same server over two transports. The tool surface,
 the Server Card `_meta` block, and the memory file are identical either way
 — only the wire changes.
 
 ```
-mcp-trinity              → stdio                 (default; an MCP host spawns this)
-mcp-trinity --http       → Streamable HTTP :3000
-PORT=8080 mcp-trinity    → Streamable HTTP :8080 (a hosted deploy sets PORT)
-mcp-trinity --stdio      → force stdio even when PORT is set
+mcp-context-card              → stdio                 (default; an MCP host spawns this)
+mcp-context-card --http       → Streamable HTTP :3000
+PORT=8080 mcp-context-card    → Streamable HTTP :8080 (a hosted deploy sets PORT)
+mcp-context-card --stdio      → force stdio even when PORT is set
 ```
 
 ## stdio
@@ -21,7 +21,7 @@ the wire, so all logging goes to `stderr`.
 // claude_desktop_config.json
 {
   "mcpServers": {
-    "trinity": { "command": "npx", "args": ["-y", "mcp-trinity"] }
+    "trinity": { "command": "npx", "args": ["-y", "mcp-context-card"] }
   }
 }
 ```
@@ -75,7 +75,7 @@ when the server needs to:
 - support **resumability** — a client reconnecting with `Last-Event-ID` to
   replay missed events (needs an `EventStore`).
 
-`mcp-trinity` needs neither: its tools are request/response, and its
+`mcp-context-card` needs neither: its tools are request/response, and its
 "memory" is a file on disk, not a live subscription. A fork that adds
 streaming tools would flip this. See `src/transport/http.ts`.
 

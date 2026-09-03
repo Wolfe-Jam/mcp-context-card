@@ -1,24 +1,24 @@
-# application/vnd.fafm+yaml — mcp-trinity project memory
+# application/vnd.fafm+yaml — mcp-context-card project memory
 # Real, dogfooded memory about this repo's own build — not a static example.
 # This file itself is one of the three sources the server exposes:
 # `remember` / `recall` read and write it, and the demo proves a fact
 # survives a full server-process restart (then restores this file exactly).
 version: "1.1"
 profile: "knowledge"
-namepoint: "@mcp-trinity:public"
+namepoint: "@mcp-context-card:public"
 created: "2026-08-12T00:00:00Z"
 last_etched: "2026-08-12T00:00:00Z"
 retention: "forever"
 
 index:
-  - "mcp-trinity — an MCP server that publishes a project's context, memory & identity"
+  - "mcp-context-card — an MCP server that publishes a project's context, memory & identity"
   - "context concern leads with AGENTS.md (text/markdown); memory & identity use .fafm/.fafa as worked examples"
   - "two exposure surfaces: Server Card _meta block + self-published ai-catalog.json"
 
 memory:
   facts:
     - text: "The context concern points at AGENTS.md — the de-facto standard for agent instructions. read_agents_md serves it whole or one section at a time, so a client pulls '## Test' without spending its context window on the whole file. Memory and identity have no de-facto standard, so the reference uses .fafm and .fafa as one instantiation each."
-      id: "mcp-trinity-scope"
+      id: "mcp-context-card-scope"
       type: "reference"
       priority: "high"
       tags: ["scope", "agents-md"]
@@ -30,11 +30,11 @@ memory:
       type: "reference"
       priority: "high"
       tags: ["mcp", "server-card", "ai-catalog"]
-      links: ["mcp-trinity-scope"]
+      links: ["mcp-context-card-scope"]
       source: "docs/MECHANISMS.md"
       verification_status: "verified"
 
-    - text: "Distribution: a published npm package (bin `mcp-trinity`, dual transport). The three source files (AGENTS.md, project.fafm, .well-known/fafa) ship with the package so it is a working discovery target on install. MCP_TRINITY_ROOT points it at a real project."
+    - text: "Distribution: a published npm package (bin `mcp-context-card`, dual transport). The three source files (AGENTS.md, project.fafm, .well-known/fafa) ship with the package so it is a working discovery target on install. MCP_CONTEXT_CARD_ROOT points it at a real project."
       id: "distribution-model"
       type: "reference"
       priority: "standard"

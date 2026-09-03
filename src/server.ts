@@ -1,5 +1,5 @@
 /**
- * mcp-trinity server — makes a project's context, memory, and identity
+ * mcp-context-card server — makes a project's context, memory, and identity
  * discoverable to any MCP client.
  *
  *   context   — read_agents_md · list_agents_md_sections   (this project's AGENTS.md)
@@ -9,7 +9,7 @@
  *
  * ...exposed through the two mechanisms already in the ecosystem:
  *
- *   1. Server Card `_meta` — the `mcp-trinity://server-card` resource (in band)
+ *   1. Server Card `_meta` — the `mcp-context-card://server-card` resource (in band)
  *      and `GET /.well-known/mcp/server-card` (out of band, http transport).
  *   2. ai-catalog — `GET /.well-known/ai-catalog.json`, three sibling entries
  *      keyed by media type (see catalog-gen.ts).
@@ -33,14 +33,14 @@ const here = dirname(fileURLToPath(import.meta.url));
 /** Default package root — `dist/` at runtime, `src/` under tsx. Both are one up. */
 export const ROOT = join(here, "..");
 
-export const SERVER_CARD_URI = "mcp-trinity://server-card";
-export const NAME = "mcp-trinity";
+export const SERVER_CARD_URI = "mcp-context-card://server-card";
+export const NAME = "mcp-context-card";
 export const VERSION = "0.2.0";
 
 /**
  * The Server Card — this server's identity plus the `_meta` context block,
  * one namespaced key per concern. Served in-band as the
- * `mcp-trinity://server-card` resource and out-of-band at
+ * `mcp-context-card://server-card` resource and out-of-band at
  * `/.well-known/mcp/server-card`.
  */
 export function serverCard() {
@@ -51,7 +51,7 @@ const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] });
 
 /**
  * @param root  directory holding `AGENTS.md`, `project.fafm`, `.well-known/`.
- *              Defaults to the package root; a deploy points `MCP_TRINITY_ROOT`
+ *              Defaults to the package root; a deploy points `MCP_CONTEXT_CARD_ROOT`
  *              at a real project, a test points it at a fixture.
  */
 export function createServer(root: string = ROOT): Server {

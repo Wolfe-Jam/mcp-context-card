@@ -31,13 +31,13 @@ test("resolveLaunch: empty / non-numeric / non-positive PORT → stdio", () => {
   }
 });
 
-test("resolveLaunch: MCP_TRINITY_ROOT is resolved to an absolute path", () => {
-  const l = resolveLaunch([], { MCP_TRINITY_ROOT: "./some/where" });
+test("resolveLaunch: MCP_CONTEXT_CARD_ROOT is resolved to an absolute path", () => {
+  const l = resolveLaunch([], { MCP_CONTEXT_CARD_ROOT: "./some/where" });
   assert.equal(l.root, resolve("./some/where"));
   assert.equal(l.http, false);
 });
 
-test("resolveLaunch: --http + MCP_TRINITY_ROOT compose", () => {
-  const l = resolveLaunch(["--http"], { MCP_TRINITY_ROOT: "srv/proj", PORT: "9000" });
+test("resolveLaunch: --http + MCP_CONTEXT_CARD_ROOT compose", () => {
+  const l = resolveLaunch(["--http"], { MCP_CONTEXT_CARD_ROOT: "srv/proj", PORT: "9000" });
   assert.deepEqual(l, { http: true, port: 9000, root: resolve("srv/proj") });
 });

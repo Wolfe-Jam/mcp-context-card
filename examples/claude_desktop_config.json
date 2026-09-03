@@ -2,9 +2,9 @@
   "mcpServers": {
     "trinity": {
       "command": "npx",
-      "args": ["-y", "mcp-trinity"],
+      "args": ["-y", "mcp-context-card"],
       "env": {
-        "MCP_TRINITY_ROOT": "/absolute/path/to/your/project"
+        "MCP_CONTEXT_CARD_ROOT": "/absolute/path/to/your/project"
       }
     }
   }

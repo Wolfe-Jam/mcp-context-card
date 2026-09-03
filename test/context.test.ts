@@ -103,7 +103,7 @@ test("the demo scenario: fills several required params from a real project.faf; 
   try {
     const client = await echoClient();
     const fields = contextFieldsFromProjectFaf(join(root, "project.faf"));
-    // project.faf declares name: mcp-trinity, main_language: TypeScript
+    // project.faf declares name: mcp-context-card, main_language: TypeScript
     const { result, filled } = await callToolWithContext(
       client,
       "deploy",
@@ -112,7 +112,7 @@ test("the demo scenario: fills several required params from a real project.faf; 
     );
     assert.deepEqual(filled.sort(), ["main_language", "project_name"]);
     const got = echoed(result);
-    assert.equal(got.project_name, "mcp-trinity");
+    assert.equal(got.project_name, "mcp-context-card");
     assert.equal(got.main_language, "TypeScript");
     assert.equal(got.target, "staging"); // the explicit arg is untouched
   } finally {

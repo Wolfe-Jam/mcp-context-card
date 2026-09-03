@@ -1,6 +1,6 @@
 faf_version: "3.0"
 project:
-  name: mcp-trinity
+  name: mcp-context-card
   goal: An MCP server that makes a project's context (its AGENTS.md), memory, and identity discoverable to any MCP client — through the Server Card _meta block and ai-catalog.json sibling entries, the two surfaces already in the ecosystem.
   main_language: TypeScript
   type: mcp
@@ -22,7 +22,7 @@ human_context:
   who: MCP host and server implementers who want a project's AGENTS.md, memory, and identity available over MCP without inventing an ad-hoc shape for each.
   what: An MCP server with seven tools — read_agents_md / list_agents_md_sections (context), remember / recall / forget (memory), whoami (identity), list_context_sources (discovery) — exposed through the Server Card _meta block and a self-published ai-catalog.json. Dual transport (stdio + stateless Streamable HTTP).
   why: AGENTS.md is the de-facto standard for agent instructions, but a client has to know the file exists and read it whole. There is no standard way for a server to publish "here is my AGENTS.md, here is what I remember, here is who I am". This does it through mechanisms that already exist.
-  where: github.com/Wolfe-Jam/mcp-trinity
+  where: github.com/Wolfe-Jam/mcp-context-card
   when: "2026-08-12"
   how: TypeScript on the MCP SDK. Dual transport in src/bin.ts. The Server Card _meta block and ai-catalog.json are generated from the same three sources (AGENTS.md, project.fafm, .well-known/fafa) — a CI check fails on drift. remember/recall are real file-backed reads/writes proven across a process boundary in demo.ts and the test suite. See docs/MECHANISMS.md, docs/WIRING.md, docs/TRANSPORT.md.
 key_files: [package.json, README.md, AGENTS.md, docs/MECHANISMS.md, src/server.ts, src/agents-md.ts, src/catalog-gen.ts, src/transport/http.ts]

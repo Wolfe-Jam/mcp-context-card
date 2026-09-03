@@ -1,12 +1,12 @@
 # AGENTS.md
 
-`mcp-trinity` is a reference MCP server that makes a project's **context**
+`mcp-context-card` is an MCP server that makes a project's **context**
 (this file), **memory**, and **identity** discoverable to any MCP client —
 through the two surfaces already in the ecosystem: the Server Card `_meta`
 block and `ai-catalog.json` sibling entries.
 
-This file is also the server's own worked example of the *context* concern:
-`read_agents_md` serves it, section by section, over the same MCP connection.
+`read_agents_md` serves this file, section by section, over the same MCP
+connection.
 
 ## Setup
 

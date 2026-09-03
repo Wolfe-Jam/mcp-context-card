@@ -10,7 +10,7 @@ test("parseFafa: reads the agent card", () => {
   try {
     const id = parseFafa(join(root, ".well-known/fafa"));
     assert.ok(id);
-    assert.equal(id.name, "mcp-trinity");
+    assert.equal(id.name, "mcp-context-card");
     assert.equal(id.license, "MIT");
     assert.equal(id.status, "reference");
     assert.ok(id.description && !id.description.includes("\n")); // folded → single line
