@@ -15,7 +15,7 @@
 // claude_desktop_config.json  ·  ~/.cursor/mcp.json  ·  etc.
 {
   "mcpServers": {
-    "trinity": {
+    "context-card": {
       "command": "npx",
       "args": ["-y", "mcp-context-card"],
       "env": { "MCP_CONTEXT_CARD_ROOT": "/abs/path/to/your/project" }
@@ -35,7 +35,7 @@ PORT=8080 npx mcp-context-card        # or:  npx mcp-context-card --http
 ```
 
 ```jsonc
-{ "mcpServers": { "trinity": { "url": "https://your-host.example/mcp" } } }
+{ "mcpServers": { "context-card": { "url": "https://your-host.example/mcp" } } }
 ```
 
 Stateless — any replica serves any request, no session store. Rationale in

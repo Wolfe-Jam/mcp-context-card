@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "trinity": {
+    "context-card": {
       "url": "https://your-host.example/mcp"
     }
   }

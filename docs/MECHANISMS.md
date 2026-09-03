@@ -116,7 +116,11 @@ GET /.well-known/ai-catalog.json
 
 ## The invariant
 
-The same three sources back **both** mechanisms:
+The same three sources also render as **the card** — `GET /card` /
+`render_context_card` / `docs/card.html` — the human view of exactly what a
+machine reads below.
+
+The same three sources back **both** discovery mechanisms:
 
 ```
 AGENTS.md      ─┐

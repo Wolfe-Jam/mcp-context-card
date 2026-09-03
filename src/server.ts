@@ -28,14 +28,14 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { findSection, parseAgentsMd } from "./agents-md.js";
 import { forget, parseFafm, recall, remember } from "./memory.js";
 import { trinityMeta, whoami } from "./identity.js";
+import { renderCard, safeAccent, type Theme } from "./render-card.js";
+
+export { NAME, VERSION, SERVER_CARD_URI } from "./constants.js";
+import { NAME, VERSION, SERVER_CARD_URI } from "./constants.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 /** Default package root — `dist/` at runtime, `src/` under tsx. Both are one up. */
 export const ROOT = join(here, "..");
-
-export const SERVER_CARD_URI = "mcp-context-card://server-card";
-export const NAME = "mcp-context-card";
-export const VERSION = "0.2.0";
 
 /**
  * The Server Card — this server's identity plus the `_meta` context block,
@@ -147,6 +147,18 @@ export function createServer(root: string = ROOT): Server {
           "What context does this project publish (AGENTS.md, memory, identity), in what media types, and through which discovery surface. For a client connecting cold.",
         inputSchema: { type: "object", properties: {} },
       },
+      {
+        name: "render_context_card",
+        description:
+          "Render the whole card — identity, AGENTS.md, memory, discovery — as one self-contained HTML page a person can read or screenshot. Also served at GET /card over the HTTP transport.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            theme: { type: "string", enum: ["light", "dark", "auto"], description: "default: auto" },
+            accent: { type: "string", description: "CSS hex colour, e.g. #FF702D (default: the AAIF palette)" },
+          },
+        },
+      },
     ],
   }));
 
@@ -190,6 +202,18 @@ export function createServer(root: string = ROOT): Server {
       }
       case "whoami":
         return text(whoami(root));
+      case "render_context_card":
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: renderCard(root, {
+                theme: (["light", "dark", "auto"].includes(args.theme) ? args.theme : "auto") as Theme,
+                accent: safeAccent(args.accent),
+              }),
+            },
+          ],
+        };
       case "list_context_sources": {
         const doc = parseAgentsMd(AGENTS);
         const mem = parseFafm(FAFM);

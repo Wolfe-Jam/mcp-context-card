@@ -21,7 +21,7 @@ the wire, so all logging goes to `stderr`.
 // claude_desktop_config.json
 {
   "mcpServers": {
-    "trinity": { "command": "npx", "args": ["-y", "mcp-context-card"] }
+    "context-card": { "command": "npx", "args": ["-y", "mcp-context-card"] }
   }
 }
 ```
@@ -49,7 +49,7 @@ GET  /.well-known/fafa              → the agent identity card
 ```jsonc
 {
   "mcpServers": {
-    "trinity": { "url": "https://your-host.example/mcp" }
+    "context-card": { "url": "https://your-host.example/mcp" }
   }
 }
 ```

@@ -12,6 +12,7 @@ const TOOLS = [
   "read_agents_md",
   "recall",
   "remember",
+  "render_context_card",
   "whoami",
 ];
 
@@ -24,7 +25,7 @@ async function connected(root: string): Promise<Client> {
 }
 const say = (r: unknown) => (r as any).content[0].text as string;
 
-test("server: advertises its name + the seven tools", async () => {
+test("server: advertises its name + the eight tools", async () => {
   const { root, cleanup } = fixture();
   try {
     const client = await connected(root);
@@ -125,6 +126,21 @@ test("server: whoami reads the .fafa", async () => {
   }
 });
 
+test("server: render_context_card returns a self-contained HTML card", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const client = await connected(root);
+    const html = say(await client.callTool({ name: "render_context_card", arguments: { theme: "dark" } }));
+    assert.match(html, /^<!doctype html>/);
+    assert.match(html, /data-theme="dark"/);
+    assert.match(html, /Context — AGENTS\.md/);
+    assert.ok(!html.includes("<script"));
+    await client.close();
+  } finally {
+    cleanup();
+  }
+});
+
 test("server: list_context_sources reports all three concerns + both surfaces", async () => {
   const { root, cleanup } = fixture();
   try {
@@ -150,7 +166,7 @@ test("server: an unknown tool or resource rejects, it doesn't hang", async () =>
     await assert.rejects(client.callTool({ name: "no_such_tool", arguments: {} }));
     await assert.rejects(client.readResource({ uri: "mcp-context-card://nope" }));
     const { tools } = await client.listTools();
-    assert.equal(tools.length, 7);
+    assert.equal(tools.length, 8);
     await client.close();
   } finally {
     cleanup();

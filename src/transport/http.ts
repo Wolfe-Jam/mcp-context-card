@@ -22,6 +22,7 @@ import { cors } from "hono/cors";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { buildCatalog } from "../catalog-gen.js";
 import { createServer, NAME, ROOT, VERSION, serverCard } from "../server.js";
+import { renderCard, safeAccent, type Theme } from "../render-card.js";
 
 export function httpApp(root: string = ROOT): Hono {
   const app = new Hono();
@@ -56,12 +57,21 @@ export function httpApp(root: string = ROOT): Hono {
     return c.body(readFileSync(join(root, ".well-known/fafa"), "utf8"));
   });
 
+  // ── The card — the view for people ──────────────────────────────────
+  app.get("/card", (c) => {
+    const q = c.req.query();
+    const theme = (["light", "dark", "auto"].includes(q.theme ?? "") ? q.theme : "auto") as Theme;
+    c.header("content-type", "text/html; charset=utf-8");
+    return c.body(renderCard(root, { theme, accent: safeAccent(q.accent) }));
+  });
+
   // ── Index ───────────────────────────────────────────────────────────
   app.get("/", (c) =>
     c.json({
       name: NAME,
       version: VERSION,
       mcp: "/mcp",
+      card: "/card",
       wellKnown: [
         "/.well-known/mcp/server-card",
         "/.well-known/ai-catalog.json",
