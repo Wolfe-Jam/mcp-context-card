@@ -6,11 +6,14 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { httpApp } from "../src/transport/http.js";
-import { callToolWithContext } from "../src/context.js";
 import { createServer, SERVER_CARD_URI } from "../src/server.js";
-import { parseFaf } from "../src/faf/parse-faf.js";
-import { join } from "node:path";
 import { fixture } from "./helpers.js";
+
+const META_KEYS = [
+  "io.github.wolfe-jam.mcp-trinity/context",
+  "io.github.wolfe-jam.mcp-trinity/memory",
+  "io.github.wolfe-jam.mcp-trinity/identity",
+];
 
 let fx: ReturnType<typeof fixture>;
 let httpServer: ReturnType<typeof serve>;
@@ -34,22 +37,17 @@ async function httpClient(): Promise<Client> {
   await client.connect(new StreamableHTTPClientTransport(new URL(`${base}/mcp`)));
   return client;
 }
+const say = (r: unknown) => (r as any).content[0].text as string;
 
 test("http: MCP works over stateless Streamable HTTP", async () => {
   const client = await httpClient();
   assert.equal(client.getServerVersion()?.name, "mcp-trinity");
 
   const { tools } = await client.listTools();
-  assert.deepEqual(
-    tools.map((t) => t.name).sort(),
-    ["describe_project", "recall", "remember", "whoami"],
-  );
+  assert.equal(tools.length, 7);
 
-  const r = (await client.callTool({
-    name: "describe_project",
-    arguments: { project_name: "x" },
-  })) as any;
-  assert.match(r.content[0].text, /Scoped to project: x/);
+  const r = say(await client.callTool({ name: "read_agents_md", arguments: { section: "Setup" } }));
+  assert.match(r, /^## Setup/);
 
   await client.close();
 });
@@ -57,12 +55,8 @@ test("http: MCP works over stateless Streamable HTTP", async () => {
 test("http: the Server Card resource carries _meta over HTTP too", async () => {
   const client = await httpClient();
   const res = await client.readResource({ uri: SERVER_CARD_URI });
-  const card = JSON.parse((res.contents[0] as any).text);
-  assert.deepEqual(Object.keys(card._meta), [
-    "one.faf/context",
-    "one.faf/memory",
-    "one.faf/agent",
-  ]);
+  const card = JSON.parse((res.contents[0] as { text: string }).text);
+  assert.deepEqual(Object.keys(card._meta), META_KEYS);
   await client.close();
 });
 
@@ -71,7 +65,8 @@ test("http: /.well-known/mcp/server-card serves the card out-of-band", async () 
   assert.equal(r.status, 200);
   const card = await r.json();
   assert.equal(card.name, "mcp-trinity");
-  assert.ok(card._meta["one.faf/context"].mediaType === "application/vnd.faf+yaml");
+  assert.equal(card._meta[META_KEYS[0]].source, "AGENTS.md");
+  assert.equal(card._meta[META_KEYS[0]].mediaType, "text/markdown");
 });
 
 test("http: /.well-known/ai-catalog.json serves 3 sibling entries", async () => {
@@ -80,6 +75,7 @@ test("http: /.well-known/ai-catalog.json serves 3 sibling entries", async () => 
   assert.match(r.headers.get("content-type") ?? "", /ai-catalog\+json/);
   const cat = await r.json();
   assert.equal(cat.entries.length, 3);
+  assert.equal(cat.entries[0].type, "text/markdown");
 });
 
 test("http: /.well-known/fafa serves the raw agent card", async () => {
@@ -92,17 +88,16 @@ test("http: /.well-known/fafa serves the raw agent card", async () => {
 test("http: memory tools round-trip over the wire", async () => {
   const client = await httpClient();
   await client.callTool({ name: "remember", arguments: { id: "w", text: "wire" } });
-  const r = (await client.callTool({ name: "recall", arguments: { id: "w" } })) as any;
-  assert.equal(r.content[0].text, "wire");
+  assert.equal(say(await client.callTool({ name: "recall", arguments: { id: "w" } })), "wire");
+  await client.callTool({ name: "forget", arguments: { id: "w" } });
   await client.close();
 });
 
-test("http: the host-side context fill works end to end over HTTP", async () => {
+test("http: list_context_sources works end to end over HTTP", async () => {
   const client = await httpClient();
-  const fields = parseFaf(join(fx.root, "project.faf")).fields;
-  const { result, filled } = await callToolWithContext(client, "describe_project", {}, fields);
-  assert.deepEqual(filled, ["project_name"]);
-  assert.match((result as any).content[0].text, /Scoped to project: mcp-trinity/);
+  const s = JSON.parse(say(await client.callTool({ name: "list_context_sources", arguments: {} })));
+  assert.equal(s.context.source, "AGENTS.md");
+  assert.ok(s.context.sections > 0);
   await client.close();
 });
 
@@ -125,7 +120,6 @@ test("http: /mcp is genuinely stateless — no session header, independent inits
   assert.equal(r1.status, 200);
   assert.equal(r1.headers.get("mcp-session-id"), null, "stateless mode must not issue a session id");
 
-  // a second, entirely independent initialize also succeeds — no session state carried
   const r2 = await fetch(`${base}/mcp`, { method: "POST", headers, body: JSON.stringify(init) });
   assert.equal(r2.status, 200);
   const b2 = await r2.json();
@@ -150,7 +144,6 @@ test("http: unknown well-known path → 404, not a crash", async () => {
 });
 
 test("stdio and http expose the identical tool surface", async () => {
-  // stdio
   const [a, b] = InMemoryTransport.createLinkedPair();
   const s = createServer(fx.root);
   const stdioClient = new Client({ name: "t", version: "0" }, { capabilities: {} });
@@ -158,10 +151,10 @@ test("stdio and http expose the identical tool surface", async () => {
   const stdioTools = (await stdioClient.listTools()).tools.map((t) => t.name).sort();
   await stdioClient.close();
 
-  // http
   const httpC = await httpClient();
   const httpTools = (await httpC.listTools()).tools.map((t) => t.name).sort();
   await httpC.close();
 
   assert.deepEqual(stdioTools, httpTools);
+  assert.equal(stdioTools.length, 7);
 });

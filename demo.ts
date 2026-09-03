@@ -1,21 +1,19 @@
 /**
- * demo — proves all three mechanisms, not just describes them.
+ * demo — every tool, run live, over both transports. Not a description.
  *
- *   1. CONTEXT  — a plain callTool() hits "project_name required"; the same
- *      call routed through the host-side fill gets it from project.faf.
- *   2. MEMORY   — remember() a fact, kill the server process entirely,
- *      spawn a fresh one, recall() the same fact. Only the file survives.
- *   3. IDENTITY — whoami() reads this server's own .fafa; the Server Card
- *      + its _meta trinity block is read back from the
- *      `mcp-trinity://server-card` resource (the http transport also serves
- *      it at /.well-known/mcp/server-card).
+ *   1. CONTEXT   — list the AGENTS.md sections, then pull just one.
+ *   2. MEMORY    — remember() a fact, kill the server process, spawn a fresh
+ *      one, recall() the same fact. Only the file survives that.
+ *   3. IDENTITY  — whoami(), and the Server Card _meta block read back from
+ *      the `mcp-trinity://server-card` resource.
+ *   4. DISCOVERY — list_context_sources(), then the same server over
+ *      stateless Streamable HTTP with its .well-known routes.
  */
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { callToolWithContext, contextFieldsFromProjectFaf } from "./src/context.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const line = "─".repeat(68);
@@ -28,7 +26,6 @@ const fafmSnapshot = readFileSync(fafmPath, "utf8");
 process.on("exit", () => writeFileSync(fafmPath, fafmSnapshot));
 
 async function connect(): Promise<Client> {
-  // Spawn `node --import tsx src/server.ts` — cross-platform, no .bin shim.
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: ["--import", "tsx", join(here, "src/server.ts")],
@@ -38,23 +35,18 @@ async function connect(): Promise<Client> {
   return client;
 }
 
-console.log(`\n🔺 mcp-trinity — context, memory & agent identity, proven, not described\n`);
+const say = (r: any) => r.content.map((c: any) => c.text).join("\n");
+
+console.log(`\n🔺 mcp-trinity — context, memory & identity, discoverable, proven live\n`);
 
 // ── 1. CONTEXT ───────────────────────────────────────────────────────────
-console.log(`${line}\n1. CONTEXT — BEFORE (plain callTool, no .faf awareness)\n${line}`);
+console.log(`${line}\n1. CONTEXT — the client pulls one AGENTS.md section, not the whole file\n${line}`);
 {
   const client = await connect();
-  const res = (await client.callTool({ name: "describe_project", arguments: {} })) as any;
-  console.log(res.content.map((c: any) => c.text).join("\n"));
-  await client.close();
-}
-console.log(`\n${line}\n1. CONTEXT — AFTER (host fills project_name from project.faf)\n${line}`);
-{
-  const client = await connect();
-  const fields = contextFieldsFromProjectFaf(join(here, "project.faf"));
-  const { result, filled } = await callToolWithContext(client, "describe_project", {}, fields);
-  console.log(`· auto-filled from project.faf: ${filled.join(", ") || "(none)"}`);
-  console.log((result as any).content.map((c: any) => c.text).join("\n"));
+  const sections = JSON.parse(say(await client.callTool({ name: "list_agents_md_sections", arguments: {} })));
+  console.log(`· list_agents_md_sections → ${sections.map((s: any) => s.heading).join(" · ")}`);
+  const testing = say(await client.callTool({ name: "read_agents_md", arguments: { section: "Test" } }));
+  console.log(`· read_agents_md({ section: "Test" }) →\n${testing.split("\n").map((l: string) => `    ${l}`).join("\n")}`);
   await client.close();
 }
 
@@ -70,32 +62,37 @@ const factText = `demo ran at ${new Date().toISOString()}`;
 }
 {
   const client = await connect(); // brand new process, zero shared memory
-  const res = (await client.callTool({ name: "recall", arguments: { id: factId } })) as any;
-  const got = res.content.map((c: any) => c.text).join("");
-  console.log(`· recalled on server process #2: "${got}"`);
+  const got = say(await client.callTool({ name: "recall", arguments: { id: factId } }));
+  console.log(`· recalled on server process #2:  "${got}"`);
   if (got !== factText) throw new Error("memory did not survive the process boundary");
   await client.close();
 }
 console.log(`· project.fafm restored on exit — the demo leaves no trace`);
 
 // ── 3. IDENTITY + _meta ──────────────────────────────────────────────────
-console.log(`\n${line}\n3. IDENTITY — whoami() + Server Card _meta (read back, not printed)\n${line}`);
+console.log(`\n${line}\n3. IDENTITY — whoami() + the Server Card _meta block (read back)\n${line}`);
 {
   const client = await connect();
-  const who = (await client.callTool({ name: "whoami", arguments: {} })) as any;
-  console.log(who.content.map((c: any) => c.text).join("\n"));
-
-  const card = (await client.readResource({ uri: "mcp-trinity://server-card" })) as any;
-  const parsed = JSON.parse(card.contents[0].text);
-  console.log(`\n· mcp-trinity://server-card resource → _meta keys: ${Object.keys(parsed._meta).join(", ")}`);
-  for (const k of ["one.faf/context", "one.faf/memory", "one.faf/agent"]) {
-    if (!parsed._meta[k]) throw new Error(`server-card _meta missing ${k}`);
+  console.log(say(await client.callTool({ name: "whoami", arguments: {} })));
+  const cardRes = await client.readResource({ uri: "mcp-trinity://server-card" });
+  const card = JSON.parse((cardRes.contents[0] as { text: string }).text);
+  console.log(`\n· mcp-trinity://server-card → _meta keys: ${Object.keys(card._meta).join(", ")}`);
+  for (const k of Object.keys(card._meta)) {
+    if (!k.startsWith("io.github.wolfe-jam.mcp-trinity/")) throw new Error(`unexpected _meta key: ${k}`);
   }
   await client.close();
 }
 
-// ── 4. TRANSPORT — same server, two ways in ──────────────────────────────
-console.log(`\n${line}\n4. TRANSPORT — the same server over stateless Streamable HTTP\n${line}`);
+// ── 4. DISCOVERY — one call, then the same server over HTTP ───────────────
+console.log(`\n${line}\n4. DISCOVERY — list_context_sources(), then the same server over HTTP\n${line}`);
+{
+  const client = await connect();
+  const sources = JSON.parse(say(await client.callTool({ name: "list_context_sources", arguments: {} })));
+  for (const c of ["context", "memory", "identity"] as const) {
+    console.log(`· ${c.padEnd(9)} ${sources[c].source} (${sources[c].mediaType}) — present: ${sources[c].present}`);
+  }
+  await client.close();
+}
 {
   const { serve } = await import("@hono/node-server");
   const { httpApp } = await import("./src/transport/http.js");
@@ -109,17 +106,16 @@ console.log(`\n${line}\n4. TRANSPORT — the same server over stateless Streamab
   const httpClient = new Client({ name: "demo-host", version: "0.2.0" }, { capabilities: {} });
   await httpClient.connect(new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${port}/mcp`)));
   const tools = (await httpClient.listTools()).tools.map((t) => t.name);
-  console.log(`· POST http://127.0.0.1:${port}/mcp → tools: ${tools.join(", ")}`);
-
-  const card = await (await fetch(`http://127.0.0.1:${port}/.well-known/mcp/server-card`)).json();
-  console.log(`· GET  /.well-known/mcp/server-card → _meta keys: ${Object.keys(card._meta).join(", ")}`);
+  console.log(`· POST http://127.0.0.1:${port}/mcp → ${tools.length} tools: ${tools.join(", ")}`);
+  const cat = await (await fetch(`http://127.0.0.1:${port}/.well-known/ai-catalog.json`)).json();
+  console.log(`· GET  /.well-known/ai-catalog.json → ${cat.entries.map((e: any) => e.type).join(" · ")}`);
   await httpClient.close();
   srv.close();
 }
 
 console.log(
   `\n${"═".repeat(68)}\n` +
-    `Same three files (project.faf, project.fafm, .well-known/fafa) drive\n` +
+    `Same three sources (AGENTS.md, project.fafm, .well-known/fafa) drive\n` +
     `both exposure mechanisms, over stdio and stateless HTTP alike. Memory\n` +
     `genuinely crossed a process boundary; the _meta block was read back\n` +
     `from a live client — nothing here is decorative.\n${"═".repeat(68)}\n`,

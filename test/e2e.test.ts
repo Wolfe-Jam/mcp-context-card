@@ -59,20 +59,28 @@ describe("e2e — real child process", () => {
     }
   });
 
-  test("stdio child: the four tools + the Server Card resource + _meta", async () => {
+  test("stdio child: the seven tools + the Server Card resource + _meta", async () => {
     const fx = fixture();
     try {
       const c = await stdioChild(fx.root);
       assert.equal(c.getServerVersion()?.name, "mcp-trinity");
       const tools = (await c.listTools()).tools.map((t) => t.name).sort();
-      assert.deepEqual(tools, ["describe_project", "recall", "remember", "whoami"]);
+      assert.deepEqual(tools, [
+        "forget",
+        "list_agents_md_sections",
+        "list_context_sources",
+        "read_agents_md",
+        "recall",
+        "remember",
+        "whoami",
+      ]);
 
       const res = await c.readResource({ uri: "mcp-trinity://server-card" });
       const card = JSON.parse((res.contents[0] as { text: string }).text);
       assert.deepEqual(Object.keys(card._meta), [
-        "one.faf/context",
-        "one.faf/memory",
-        "one.faf/agent",
+        "io.github.wolfe-jam.mcp-trinity/context",
+        "io.github.wolfe-jam.mcp-trinity/memory",
+        "io.github.wolfe-jam.mcp-trinity/identity",
       ]);
       await c.close();
     } finally {
@@ -123,7 +131,7 @@ describe("e2e — real child process", () => {
     const fx = fixture();
     try {
       const c = await stdioChild(fx.root);
-      assert.ok((await c.listTools()).tools.length === 4);
+      assert.ok((await c.listTools()).tools.length === 7);
       await c.close();
 
       // --stdio with PORT set → still stdio, nothing listening on PORT

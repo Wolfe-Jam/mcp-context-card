@@ -5,6 +5,16 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer, SERVER_CARD_URI } from "../src/server.js";
 import { fixture } from "./helpers.js";
 
+const TOOLS = [
+  "forget",
+  "list_agents_md_sections",
+  "list_context_sources",
+  "read_agents_md",
+  "recall",
+  "remember",
+  "whoami",
+];
+
 async function connected(root: string): Promise<Client> {
   const server = createServer(root);
   const [a, b] = InMemoryTransport.createLinkedPair();
@@ -12,24 +22,22 @@ async function connected(root: string): Promise<Client> {
   await Promise.all([server.connect(b), client.connect(a)]);
   return client;
 }
+const say = (r: unknown) => (r as any).content[0].text as string;
 
-test("server: advertises its name + the four tools", async () => {
+test("server: advertises its name + the seven tools", async () => {
   const { root, cleanup } = fixture();
   try {
     const client = await connected(root);
     assert.equal(client.getServerVersion()?.name, "mcp-trinity");
     const { tools } = await client.listTools();
-    assert.deepEqual(
-      tools.map((t) => t.name).sort(),
-      ["describe_project", "recall", "remember", "whoami"],
-    );
+    assert.deepEqual(tools.map((t) => t.name).sort(), TOOLS);
     await client.close();
   } finally {
     cleanup();
   }
 });
 
-test("server: the Server Card resource carries the _meta trinity block", async () => {
+test("server: the Server Card resource carries the _meta context block", async () => {
   const { root, cleanup } = fixture();
   try {
     const client = await connected(root);
@@ -37,37 +45,58 @@ test("server: the Server Card resource carries the _meta trinity block", async (
     assert.ok(resources.find((r) => r.uri === SERVER_CARD_URI));
 
     const res = await client.readResource({ uri: SERVER_CARD_URI });
-    const card = JSON.parse((res.contents[0] as any).text);
+    const card = JSON.parse((res.contents[0] as { text: string }).text);
     assert.equal(card.name, "mcp-trinity");
     assert.deepEqual(Object.keys(card._meta), [
-      "one.faf/context",
-      "one.faf/memory",
-      "one.faf/agent",
+      "io.github.wolfe-jam.mcp-trinity/context",
+      "io.github.wolfe-jam.mcp-trinity/memory",
+      "io.github.wolfe-jam.mcp-trinity/identity",
     ]);
-    await client.close();
+    assert.equal(card._meta["io.github.wolfe-jam.mcp-trinity/context"].source, "AGENTS.md");
+    assert.equal(card._meta["io.github.wolfe-jam.mcp-trinity/context"].mediaType, "text/markdown");
   } finally {
     cleanup();
   }
 });
 
-test("server: describe_project walls off without project_name", async () => {
+test("server: read_agents_md returns the whole file, or one section", async () => {
   const { root, cleanup } = fixture();
   try {
     const client = await connected(root);
-    const r = (await client.callTool({ name: "describe_project", arguments: {} })) as any;
-    assert.match(r.content[0].text, /required/);
-    const ok = (await client.callTool({
-      name: "describe_project",
-      arguments: { project_name: "x" },
-    })) as any;
-    assert.match(ok.content[0].text, /Scoped to project: x/);
+
+    const whole = say(await client.callTool({ name: "read_agents_md", arguments: {} }));
+    assert.match(whole, /^# AGENTS\.md/);
+
+    const section = say(await client.callTool({ name: "read_agents_md", arguments: { section: "Test" } }));
+    assert.match(section, /^## Test/);
+    assert.ok(section.length < whole.length);
+
+    const miss = say(await client.callTool({ name: "read_agents_md", arguments: { section: "nope" } }));
+    assert.match(miss, /no section matching "nope"/);
+
     await client.close();
   } finally {
     cleanup();
   }
 });
 
-test("server: remember → (new client) recall survives", async () => {
+test("server: list_agents_md_sections returns the headings as JSON", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const client = await connected(root);
+    const sections = JSON.parse(
+      say(await client.callTool({ name: "list_agents_md_sections", arguments: {} })),
+    );
+    const headings = sections.map((s: { heading: string }) => s.heading);
+    assert.ok(headings.includes("Setup"));
+    assert.ok(headings.includes("Safety"));
+    await client.close();
+  } finally {
+    cleanup();
+  }
+});
+
+test("server: remember → (new client) recall survives; forget removes", async () => {
   const { root, cleanup } = fixture();
   try {
     const c1 = await connected(root);
@@ -75,8 +104,10 @@ test("server: remember → (new client) recall survives", async () => {
     await c1.close();
 
     const c2 = await connected(root); // fresh server instance, same files
-    const r = (await c2.callTool({ name: "recall", arguments: { id: "k" } })) as any;
-    assert.equal(r.content[0].text, "v");
+    assert.equal(say(await c2.callTool({ name: "recall", arguments: { id: "k" } })), "v");
+    assert.match(say(await c2.callTool({ name: "forget", arguments: { id: "k" } })), /forgot: k/);
+    assert.match(say(await c2.callTool({ name: "recall", arguments: { id: "k" } })), /no memory for "k"/);
+    assert.match(say(await c2.callTool({ name: "forget", arguments: { id: "k" } })), /no memory for "k"/);
     await c2.close();
   } finally {
     cleanup();
@@ -87,20 +118,25 @@ test("server: whoami reads the .fafa", async () => {
   const { root, cleanup } = fixture();
   try {
     const client = await connected(root);
-    const r = (await client.callTool({ name: "whoami", arguments: {} })) as any;
-    assert.match(r.content[0].text, /mcp-trinity/);
+    assert.match(say(await client.callTool({ name: "whoami", arguments: {} })), /mcp-trinity/);
     await client.close();
   } finally {
     cleanup();
   }
 });
 
-test("server: recall of an unknown id returns the (no memory) sentinel", async () => {
+test("server: list_context_sources reports all three concerns + both surfaces", async () => {
   const { root, cleanup } = fixture();
   try {
     const client = await connected(root);
-    const r = (await client.callTool({ name: "recall", arguments: { id: "ghost" } })) as any;
-    assert.match(r.content[0].text, /no memory for "ghost"/);
+    const s = JSON.parse(say(await client.callTool({ name: "list_context_sources", arguments: {} })));
+    assert.equal(s.context.source, "AGENTS.md");
+    assert.equal(s.context.present, true);
+    assert.ok(s.context.sections > 0);
+    assert.equal(s.memory.mediaType, "application/vnd.fafm+yaml");
+    assert.equal(s.identity.present, true);
+    assert.ok(s.surfaces.serverCard.some((x: string) => x.includes("/.well-known/mcp/server-card")));
+    assert.ok(s.surfaces.aiCatalog[0].includes("/.well-known/ai-catalog.json"));
     await client.close();
   } finally {
     cleanup();
@@ -113,9 +149,8 @@ test("server: an unknown tool or resource rejects, it doesn't hang", async () =>
     const client = await connected(root);
     await assert.rejects(client.callTool({ name: "no_such_tool", arguments: {} }));
     await assert.rejects(client.readResource({ uri: "mcp-trinity://nope" }));
-    // the connection is still usable afterwards
     const { tools } = await client.listTools();
-    assert.equal(tools.length, 4);
+    assert.equal(tools.length, 7);
     await client.close();
   } finally {
     cleanup();
