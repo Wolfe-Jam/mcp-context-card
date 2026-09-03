@@ -1,23 +1,54 @@
 {
-  "name": "faf-trinity",
-  "version": "0.1.0",
-  "main": "index.js",
-  "scripts": {
-    "demo": "tsx demo.ts",
-    "catalog": "tsx src/catalog-gen.ts"
-  },
-  "keywords": ["mcp", "model-context-protocol", "faf", "context", "memory", "agent"],
-  "author": "wolfejam / FAF",
+  "name": "mcp-trinity",
+  "version": "0.2.0",
+  "description": "Reference MCP server: project context, persistent memory, and agent identity — through the two exposure surfaces already in the ecosystem (Server Card _meta, ai-catalog sibling entries).",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "server-card",
+    "ai-catalog",
+    "project-context",
+    "agent-memory",
+    "agent-identity"
+  ],
+  "author": "wolfejam",
   "license": "MIT",
-  "description": "The chassis for context, memory & agent in MCP",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "mcp-trinity": "dist/bin.js"
+  },
+  "main": "dist/server.js",
+  "files": [
+    "dist",
+    "project.faf",
+    "project.fafm",
+    ".well-known",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/bin.js",
+    "dev": "tsx src/bin.ts",
+    "demo": "tsx demo.ts",
+    "catalog": "tsx src/catalog-gen.ts",
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0"
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@types/node": "^26.2.0",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   },
-  "type": "module",
-  "private": "true"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Wolfe-Jam/mcp-trinity.git"
+  },
+  "homepage": "https://github.com/Wolfe-Jam/mcp-trinity"
 }

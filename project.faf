@@ -1,7 +1,7 @@
 faf_version: "3.0"
 project:
-  name: faf-trinity
-  goal: The chassis for context, memory & agent in MCP — three IANA-registered formats, one MCP server.
+  name: mcp-trinity
+  goal: A reference MCP server for the three things servers keep reinventing — project context, persistent memory, and agent identity — through the two exposure surfaces already in the ecosystem (Server Card _meta, ai-catalog sibling entries).
   main_language: TypeScript
   type: mcp
 stack:
@@ -15,14 +15,14 @@ stack:
   state_management: slotignored  # stateless server, memory lives in project.fafm
   database: slotignored  # no database — memory is a file, not a DB
   connection: slotignored  # no database
-  hosting: slotignored  # reference implementation, not a deployed service
-  cicd: slotignored  # not wired up yet — Phase 5
-tech_stack: [TypeScript, "@modelcontextprotocol/sdk"]
+  hosting: Docker / any Node host — stdio for local, stateless Streamable HTTP for remote
+  cicd: GitHub Actions (typecheck + test)
+tech_stack: [TypeScript, "@modelcontextprotocol/sdk", yaml, hono]
 human_context:
-  who: MCP host/server implementers who want context, memory, and agent identity without inventing their own ad-hoc shape
-  what: A minimal reference MCP server exposing .faf (context), .fafm (memory), and .fafa (agent identity) via two mechanisms already proven live in production — MCP Server Card _meta and a self-published ai-catalog.json
-  why: MCP servers today have no standard answer to "who am I, what do I remember, what's my project" — faf.one/context.faf.one already runs this pattern in production, but that's a full SvelteKit app, not something forkable. This extracts the minimal pattern.
-  where: github.com/Wolfe-Jam/faf-trinity
+  who: MCP host and server implementers who want project context, memory, and agent identity without inventing their own ad-hoc shape for each.
+  what: A minimal reference MCP server exposing project context (.faf), persistent memory (.fafm), and agent identity (.fafa) through the two exposure surfaces already in the ecosystem — the Server Card _meta block and a self-published ai-catalog.json. Dual transport (stdio + stateless Streamable HTTP). The three IANA-registered formats are the worked example.
+  why: MCP servers have no standard answer to "who am I, what do I remember, what's my project", so every server that wants it invents one. This pattern already runs in production at faf.one and context.faf.one, but that's a full app — not something you can read in one sitting and fork. This is the minimal, legible, published version.
+  where: github.com/Wolfe-Jam/mcp-trinity
   when: "2026-08-12"
-  how: Phase 1 of 5 — scaffold + real artifacts. See PLAN.md in PLANET-FAF/07-PROJECTS/faf-trinity/ for the full build plan.
-key_files: [package.json, README.md, tsconfig.json]
+  how: TypeScript on the MCP SDK. remember/recall are real file-backed reads/writes proven across a process boundary. See PLANET-FAF/DEV-NOTES/PLAN-mcp-trinity-aaif-40.md for the build plan.
+key_files: [package.json, README.md, src/server.ts, src/faf/parse-fafm.ts, demo.ts]

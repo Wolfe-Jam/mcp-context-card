@@ -1,43 +1,45 @@
-# application/vnd.fafm+yaml — faf-trinity project memory
+# application/vnd.fafm+yaml — mcp-trinity project memory
 # Real, dogfooded memory about this repo's own build — not a static example.
-# This file itself is one of the three artifacts the repo demonstrates.
+# This file itself is one of the three artifacts the repo demonstrates:
+# `remember` / `recall` read and write it, and the demo proves a fact
+# survives a full server-process restart (then restores this file exactly).
 version: "1.1"
 profile: "knowledge"
-namepoint: "@faf-trinity:public"
+namepoint: "@mcp-trinity:public"
 created: "2026-08-12T00:00:00Z"
 last_etched: "2026-08-12T00:00:00Z"
 retention: "forever"
 
 index:
-  - "faf-trinity — the chassis for context, memory & agent in MCP"
-  - "lineage — direct successor to mcp-project-context, not mcp-better"
-  - "build-status — Phase 1 of 5, scaffold + real artifacts"
+  - "mcp-trinity — a reference MCP server for context, memory & agent identity"
+  - "lineage — successor to mcp-project-context (one format) → this (three formats, two surfaces)"
+  - "build-status — published reference, dual transport"
 
 memory:
   facts:
-    - text: "faf-trinity extends mcp-project-context's single-format pattern (context injection) to all three IANA-registered FAF formats — .faf, .fafm, .fafa — plus both proven exposure mechanisms."
-      id: "faf-trinity-scope"
+    - text: "mcp-trinity extends mcp-project-context's single-format pattern (host-side context injection) to all three IANA-registered FAF formats — .faf, .fafm, .fafa — through both ecosystem exposure surfaces: the Server Card _meta block and a self-published ai-catalog.json."
+      id: "mcp-trinity-scope"
       type: "reference"
       priority: "high"
       tags: ["scope", "trinity"]
-      source: "PLANET-FAF/07-PROJECTS/faf-trinity/PLAN.md"
+      source: "PLANET-FAF/DEV-NOTES/PLAN-mcp-trinity-aaif-40.md"
       verification_status: "verified"
 
-    - text: "Both exposure mechanisms this repo demonstrates — MCP Server Card _meta and a self-published ai-catalog.json — are already proven live in production at faf.one and context.faf.one before this repo existed."
+    - text: "Both exposure mechanisms this repo demonstrates — the MCP Server Card _meta block and a self-published ai-catalog.json — were already running in production at faf.one and context.faf.one before this repo existed. This is the minimal, forkable extraction of that pattern."
       id: "mechanisms-already-proven"
       type: "reference"
       priority: "high"
       tags: ["mcp", "ai-catalog", "precedent"]
-      links: ["faf-trinity-scope"]
+      links: ["mcp-trinity-scope"]
       source: "INTEL/trinity-venue-fit-matrix-faf-fafm-fafa-2026-08-10.md"
       verification_status: "verified"
 
-    - text: "This repo is a GitHub template, not an npm package — MIT, fork-and-own posture, same as mcp-project-context. No badge, no separate MCP server package, until real outside pull justifies it."
+    - text: "Distribution: a published npm package (bin `mcp-trinity`) AND a GitHub template. The three source files (project.faf, project.fafm, .well-known/fafa) ship with the package so a fork is a working discovery target on clone. The three IANA-registered formats are the worked example — the contribution is the two-surface pattern."
       id: "distribution-model"
       type: "reference"
       priority: "standard"
-      tags: ["distribution", "mit"]
-      source: "PLANET-FAF/07-PROJECTS/faf-trinity/PLAN.md"
+      tags: ["distribution", "mit", "npm"]
+      source: "PLANET-FAF/DEV-NOTES/PLAN-mcp-trinity-aaif-40.md"
       verification_status: "verified"
   sessions: []
   preferences: {}
