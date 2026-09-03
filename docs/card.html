@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>mcp-context-card — context card</title>
+<style>
+:root{
+  --accent:#FF702D;
+  --bg:#f4f4f5; --card:#fff; --fg:#0a0a0a; --muted:#6b6b70;
+  --line:rgba(0,0,0,.09); --chip:rgba(0,0,0,.05);
+}
+:root[data-theme="dark"]{
+  --bg:#000; --card:#0d0d0d; --fg:#fafafa; --muted:#9a9aa0;
+  --line:rgba(255,255,255,.13); --chip:rgba(255,255,255,.07);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#000; --card:#0d0d0d; --fg:#fafafa; --muted:#9a9aa0;
+    --line:rgba(255,255,255,.13); --chip:rgba(255,255,255,.07);
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  padding:40px 18px}
+.card{max-width:760px;margin:0 auto;background:var(--card);border:1px solid var(--line);
+  border-radius:14px;overflow:hidden}
+.card>*{padding:26px 30px}
+.top{border-top:4px solid var(--accent);border-bottom:1px solid var(--line)}
+h1{margin:0 0 10px;font-size:1.7rem;letter-spacing:-.02em}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-size:.74rem;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--chip);color:var(--muted)}
+.pill.accent{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+section{border-bottom:1px solid var(--line)}
+section:last-child{border-bottom:0}
+.label{font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 14px}
+.toc{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 0 20px;padding:0;list-style:none}
+.toc a{font-size:.82rem;color:var(--muted);text-decoration:none}
+.toc a:hover{color:var(--accent)}
+.md h1,.md h2,.md h3,.md h4{margin:22px 0 8px;font-size:1rem;letter-spacing:-.01em}
+.md h1{font-size:1.15rem}
+.md p{margin:8px 0}
+.md ul,.md ol{margin:8px 0;padding-left:22px}
+.md li{margin:3px 0}
+.md code{background:var(--chip);padding:1px 5px;border-radius:5px;
+  font:.86em ui-monospace,SFMono-Regular,Menlo,monospace}
+.md pre{background:var(--chip);padding:14px 16px;border-radius:9px;overflow:auto}
+.md pre code{background:none;padding:0}
+.md table{border-collapse:collapse;width:100%;margin:12px 0;font-size:.88rem;display:block;overflow:auto}
+.md th,.md td{border:1px solid var(--line);padding:6px 10px;text-align:left}
+.md blockquote{margin:10px 0;padding-left:14px;border-left:3px solid var(--line);color:var(--muted)}
+.md a{color:var(--accent)}
+.fact{padding:12px 0;border-bottom:1px solid var(--line)}
+.fact:last-child{border-bottom:0}
+.fact p{margin:0 0 7px}
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tag{font-size:.72rem;padding:2px 8px;border-radius:5px;background:var(--chip);color:var(--muted)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block}
+.dot.pending{background:var(--muted)}
+.disc{width:100%;border-collapse:collapse;font-size:.84rem}
+.disc th,.disc td{text-align:left;padding:6px 10px;border-bottom:1px solid var(--line)}
+.disc th{color:var(--muted);font-weight:600}
+.disc code{font:.86em ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted)}
+.fetch{margin:14px 0 0;font-size:.82rem;color:var(--muted)}
+.fetch code{background:var(--chip);padding:1px 5px;border-radius:5px}
+.foot{color:var(--muted);font-size:.78rem;text-align:center;border-top:1px solid var(--line)}
+.none{color:var(--muted);font-style:italic}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top">
+    <h1>mcp-context-card</h1>
+    <div class="pills"><span class="pill">v0.2.0</span><span class="pill accent">reference</span><span class="pill">MIT</span></div>
+  </div>
+  <section>
+    <p class="label">Context — AGENTS.md</p>
+    <ul class="toc"><li><a href="#setup">Setup</a></li><li><a href="#build">Build</a></li><li><a href="#test">Test</a></li><li><a href="#layout">Layout</a></li><li><a href="#conventions">Conventions</a></li><li><a href="#the-invariant">The invariant</a></li><li><a href="#safety">Safety</a></li><li><a href="#definition-of-done">Definition of done</a></li><li><a href="#authoring-this-file">Authoring this file</a></li></ul><div class="md"><p><code>mcp-context-card</code> is an MCP server that makes a project's <strong>context</strong> (this file), <strong>memory</strong>, and <strong>identity</strong> discoverable to any MCP client — through the two surfaces already in the ecosystem: the Server Card <code>_meta</code> block and <code>ai-catalog.json</code> sibling entries.</p>
+<p><code>read_agents_md</code> serves this file, section by section, over the same MCP connection.</p>
+<h2 id="setup">Setup</h2>
+<pre><code class="language-bash">npm ci</code></pre>
+<p>Node 22 or newer. No other system dependencies.</p>
+<h2 id="build">Build</h2>
+<pre><code class="language-bash">npm run build       # tsc -p tsconfig.build.json  →  dist/
+npm run typecheck   # tsc --noEmit over src/ + test/</code></pre>
+<h2 id="test">Test</h2>
+<pre><code class="language-bash">npm test              # node:test — every test/*.test.ts
+npm run test:coverage # + the coverage gate (lines 90 / funcs 85 / branches 80, src/ only)
+npm run demo          # end to end: all tools over stdio, then over stateless HTTP</code></pre>
+<p>CI runs <code>typecheck → build → test:coverage → demo</code> on Linux, macOS, and Windows for every push and PR to <code>main</code> (<code>.github/workflows/ci.yml</code>).</p>
+<h2 id="layout">Layout</h2>
+<table><thead><tr><th>Path</th><th>What</th></tr></thead><tbody><tr><td><code>src/server.ts</code></td><td>the MCP server — the seven tools + the Server Card resource</td></tr><tr><td><code>src/agents-md.ts</code></td><td>reads and section-splits this file</td></tr><tr><td><code>src/memory.ts</code> → <code>src/faf/parse-fafm.ts</code></td><td>file-backed <code>remember</code> / <code>recall</code> / <code>forget</code></td></tr><tr><td><code>src/identity.ts</code></td><td><code>whoami</code> + the <code>_meta</code> context block</td></tr><tr><td><code>src/catalog-gen.ts</code></td><td>writes <code>.well-known/ai-catalog.json</code> from the same three sources</td></tr><tr><td><code>src/transport/http.ts</code></td><td>the stateless Streamable HTTP app (Hono)</td></tr><tr><td><code>src/bin.ts</code></td><td>dual-transport entry point (<code>resolveLaunch</code>)</td></tr><tr><td><code>src/faf/parse-*.ts</code></td><td>parsers for the worked-example artifacts</td></tr></tbody></table>
+<h2 id="conventions">Conventions</h2>
+<ul><li>TypeScript strict, ESM only (<code>&quot;type&quot;: &quot;module&quot;</code>, <code>.js</code> import specifiers).</li><li>Tests use <code>node:test</code> + <code>node:assert/strict</code> — no test framework.</li><li>Every source file opens with a comment stating what it is and why.</li><li>Conventional Commit messages (<code>feat:</code>, <code>fix:</code>, <code>chore:</code>, <code>test:</code>, <code>docs:</code>).</li></ul>
+<h2 id="the-invariant">The invariant</h2>
+<p><code>src/identity.ts</code> and <code>src/catalog-gen.ts</code> describe the <strong>same three sources</strong>: this file, <code>project.fafm</code>, <code>.well-known/fafa</code>. Change what one exposes and you must change the other. <code>npm run catalog:check</code> enforces it in CI — it regenerates <code>ai-catalog.json</code> and fails on any diff.</p>
+<h2 id="safety">Safety</h2>
+<ul><li>Branch off <code>main</code>; CI must be green before merge.</li><li><code>npm run demo</code> writes a fact to <code>project.fafm</code> and restores the file on exit — don't kill it mid-run.</li><li>No secrets live in this repo; never add any.</li></ul>
+<h2 id="definition-of-done">Definition of done</h2>
+<p><code>npm run typecheck &amp;&amp; npm run build &amp;&amp; npm test &amp;&amp; npm run demo</code> all green, plus <code>npm run catalog:check</code> clean if you touched <code>AGENTS.md</code>, <code>project.fafm</code>, or <code>.well-known/fafa</code>.</p>
+<h2 id="authoring-this-file">Authoring this file</h2>
+<p><code>AGENTS.md</code> here is maintained by hand. It can also be generated from the repo's <code>project.faf</code> with <code>faf export --agents</code> — the server doesn't care how the file was authored, only that it's valid Markdown.</p></div>
+  </section>
+  <section>
+    <p class="label">Memory — 3 facts</p>
+    <div class="fact"><p>The context concern points at AGENTS.md — the de-facto standard for agent instructions. read_agents_md serves it whole or one section at a time, so a client pulls '## Test' without spending its context window on the whole file. Memory and identity have no de-facto standard, so the reference uses .fafm and .fafa as one instantiation each.</p><div class="meta"><span class="tag">scope</span><span class="tag">agents-md</span><span class="dot" title="verified"></span></div></div><div class="fact"><p>Both exposure mechanisms — the Server Card _meta block and a self-published ai-catalog.json — already exist in the MCP ecosystem. This server wires all three concerns through them, from one set of source files, with a CI check (catalog:check) that fails if the two surfaces drift apart.</p><div class="meta"><span class="tag">mcp</span><span class="tag">server-card</span><span class="tag">ai-catalog</span><span class="dot" title="verified"></span></div></div><div class="fact"><p>Distribution: a published npm package (bin <code>mcp-context-card</code>, dual transport). The three source files (AGENTS.md, project.fafm, .well-known/fafa) ship with the package so it is a working discovery target on install. MCP_CONTEXT_CARD_ROOT points it at a real project.</p><div class="meta"><span class="tag">distribution</span><span class="tag">mit</span><span class="tag">npm</span><span class="dot" title="verified"></span></div></div>
+  </section>
+  <section>
+    <p class="label">Discovery</p>
+    <table class="disc"><thead><tr><th>concern</th><th>source</th><th>media type</th></tr></thead><tbody><tr><td>context</td><td><code>AGENTS.md</code></td><td><code>text/markdown</code></td></tr><tr><td>memory</td><td><code>project.fafm</code></td><td><code>application/vnd.fafm+yaml</code></td></tr><tr><td>identity</td><td><code>.well-known/fafa</code></td><td><code>application/vnd.fafa+yaml</code></td></tr></tbody></table>
+    <p class="fetch">A machine reads this from
+      <code>mcp-context-card://server-card</code>,
+      <code>GET /.well-known/mcp/server-card</code>, or
+      <code>GET /.well-known/ai-catalog.json</code>.</p>
+  </section>
+  <div class="foot">mcp-context-card · context card</div>
+</main>
+</body>
+</html>

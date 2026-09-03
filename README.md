@@ -36,6 +36,22 @@ swap in your own.
 
 → **[docs/MECHANISMS.md](./docs/MECHANISMS.md)** for the wire‑level detail.
 
+## The card
+
+The same three sources render as one self‑contained HTML page — identity,
+`AGENTS.md`, memory, and how a machine fetches it. The view for people:
+screenshot it, drop it in a PR, put it on a status page.
+
+```
+GET /card                      # live, on the HTTP transport
+GET /card?theme=light&accent=%230066cc
+npm run card                   # writes docs/card.html
+```
+
+[**docs/card.html**](./docs/card.html) is the rendered card for this repo (open
+it raw, or `npm run card` to regenerate). Light / dark / auto; the accent
+defaults to the AAIF palette and takes any hex.
+
 ## Run it
 
 ```bash
@@ -50,7 +66,7 @@ PORT=8080 npx mcp-context-card       # HTTP on :8080 (a hosted deploy sets PORT)
 // claude_desktop_config.json  ·  ~/.cursor/mcp.json  ·  any stdio host
 {
   "mcpServers": {
-    "trinity": {
+    "context-card": {
       "command": "npx",
       "args": ["-y", "mcp-context-card"],
       "env": { "MCP_CONTEXT_CARD_ROOT": "/path/to/your/project" }
@@ -76,6 +92,7 @@ Full host wiring in **[docs/WIRING.md](./docs/WIRING.md)**; transport choice in
 | `forget` | drop or correct a stale fact |
 | `whoami` | this server's name, vendor, version, status, license |
 | `list_context_sources` | what this project publishes, in what media types, via which surface |
+| `render_context_card` | the whole card as one self‑contained HTML page (also `GET /card`) |
 
 ## Proven live
 
@@ -87,9 +104,11 @@ Full host wiring in **[docs/WIRING.md](./docs/WIRING.md)**; transport choice in
 3. **Identity** — `whoami()`, and the Server Card `_meta` block read back from a
    live client.
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
-   HTTP with its `.well-known` routes.
+   HTTP with its `.well-known` routes and `GET /card`.
+5. **Param-fill** — a host fills another server's required params from
+   `project.faf` in one wrapped call (`src/context.ts`, see WIRING §4).
 
-**71 tests** across Linux / macOS / Windows, coverage‑gated in CI — including a
+**91 tests** across Linux / macOS / Windows, coverage‑gated in CI — including a
 real `child_process` spawn that proves memory across a genuine process boundary,
 and stdio/HTTP tool‑surface parity.
 
@@ -97,8 +116,10 @@ and stdio/HTTP tool‑surface parity.
 
 | Path | What |
 |---|---|
-| `src/server.ts` | the seven tools + the Server Card resource |
+| `src/server.ts` | the eight tools + the Server Card resource |
 | `src/agents-md.ts` | reads and section‑splits `AGENTS.md` |
+| `src/md.ts` | a minimal dependency‑free Markdown → HTML renderer |
+| `src/render-card.ts` | the card — identity + `AGENTS.md` + memory + discovery, as one HTML page |
 | `src/memory.ts` | file‑backed `remember` / `recall` / `forget` |
 | `src/identity.ts` | `whoami` + the `_meta` context block |
 | `src/catalog-gen.ts` | writes `ai-catalog.json` from the same three sources |

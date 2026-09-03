@@ -59,7 +59,7 @@ describe("e2e — real child process", () => {
     }
   });
 
-  test("stdio child: the seven tools + the Server Card resource + _meta", async () => {
+  test("stdio child: the eight tools + the Server Card resource + _meta", async () => {
     const fx = fixture();
     try {
       const c = await stdioChild(fx.root);
@@ -72,6 +72,7 @@ describe("e2e — real child process", () => {
         "read_agents_md",
         "recall",
         "remember",
+        "render_context_card",
         "whoami",
       ]);
 
@@ -131,7 +132,7 @@ describe("e2e — real child process", () => {
     const fx = fixture();
     try {
       const c = await stdioChild(fx.root);
-      assert.ok((await c.listTools()).tools.length === 7);
+      assert.ok((await c.listTools()).tools.length === 8);
       await c.close();
 
       // --stdio with PORT set → still stdio, nothing listening on PORT

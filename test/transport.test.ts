@@ -44,7 +44,7 @@ test("http: MCP works over stateless Streamable HTTP", async () => {
   assert.equal(client.getServerVersion()?.name, "mcp-context-card");
 
   const { tools } = await client.listTools();
-  assert.equal(tools.length, 7);
+  assert.equal(tools.length, 8);
 
   const r = say(await client.callTool({ name: "read_agents_md", arguments: { section: "Setup" } }));
   assert.match(r, /^## Setup/);
@@ -83,6 +83,21 @@ test("http: /.well-known/fafa serves the raw agent card", async () => {
   assert.equal(r.status, 200);
   assert.match(r.headers.get("content-type") ?? "", /vnd\.fafa\+yaml/);
   assert.match(await r.text(), /name: "mcp-context-card"/);
+});
+
+test("http: GET /card renders the card; ?theme + ?accent are honoured / sanitised", async () => {
+  const r = await fetch(`${base}/card?theme=light&accent=%230A7`);
+  assert.equal(r.status, 200);
+  assert.match(r.headers.get("content-type") ?? "", /text\/html/);
+  const html = await r.text();
+  assert.match(html, /^<!doctype html>/);
+  assert.match(html, /data-theme="light"/);
+  assert.match(html, /--accent:#0A7/);
+
+  // a hostile accent is dropped
+  const bad = await (await fetch(`${base}/card?accent=x%3B%7D%3C%2Fstyle%3E`)).text();
+  assert.ok(!bad.includes("</style><"));
+  assert.match(bad, /--accent:#FF702D/);
 });
 
 test("http: memory tools round-trip over the wire", async () => {
@@ -156,5 +171,5 @@ test("stdio and http expose the identical tool surface", async () => {
   await httpC.close();
 
   assert.deepEqual(stdioTools, httpTools);
-  assert.equal(stdioTools.length, 7);
+  assert.equal(stdioTools.length, 8);
 });

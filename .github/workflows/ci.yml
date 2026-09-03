@@ -19,3 +19,5 @@ jobs:
       - run: npm run demo
       - run: npm run catalog:check
         if: runner.os == 'Linux'
+      - run: npm run card:check
+        if: runner.os == 'Linux'

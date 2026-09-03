@@ -18,6 +18,12 @@ the versioned, tested, installable server.
   license from its `.fafa`.
 - **discovery** — `list_context_sources`. What the project publishes, in what
   media types, through which surface.
+- **the card** — `render_context_card` and `GET /card`. Identity + `AGENTS.md`
+  + memory + discovery as one self-contained HTML page (inline CSS, no JS, no
+  external anything). Light / dark / auto; the accent defaults to the AAIF
+  palette and takes any hex. `npm run card` writes `docs/card.html`; a CI check
+  fails on drift. Rendered by `src/md.ts` — a ~200-line dependency-free
+  Markdown renderer.
 
 ### Exposure
 
@@ -38,7 +44,7 @@ the versioned, tested, installable server.
 
 ### Engineering
 
-- 71 tests across Linux / macOS / Windows, coverage-gated
+- 91 tests across Linux / macOS / Windows, coverage-gated
   (lines 90 / funcs 85 / branches 80, `src/` only). A real `child_process`
   spawn proves memory across a genuine process boundary; stdio/HTTP
   tool-surface parity is asserted.

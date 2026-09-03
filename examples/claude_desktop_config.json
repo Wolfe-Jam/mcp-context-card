@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "trinity": {
+    "context-card": {
       "command": "npx",
       "args": ["-y", "mcp-context-card"],
       "env": {

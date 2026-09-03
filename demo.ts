@@ -110,6 +110,8 @@ console.log(`\n${line}\n4. DISCOVERY — list_context_sources(), then the same s
   console.log(`· POST http://127.0.0.1:${port}/mcp → ${tools.length} tools: ${tools.join(", ")}`);
   const cat = await (await fetch(`http://127.0.0.1:${port}/.well-known/ai-catalog.json`)).json();
   console.log(`· GET  /.well-known/ai-catalog.json → ${cat.entries.map((e: any) => e.type).join(" · ")}`);
+  const card = await (await fetch(`http://127.0.0.1:${port}/card`)).text();
+  console.log(`· GET  /card → ${card.length.toLocaleString()} bytes of self-contained HTML (the view for people)`);
   await httpClient.close();
   srv.close();
 }
