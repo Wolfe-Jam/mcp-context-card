@@ -36,15 +36,28 @@ function load(path: string): Document {
 }
 
 export function parseFafm(path: string): Memory {
-  const doc = load(path);
-  const seq = doc.getIn(["memory", "facts"], true) as YAMLSeq | undefined;
-  const facts = (seq?.toJSON?.() ?? []) as unknown[];
+  let doc: Document;
+  try {
+    doc = load(path);
+    if (doc.errors.length) return { facts: [] };
+  } catch {
+    return { facts: [] };
+  }
+
+  let facts: unknown[] = [];
+  try {
+    const seq = doc.getIn(["memory", "facts"], true) as YAMLSeq | undefined;
+    const j = seq?.toJSON?.();
+    if (Array.isArray(j)) facts = j;
+  } catch {
+    /* leave facts empty */
+  }
 
   return {
     version: doc.get("version") as string | undefined,
     profile: doc.get("profile") as string | undefined,
     namepoint: doc.get("namepoint") as string | undefined,
-    facts: (Array.isArray(facts) ? facts : []).map(normFact),
+    facts: facts.map(normFact),
   };
 }
 

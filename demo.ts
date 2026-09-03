@@ -6,8 +6,9 @@
  *   2. MEMORY   — remember() a fact, kill the server process entirely,
  *      spawn a fresh one, recall() the same fact. Only the file survives.
  *   3. IDENTITY — whoami() reads this server's own .fafa; the Server Card
- *      _meta trinity block is read back two ways: the initialize result's
- *      top-level `_meta`, and the `mcp-trinity://server-card` resource.
+ *      + its _meta trinity block is read back from the
+ *      `mcp-trinity://server-card` resource (the http transport also serves
+ *      it at /.well-known/mcp/server-card).
  */
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
@@ -26,16 +27,15 @@ const fafmPath = join(here, "project.fafm");
 const fafmSnapshot = readFileSync(fafmPath, "utf8");
 process.on("exit", () => writeFileSync(fafmPath, fafmSnapshot));
 
-async function connect(): Promise<{ client: Client; initMeta: unknown }> {
+async function connect(): Promise<Client> {
+  // Spawn `node --import tsx src/server.ts` — cross-platform, no .bin shim.
   const transport = new StdioClientTransport({
-    command: join(here, "node_modules/.bin/tsx"),
-    args: [join(here, "src/server.ts")],
+    command: process.execPath,
+    args: ["--import", "tsx", join(here, "src/server.ts")],
   });
   const client = new Client({ name: "demo-host", version: "0.2.0" }, { capabilities: {} });
   await client.connect(transport);
-  // The initialize result is on the transport; grab _meta via a fresh probe.
-  const initMeta = (client as unknown as { _serverInfo?: unknown })._serverInfo;
-  return { client, initMeta };
+  return client;
 }
 
 console.log(`\n🔺 mcp-trinity — context, memory & agent identity, proven, not described\n`);
@@ -43,14 +43,14 @@ console.log(`\n🔺 mcp-trinity — context, memory & agent identity, proven, no
 // ── 1. CONTEXT ───────────────────────────────────────────────────────────
 console.log(`${line}\n1. CONTEXT — BEFORE (plain callTool, no .faf awareness)\n${line}`);
 {
-  const { client } = await connect();
+  const client = await connect();
   const res = (await client.callTool({ name: "describe_project", arguments: {} })) as any;
   console.log(res.content.map((c: any) => c.text).join("\n"));
   await client.close();
 }
 console.log(`\n${line}\n1. CONTEXT — AFTER (host fills project_name from project.faf)\n${line}`);
 {
-  const { client } = await connect();
+  const client = await connect();
   const fields = contextFieldsFromProjectFaf(join(here, "project.faf"));
   const { result, filled } = await callToolWithContext(client, "describe_project", {}, fields);
   console.log(`· auto-filled from project.faf: ${filled.join(", ") || "(none)"}`);
@@ -63,13 +63,13 @@ console.log(`\n${line}\n2. MEMORY — remember() → kill process → spawn fres
 const factId = "demo-run";
 const factText = `demo ran at ${new Date().toISOString()}`;
 {
-  const { client } = await connect();
+  const client = await connect();
   await client.callTool({ name: "remember", arguments: { id: factId, text: factText } });
   console.log(`· remembered on server process #1: "${factText}"`);
   await client.close(); // process #1 is gone — no in-memory state survives
 }
 {
-  const { client } = await connect(); // brand new process, zero shared memory
+  const client = await connect(); // brand new process, zero shared memory
   const res = (await client.callTool({ name: "recall", arguments: { id: factId } })) as any;
   const got = res.content.map((c: any) => c.text).join("");
   console.log(`· recalled on server process #2: "${got}"`);
@@ -81,7 +81,7 @@ console.log(`· project.fafm restored on exit — the demo leaves no trace`);
 // ── 3. IDENTITY + _meta ──────────────────────────────────────────────────
 console.log(`\n${line}\n3. IDENTITY — whoami() + Server Card _meta (read back, not printed)\n${line}`);
 {
-  const { client } = await connect();
+  const client = await connect();
   const who = (await client.callTool({ name: "whoami", arguments: {} })) as any;
   console.log(who.content.map((c: any) => c.text).join("\n"));
 
