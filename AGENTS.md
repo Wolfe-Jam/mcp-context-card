@@ -38,13 +38,15 @@ Windows for every push and PR to `main` (`.github/workflows/ci.yml`).
 
 | Path | What |
 |---|---|
-| `src/server.ts` | the MCP server — the seven tools + the Server Card resource |
+| `src/server.ts` | the MCP server — the eight tools + the Server Card resource |
 | `src/agents-md.ts` | reads and section-splits this file |
+| `src/md.ts` | a minimal dependency-free Markdown → HTML renderer |
+| `src/render-card.ts` | the card — identity + this file + memory + discovery, as one HTML page |
 | `src/memory.ts` → `src/faf/parse-fafm.ts` | file-backed `remember` / `recall` / `forget` |
 | `src/identity.ts` | `whoami` + the `_meta` context block |
 | `src/catalog-gen.ts` | writes `.well-known/ai-catalog.json` from the same three sources |
 | `src/transport/http.ts` | the stateless Streamable HTTP app (Hono) |
-| `src/bin.ts` | dual-transport entry point (`resolveLaunch`) |
+| `src/bin.ts` | the entry point (`resolveLaunch`) — `stdio` · `--http` · `card` |
 | `src/faf/parse-*.ts` | parsers for the worked-example artifacts |
 
 ## Conventions
@@ -56,10 +58,11 @@ Windows for every push and PR to `main` (`.github/workflows/ci.yml`).
 
 ## The invariant
 
-`src/identity.ts` and `src/catalog-gen.ts` describe the **same three
-sources**: this file, `project.fafm`, `.well-known/fafa`. Change what one
-exposes and you must change the other. `npm run catalog:check` enforces it in
-CI — it regenerates `ai-catalog.json` and fails on any diff.
+`src/identity.ts`, `src/catalog-gen.ts`, and `src/render-card.ts` all describe
+the **same three sources**: this file, `project.fafm`, `.well-known/fafa`.
+Change what one exposes and you must change the others. `npm run catalog:check`
+and `npm run card:check` enforce it in CI — each regenerates its surface and
+fails on any diff.
 
 ## Safety
 
@@ -71,8 +74,8 @@ CI — it regenerates `ai-catalog.json` and fails on any diff.
 ## Definition of done
 
 `npm run typecheck && npm run build && npm test && npm run demo` all green,
-plus `npm run catalog:check` clean if you touched `AGENTS.md`,
-`project.fafm`, or `.well-known/fafa`.
+plus `npm run catalog:check` and `npm run card:check` clean if you touched
+`AGENTS.md`, `project.fafm`, or `.well-known/fafa`.
 
 ## Authoring this file
 
