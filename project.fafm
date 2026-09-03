@@ -1,6 +1,6 @@
 # application/vnd.fafm+yaml — mcp-trinity project memory
 # Real, dogfooded memory about this repo's own build — not a static example.
-# This file itself is one of the three artifacts the repo demonstrates:
+# This file itself is one of the three sources the server exposes:
 # `remember` / `recall` read and write it, and the demo proves a fact
 # survives a full server-process restart (then restores this file exactly).
 version: "1.1"
@@ -11,30 +11,30 @@ last_etched: "2026-08-12T00:00:00Z"
 retention: "forever"
 
 index:
-  - "mcp-trinity — a reference MCP server for context, memory & agent identity"
-  - "lineage — successor to mcp-project-context (one format) → this (three formats, two surfaces)"
-  - "build-status — published reference, dual transport"
+  - "mcp-trinity — an MCP server that publishes a project's context, memory & identity"
+  - "context concern leads with AGENTS.md (text/markdown); memory & identity use .fafm/.fafa as worked examples"
+  - "two exposure surfaces: Server Card _meta block + self-published ai-catalog.json"
 
 memory:
   facts:
-    - text: "mcp-trinity extends mcp-project-context's single-format pattern (host-side context injection) to all three IANA-registered FAF formats — .faf, .fafm, .fafa — through both ecosystem exposure surfaces: the Server Card _meta block and a self-published ai-catalog.json."
+    - text: "The context concern points at AGENTS.md — the de-facto standard for agent instructions. read_agents_md serves it whole or one section at a time, so a client pulls '## Test' without spending its context window on the whole file. Memory and identity have no de-facto standard, so the reference uses .fafm and .fafa as one instantiation each."
       id: "mcp-trinity-scope"
       type: "reference"
       priority: "high"
-      tags: ["scope", "trinity"]
+      tags: ["scope", "agents-md"]
       source: "README.md"
       verification_status: "verified"
 
-    - text: "Both exposure mechanisms this repo demonstrates — the MCP Server Card _meta block and a self-published ai-catalog.json — were already running in production at faf.one and context.faf.one before this repo existed. This is the minimal, forkable extraction of that pattern."
+    - text: "Both exposure mechanisms — the Server Card _meta block and a self-published ai-catalog.json — already exist in the MCP ecosystem. This server wires all three concerns through them, from one set of source files, with a CI check (catalog:check) that fails if the two surfaces drift apart."
       id: "mechanisms-already-proven"
       type: "reference"
       priority: "high"
-      tags: ["mcp", "ai-catalog", "precedent"]
+      tags: ["mcp", "server-card", "ai-catalog"]
       links: ["mcp-trinity-scope"]
-      source: "https://faf.one/.well-known/ai-catalog.json"
+      source: "docs/MECHANISMS.md"
       verification_status: "verified"
 
-    - text: "Distribution: a published npm package (bin `mcp-trinity`) AND a GitHub template. The three source files (project.faf, project.fafm, .well-known/fafa) ship with the package so a fork is a working discovery target on clone. The three IANA-registered formats are the worked example — the contribution is the two-surface pattern."
+    - text: "Distribution: a published npm package (bin `mcp-trinity`, dual transport). The three source files (AGENTS.md, project.fafm, .well-known/fafa) ship with the package so it is a working discovery target on install. MCP_TRINITY_ROOT points it at a real project."
       id: "distribution-model"
       type: "reference"
       priority: "standard"

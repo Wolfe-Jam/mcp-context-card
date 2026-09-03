@@ -1,17 +1,18 @@
 /**
- * mcp-trinity server — a minimal, domain-agnostic MCP server that
- * demonstrates the three things servers keep reinventing:
+ * mcp-trinity server — makes a project's context, memory, and identity
+ * discoverable to any MCP client.
  *
- *   - describe_project  (context)  — a param the host can fill from `.faf`
- *   - remember / recall (memory)   — file-backed against a `.fafm`
- *   - whoami             (identity) — this server's own `.fafa`
+ *   context   — read_agents_md · list_agents_md_sections   (this project's AGENTS.md)
+ *   memory    — remember · recall · forget                 (a .fafm file)
+ *   identity  — whoami                                     (this server's .fafa)
+ *   discovery — list_context_sources                       (what's published, and how)
  *
  * ...exposed through the two mechanisms already in the ecosystem:
  *
- *   1. Server Card `_meta` — emitted in the `initialize` result AND
- *      readable as the `mcp-trinity://server-card` resource.
- *   2. ai-catalog `.well-known/ai-catalog.json` — three sibling entries
- *      (see catalog-gen.ts), served over HTTP by the http transport.
+ *   1. Server Card `_meta` — the `mcp-trinity://server-card` resource (in band)
+ *      and `GET /.well-known/mcp/server-card` (out of band, http transport).
+ *   2. ai-catalog — `GET /.well-known/ai-catalog.json`, three sibling entries
+ *      keyed by media type (see catalog-gen.ts).
  */
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -24,8 +25,8 @@ import {
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { contextFieldsFromProjectFaf } from "./context.js";
-import { recall, remember } from "./memory.js";
+import { findSection, parseAgentsMd } from "./agents-md.js";
+import { forget, parseFafm, recall, remember } from "./memory.js";
 import { trinityMeta, whoami } from "./identity.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -37,8 +38,8 @@ export const NAME = "mcp-trinity";
 export const VERSION = "0.2.0";
 
 /**
- * The Server Card — this server's identity plus the `_meta` trinity block,
- * one namespaced key per IANA-registered format. Served in-band as the
+ * The Server Card — this server's identity plus the `_meta` context block,
+ * one namespaced key per concern. Served in-band as the
  * `mcp-trinity://server-card` resource and out-of-band at
  * `/.well-known/mcp/server-card`.
  */
@@ -46,33 +47,30 @@ export function serverCard() {
   return { name: NAME, version: VERSION, _meta: trinityMeta() };
 }
 
+const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] });
+
 /**
- * @param root  directory holding `project.faf`, `project.fafm`, `.well-known/`.
- *              Defaults to the package root; a fork or a test points it
- *              somewhere else.
+ * @param root  directory holding `AGENTS.md`, `project.fafm`, `.well-known/`.
+ *              Defaults to the package root; a deploy points `MCP_TRINITY_ROOT`
+ *              at a real project, a test points it at a fixture.
  */
 export function createServer(root: string = ROOT): Server {
-  const FAF = join(root, "project.faf");
+  const AGENTS = join(root, "AGENTS.md");
   const FAFM = join(root, "project.fafm");
+  const FAFA = join(root, ".well-known/fafa");
 
   const server = new Server(
     { name: NAME, version: VERSION },
     { capabilities: { tools: {}, resources: {} } },
   );
 
-  // ── Mechanism 1: the Server Card + its _meta trinity block ──────────
-  // A Server Card (SEP-2127) is a document, not an initialize field — so
-  // it's exposed the two ways a client can actually consume it:
-  //   • in-band: the `mcp-trinity://server-card` MCP resource, below
-  //   • out-of-band: GET /.well-known/mcp/server-card (http transport)
-  // Both return the same object, with `_meta` carrying one namespaced key
-  // per IANA-registered format. v0.1.0 only console.log'd this block.
+  // ── Mechanism 1: the Server Card resource + its _meta context block ───
   server.setRequestHandler(ListResourcesRequestSchema, async () => ({
     resources: [
       {
         uri: SERVER_CARD_URI,
         name: "Server Card",
-        description: "This server's identity + the trinity _meta block.",
+        description: "This server's identity + the _meta context block.",
         mimeType: "application/json",
       },
     ],
@@ -83,11 +81,7 @@ export function createServer(root: string = ROOT): Server {
     }
     return {
       contents: [
-        {
-          uri: SERVER_CARD_URI,
-          mimeType: "application/json",
-          text: JSON.stringify(serverCard(), null, 2),
-        },
+        { uri: SERVER_CARD_URI, mimeType: "application/json", text: JSON.stringify(serverCard(), null, 2) },
       ],
     };
   });
@@ -96,17 +90,28 @@ export function createServer(root: string = ROOT): Server {
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
       {
-        name: "describe_project",
-        description: "Describe the current project. `project_name` is required — a host can fill it from a `.faf`.",
+        name: "read_agents_md",
+        description:
+          "Return this project's AGENTS.md — the whole file, or one section by heading. The instructions a client would otherwise have to know to look for and read wholesale.",
         inputSchema: {
           type: "object",
-          properties: { project_name: { type: "string", description: "Project name" } },
-          required: ["project_name"],
+          properties: {
+            section: {
+              type: "string",
+              description: "A heading to return just that section (case-insensitive, prefix match). Omit for the whole file.",
+            },
+          },
         },
       },
       {
+        name: "list_agents_md_sections",
+        description:
+          "List the headings in this project's AGENTS.md, so a client can pull one section instead of spending context on the whole file.",
+        inputSchema: { type: "object", properties: {} },
+      },
+      {
         name: "remember",
-        description: "Store a fact in persistent memory (a `.fafm` file).",
+        description: "Persist a fact past the session boundary — written to a .fafm file, not held in memory.",
         inputSchema: {
           type: "object",
           properties: { id: { type: "string" }, text: { type: "string" } },
@@ -115,7 +120,16 @@ export function createServer(root: string = ROOT): Server {
       },
       {
         name: "recall",
-        description: "Retrieve a fact from persistent memory by id.",
+        description: "Retrieve a fact stored in a previous session by id.",
+        inputSchema: {
+          type: "object",
+          properties: { id: { type: "string" } },
+          required: ["id"],
+        },
+      },
+      {
+        name: "forget",
+        description: "Remove a fact by id — to correct or drop something stale.",
         inputSchema: {
           type: "object",
           properties: { id: { type: "string" } },
@@ -124,7 +138,13 @@ export function createServer(root: string = ROOT): Server {
       },
       {
         name: "whoami",
-        description: "Return this server's own agent identity (`.fafa`).",
+        description: "This server's own identity — name, vendor, version, status, license — from its .fafa card.",
+        inputSchema: { type: "object", properties: {} },
+      },
+      {
+        name: "list_context_sources",
+        description:
+          "What context does this project publish (AGENTS.md, memory, identity), in what media types, and through which discovery surface. For a client connecting cold.",
         inputSchema: { type: "object", properties: {} },
       },
     ],
@@ -133,42 +153,82 @@ export function createServer(root: string = ROOT): Server {
   server.setRequestHandler(CallToolRequestSchema, async (req) => {
     const args = (req.params.arguments ?? {}) as Record<string, string>;
     switch (req.params.name) {
-      case "describe_project": {
-        if (!args.project_name) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: "⛔ project_name is required — none supplied. A real agent now has to guess or ask. A host that read a .faf would have filled it.",
-              },
-            ],
-          };
-        }
-        return { content: [{ type: "text", text: `✅ Scoped to project: ${args.project_name}` }] };
+      case "read_agents_md": {
+        const doc = parseAgentsMd(AGENTS);
+        if (!doc) return text("(no AGENTS.md in this project)");
+        if (!args.section) return text(doc.raw);
+        const s = findSection(doc, args.section);
+        return s
+          ? text(`${"#".repeat(s.level)} ${s.heading}\n\n${s.body}`)
+          : text(
+              `(no section matching "${args.section}" — headings: ${doc.sections
+                .map((x) => x.heading)
+                .join(", ")})`,
+            );
+      }
+      case "list_agents_md_sections": {
+        const doc = parseAgentsMd(AGENTS);
+        if (!doc) return text("(no AGENTS.md in this project)");
+        return text(
+          JSON.stringify(
+            doc.sections.map((s) => ({ heading: s.heading, level: s.level })),
+            null,
+            2,
+          ),
+        );
       }
       case "remember": {
         remember(FAFM, args.id, args.text);
-        return { content: [{ type: "text", text: `remembered: ${args.id}` }] };
+        return text(`remembered: ${args.id}`);
       }
       case "recall": {
         const fact = recall(FAFM, args.id);
-        return {
-          content: [{ type: "text", text: fact ? fact.text : `(no memory for "${args.id}")` }],
-        };
+        return text(fact ? fact.text : `(no memory for "${args.id}")`);
+      }
+      case "forget": {
+        return text(forget(FAFM, args.id) ? `forgot: ${args.id}` : `(no memory for "${args.id}")`);
       }
       case "whoami":
-        return { content: [{ type: "text", text: whoami(root) }] };
+        return text(whoami(root));
+      case "list_context_sources": {
+        const doc = parseAgentsMd(AGENTS);
+        const mem = parseFafm(FAFM);
+        return text(
+          JSON.stringify(
+            {
+              context: {
+                source: "AGENTS.md",
+                mediaType: "text/markdown",
+                present: !!doc,
+                sections: doc?.sections.length ?? 0,
+              },
+              memory: {
+                source: "project.fafm",
+                mediaType: "application/vnd.fafm+yaml",
+                present: mem.facts.length > 0 || mem.profile !== undefined,
+                facts: mem.facts.length,
+              },
+              identity: {
+                source: ".well-known/fafa",
+                mediaType: "application/vnd.fafa+yaml",
+                present: !whoami(root).startsWith("(no "),
+              },
+              surfaces: {
+                serverCard: [`resource: ${SERVER_CARD_URI}`, "GET /.well-known/mcp/server-card"],
+                aiCatalog: ["GET /.well-known/ai-catalog.json"],
+              },
+            },
+            null,
+            2,
+          ),
+        );
+      }
       default:
         throw new Error(`unknown tool: ${req.params.name}`);
     }
   });
 
   return server;
-}
-
-/** Read a project's `.faf` fillable fields (default: this package). */
-export function projectFields(root: string = ROOT): Record<string, string> {
-  return contextFieldsFromProjectFaf(join(root, "project.faf"));
 }
 
 /** Connect a server instance to a transport (stdio or http). */

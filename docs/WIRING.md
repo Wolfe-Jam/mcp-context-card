@@ -1,13 +1,9 @@
 # Wiring
 
-Two audiences:
-
-1. **[Running it in a host](#1-running-it-in-a-host)** — Claude Desktop, Cursor,
-   or any MCP client.
-2. **[The host‑side context‑fill](#2-the-host-side-context-fill)** — the pattern
-   `src/context.ts` demonstrates, for anyone building the *host*.
-3. **[Adapting it for your own artifacts](#3-adapting-it)** — forking the
-   reference.
+1. [Running it in a host](#1-running-it-in-a-host)
+2. [The tools in practice](#2-the-tools-in-practice)
+3. [Adapting it for your own artifacts](#3-adapting-it)
+4. [Also: host-side context-fill](#4-also-host-side-context-fill)
 
 ---
 
@@ -28,10 +24,9 @@ Two audiences:
 }
 ```
 
-- **`MCP_TRINITY_ROOT`** — directory holding `project.faf`, `project.fafm`, and
-  `.well-known/fafa`. Omit it and the server uses its own bundled copies (fine
-  for a first look, not for real use).
-- `stdout` is the JSON‑RPC wire; all logging is on `stderr`.
+- **`MCP_TRINITY_ROOT`** — directory holding `AGENTS.md`, `project.fafm`, and
+  `.well-known/fafa`. Omit it and the server uses its own bundled copies.
+- `stdout` is the JSON‑RPC wire; logging is on `stderr`.
 
 ### Streamable HTTP (remote)
 
@@ -40,95 +35,86 @@ PORT=8080 npx mcp-trinity        # or:  npx mcp-trinity --http
 ```
 
 ```jsonc
-{
-  "mcpServers": {
-    "trinity": { "url": "https://your-host.example/mcp" }
-  }
-}
+{ "mcpServers": { "trinity": { "url": "https://your-host.example/mcp" } } }
 ```
 
-Stateless — any replica serves any request, no session store. Rationale and the
-"when you'd want stateful" case: [TRANSPORT.md](./TRANSPORT.md).
-
-### What the host gets
-
-| | |
-|---|---|
-| `tools/list` | `describe_project`, `remember`, `recall`, `whoami` |
-| `resources/read mcp-trinity://server-card` | the Server Card + `_meta` trinity block |
-| `GET /.well-known/mcp/server-card` | same card, out of band (HTTP only) |
-| `GET /.well-known/ai-catalog.json` | three sibling entries (HTTP only) |
+Stateless — any replica serves any request, no session store. Rationale in
+[TRANSPORT.md](./TRANSPORT.md).
 
 ---
 
-## 2. The host‑side context‑fill
+## 2. The tools in practice
 
-`describe_project` **requires** `project_name`. A plain call fails:
-
-```ts
-await client.callTool({ name: "describe_project", arguments: {} });
-// ⛔ project_name is required — none supplied. A real agent now has to guess or ask.
-```
-
-A host usually *already knows* the project name — it's sitting in a `.faf`, a
-`package.json`, an env var. The fix is not a server change; it's the host
-filling known parameters before dispatch, using the tool's **own** input
-schema.
+A client that just connected wants the project's conventions — but not the whole
+`AGENTS.md` in its context window:
 
 ```ts
-import { callToolWithContext, contextFieldsFromProjectFaf }
-  from "mcp-trinity/context";           // or copy src/context.ts — it's ~50 lines
+// what's documented?
+await client.callTool({ name: "list_agents_md_sections", arguments: {} });
+// → [{ "heading": "Setup", "level": 2 }, { "heading": "Test", "level": 2 }, …]
 
-// flat, tool-schema-keyed fields read from a .faf:
-//   { project_name: "acme-api", main_language: "TypeScript", who: "...", ... }
-const fields = contextFieldsFromProjectFaf("/abs/path/to/project.faf");
-
-const { result, filled } = await callToolWithContext(
-  client,
-  "describe_project",
-  {},           // caller-supplied args win; nothing here is overridden
-  fields,
-);
-// filled → ["project_name"]
-// result → ✅ Scoped to project: acme-api
+// pull just the one it needs
+await client.callTool({ name: "read_agents_md", arguments: { section: "Test" } });
+// → "## Test\n\n```bash\nnpm test\n```\n…"
 ```
 
-### How `callToolWithContext` works
+Between sessions, carry a fact forward:
 
-1. `client.listTools()` — the host reads the target tool's declared
-   `inputSchema.properties`. No server cooperation needed.
-2. For each property the caller **didn't** supply and the context **does**
-   know, fill it.
-3. Dispatch the merged arguments; report which keys were filled.
+```ts
+await client.callTool({ name: "remember", arguments: { id: "db-migration", text: "run `npm run migrate` before tests since #412" } });
+// next session, different process:
+await client.callTool({ name: "recall", arguments: { id: "db-migration" } });
+// → "run `npm run migrate` before tests since #412"
+```
 
-It never overrides an explicit argument, and it only fills properties the tool
-actually declares. A tool with no matching property is called unchanged.
+And to discover what a server offers before committing to it:
 
-This is [`mcp-project-context`](https://github.com/Wolfe-Jam/mcp-project-context)
-generalized: that server special‑cased one field (`repository` → `owner`/`repo`);
-this fills whichever flat scalar fields the project context exposes into
-whichever tool declares them.
+```ts
+await client.callTool({ name: "list_context_sources", arguments: {} });
+// → { context: { source: "AGENTS.md", mediaType: "text/markdown", present: true, sections: 9 },
+//     memory:  { … }, identity: { … },
+//     surfaces: { serverCard: [...], aiCatalog: [...] } }
+```
 
 ---
 
 ## 3. Adapting it
 
-To serve *your* artifacts instead of the reference `.faf` / `.fafm` / `.fafa`:
+To serve *your* artifacts:
 
-1. **Replace the three files** — `project.faf`, `project.fafm`,
-   `.well-known/fafa` — with your own, or point `MCP_TRINITY_ROOT` at a
-   directory that has them.
-2. **Rename the namespace.** `trinityMeta()` in `src/identity.ts` and
-   `buildCatalog()` in `src/catalog-gen.ts` use `one.faf/*` keys and a
-   `urn:air:mcp-trinity:*` identifier scheme. Change both to a domain / name you
-   control — `_meta` keys must be reverse‑DNS‑namespaced to their owner, and the
-   `urn:air` identifiers must align with your publisher domain
-   ([MECHANISMS.md](./MECHANISMS.md)).
-3. **Swap the media types** if your artifacts aren't the FAF formats. The IANA
-   anchors in `trinityMeta()` should point at *your* registered types (or drop
-   the `iana` field if they aren't registered).
-4. `npm run catalog` to regenerate `ai-catalog.json`, `npm run demo` to confirm
-   all three still round‑trip, `npm test` for the suite.
+1. **Replace the three files** — `AGENTS.md`, `project.fafm`, `.well-known/fafa`
+   — with your own, or point `MCP_TRINITY_ROOT` at a directory that has them.
+   `AGENTS.md` is the one with a real standard; the other two are swappable.
+2. **Rename the namespace.** `trinityMeta()` in `src/identity.ts` uses
+   `io.github.wolfe-jam.mcp-trinity/*` keys, and `buildCatalog()` in
+   `src/catalog-gen.ts` uses `urn:air:mcp-trinity:*` identifiers. Change both to
+   a domain or GitHub identity you control ([MECHANISMS.md](./MECHANISMS.md)).
+3. **Swap the media types** in `trinityMeta()` if your memory / identity
+   artifacts aren't `.fafm` / `.fafa`. Drop the `iana` field for any that isn't
+   a registered type.
+4. `npm run catalog` to regenerate, `npm run demo` to confirm all three still
+   round‑trip, `npm test` for the suite.
 
-The tool surface, the transport, and the `catalog‑gen ↔ _meta` invariant are
-unchanged — only the artifacts and the names move.
+---
+
+## 4. Also: host-side context-fill
+
+`src/context.ts` (`callToolWithContext`) is a small, standalone helper — not
+part of the server. It wraps `client.callTool`: before dispatching, it reads the
+target tool's **own** `inputSchema` and fills any declared parameter the caller
+left out that the project context already knows.
+
+```ts
+import { callToolWithContext, contextFieldsFromProjectFaf } from "mcp-trinity/context";
+
+const fields = contextFieldsFromProjectFaf("/abs/path/to/project.faf");
+// { project_name: "acme-api", main_language: "TypeScript", … }
+
+const { result, filled } = await callToolWithContext(client, "some_tool", {}, fields);
+// filled → ["project_name"]   (only schema-declared, never overrides an explicit arg)
+```
+
+This is [`mcp-project-context`](https://github.com/Wolfe-Jam/mcp-project-context)
+generalized — that server special‑cased one field; this fills whichever flat
+scalar fields the context exposes into whichever tool declares them. The field
+source shown here is a `.faf`; any `Record<string,string>` works.

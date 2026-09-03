@@ -5,43 +5,60 @@ All notable changes to this project. Adheres to [Semantic Versioning](https://se
 ## [Unreleased]
 
 The first published release. `faf-trinity` v0.1.0 was a private demo; this is
-the versioned, tested, installable reference.
+the versioned, tested, installable server.
 
-### Added
+### The tools
 
-- Dual transport — stdio (default) and stateless Streamable HTTP (`--http` /
-  `PORT`); `src/bin.ts` `resolveLaunch()` selects the mode.
-- HTTP discovery routes: `GET /.well-known/mcp/server-card`,
-  `GET /.well-known/ai-catalog.json`, `GET /.well-known/fafa`.
-- `mcp-trinity://server-card` MCP resource carrying the `_meta` trinity block
-  (in-band; the `.well-known` route is the out-of-band twin).
-- Real YAML parsers for `.faf` / `.fafm` / `.fafa` (`src/faf/`), replacing the
-  line-adjacency string matching.
-- `catalog-gen` derives `ai-catalog.json` from the three source files; the CI
-  job fails on any drift (`npm run catalog:check`).
-- `MCP_TRINITY_ROOT` — point the server at any project directory.
-- 64 tests across Linux / macOS / Windows, coverage-gated
-  (lines 90 / funcs 85 / branches 80). Includes a real `child_process` spawn
-  that proves memory survives an actual process boundary, and stdio/HTTP
-  tool-surface parity.
-- `docs/MECHANISMS.md`, `docs/WIRING.md`, `docs/TRANSPORT.md`; `examples/`
-  (Dockerfile, compose, client configs).
-- `server.json` — MCP registry manifest.
-- Build now emits `dist/` (`tsconfig.build.json`); package is installable with
-  an `exports` map and shipped type declarations.
+- **context** — `read_agents_md` (whole file or one section by heading),
+  `list_agents_md_sections`. Serves the project's `AGENTS.md` — the file a
+  client otherwise has to know to look for and read wholesale.
+- **memory** — `remember`, `recall`, `forget`. File-backed against a `.fafm`;
+  a fact survives a full server-process restart.
+- **identity** — `whoami`. The server's own name / vendor / version / status /
+  license from its `.fafa`.
+- **discovery** — `list_context_sources`. What the project publishes, in what
+  media types, through which surface.
 
-### Changed
+### Exposure
 
-- Renamed `faf-trinity` → `mcp-trinity`. FAF is the worked example, not the
-  framing — every surface leads with the MCP pattern.
-- The Server Card `_meta` block and `catalog-gen` now carry real data, not a
-  `console.log` and a hardcoded object.
-- Positioned as an installable reference, not a "fork it and own it" template.
-- Trimmed the three-DOI citation block to one line.
+- Server Card `_meta` block — publisher-namespaced keys
+  (`io.github.wolfe-jam.mcp-trinity/{context,memory,identity}`), one per
+  concern. `context` points at `AGENTS.md` / `text/markdown`.
+- `mcp-trinity://server-card` MCP resource (in-band) +
+  `GET /.well-known/mcp/server-card` (out-of-band, HTTP transport).
+- `GET /.well-known/ai-catalog.json` — three sibling entries, keyed by media
+  type, derived from the same three sources. `npm run catalog:check` fails on
+  drift, in CI.
+
+### Transport
+
+- stdio (default) and stateless Streamable HTTP (`--http` / `PORT`);
+  `src/bin.ts` `resolveLaunch()` selects the mode. `MCP_TRINITY_ROOT` points
+  the server at any project.
+
+### Engineering
+
+- 71 tests across Linux / macOS / Windows, coverage-gated
+  (lines 90 / funcs 85 / branches 80, `src/` only). A real `child_process`
+  spawn proves memory across a genuine process boundary; stdio/HTTP
+  tool-surface parity is asserted.
+- Build emits `dist/` (`tsconfig.build.json`); `exports` map, shipped type
+  declarations. `docs/MECHANISMS.md`, `docs/WIRING.md`, `docs/TRANSPORT.md`;
+  `examples/` (Dockerfile, compose, client configs). `server.json` registry
+  manifest.
+- `src/context.ts` — a standalone host-side param-fill helper
+  (`mcp-project-context` generalized), documented in WIRING.
+
+### Since v0.1.0
+
+- Renamed `faf-trinity` → `mcp-trinity`.
+- Context concern now leads with `AGENTS.md`, not a FAF format; the FAF formats
+  are the worked examples for memory and identity, where no standard exists.
+- The `_meta` block and `catalog-gen` carry real data, not a `console.log` and
+  a hardcoded object.
 
 ## v0.1.0 (2026-08-12)
 
 - Initial private reference implementation (as `faf-trinity`): project context,
   persistent memory, and agent identity in one MCP server, through two
-  mechanisms already live in production. `demo.ts` proved all three — memory
-  genuinely crossing a process boundary.
+  mechanisms already live in production. `demo.ts` proved all three.

@@ -1,8 +1,8 @@
-# FAF Agent Card (.fafa) — mcp-trinity reference server
+# Agent identity card (.fafa) — mcp-trinity's own identity
 # Media type: application/vnd.fafa+yaml
-# This is the reference server's own identity card. A fork replaces it
-# with its own agent's real identity, capabilities, and live endpoints.
-# Every scalar quoted, matching the live convention on faf.one/.well-known/fafa.
+# This is the identity concern's worked example: `whoami` reads this file,
+# and it's the third entry in the Server Card _meta block and ai-catalog.
+# A deployment pointed at a real project replaces it with that agent's identity.
 
 version: "1.0"
 agent:
@@ -11,8 +11,8 @@ agent:
   vendor: "reference"
   version: "0.2.0"
   description: >-
-    Reference MCP server demonstrating project context, persistent memory,
-    and agent identity through the Server Card _meta block and a
-    self-published ai-catalog.json. A fork fills this in with its own.
+    Reference MCP server that makes a project's context (AGENTS.md), memory,
+    and identity discoverable to any MCP client, through the Server Card _meta
+    block and a self-published ai-catalog.json.
   status: "reference"
   license: "MIT"

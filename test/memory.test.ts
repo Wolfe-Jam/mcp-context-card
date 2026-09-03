@@ -125,7 +125,7 @@ test("remember: updating a fact keeps its other fields (tags, type, priority)", 
     remember(p, "mcp-trinity-scope", "rewritten text"); // an authored fact with tags
     const f = recall(p, "mcp-trinity-scope");
     assert.equal(f?.text, "rewritten text");
-    assert.deepEqual(f?.tags, ["scope", "trinity"]); // preserved
+    assert.deepEqual(f?.tags, ["scope", "agents-md"]); // preserved
     assert.equal(f?.priority, "high"); // preserved
   } finally {
     cleanup();

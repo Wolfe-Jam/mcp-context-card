@@ -1,28 +1,28 @@
 faf_version: "3.0"
 project:
   name: mcp-trinity
-  goal: A reference MCP server for the three things servers keep reinventing — project context, persistent memory, and agent identity — through the two exposure surfaces already in the ecosystem (Server Card _meta, ai-catalog sibling entries).
+  goal: An MCP server that makes a project's context (its AGENTS.md), memory, and identity discoverable to any MCP client — through the Server Card _meta block and ai-catalog.json sibling entries, the two surfaces already in the ecosystem.
   main_language: TypeScript
   type: mcp
 stack:
   runtime: Node.js
   build: TypeScript (tsc)
-  backend: Node.js (stdio MCP server)
-  api_type: MCP (JSON-RPC 2.0 over stdio)
-  frontend: slotignored  # no UI layer — stdio reference implementation
+  backend: Node.js (MCP server, dual transport)
+  api_type: MCP (JSON-RPC 2.0 — stdio + stateless Streamable HTTP)
+  frontend: slotignored  # no UI layer
   css_framework: slotignored  # no UI
   ui_library: slotignored  # no UI
-  state_management: slotignored  # stateless server, memory lives in project.fafm
-  database: slotignored  # no database — memory is a file, not a DB
+  state_management: slotignored  # stateless server; memory is a file
+  database: slotignored  # memory is a file, not a DB
   connection: slotignored  # no database
   hosting: Docker / any Node host — stdio for local, stateless Streamable HTTP for remote
-  cicd: GitHub Actions (typecheck + test)
-tech_stack: [TypeScript, "@modelcontextprotocol/sdk", yaml, hono]
+  cicd: GitHub Actions (typecheck + build + test + demo, 3 OSes)
+tech_stack: [TypeScript, "@modelcontextprotocol/sdk", hono, yaml]
 human_context:
-  who: MCP host and server implementers who want project context, memory, and agent identity without inventing their own ad-hoc shape for each.
-  what: A minimal reference MCP server exposing project context (.faf), persistent memory (.fafm), and agent identity (.fafa) through the two exposure surfaces already in the ecosystem — the Server Card _meta block and a self-published ai-catalog.json. Dual transport (stdio + stateless Streamable HTTP). The three IANA-registered formats are the worked example.
-  why: MCP servers have no standard answer to "who am I, what do I remember, what's my project", so every server that wants it invents one. This pattern already runs in production at faf.one and context.faf.one, but that's a full app — not something you can read in one sitting and fork. This is the minimal, legible, published version.
+  who: MCP host and server implementers who want a project's AGENTS.md, memory, and identity available over MCP without inventing an ad-hoc shape for each.
+  what: An MCP server with seven tools — read_agents_md / list_agents_md_sections (context), remember / recall / forget (memory), whoami (identity), list_context_sources (discovery) — exposed through the Server Card _meta block and a self-published ai-catalog.json. Dual transport (stdio + stateless Streamable HTTP).
+  why: AGENTS.md is the de-facto standard for agent instructions, but a client has to know the file exists and read it whole. There is no standard way for a server to publish "here is my AGENTS.md, here is what I remember, here is who I am". This does it through mechanisms that already exist.
   where: github.com/Wolfe-Jam/mcp-trinity
   when: "2026-08-12"
-  how: TypeScript on the MCP SDK. Dual transport in src/bin.ts (stdio default, stateless Streamable HTTP via --http / PORT). The Server Card _meta block and ai-catalog.json are generated from the same three source files — a CI check fails on drift. remember/recall are real file-backed reads/writes proven across a process boundary in demo.ts and the test suite. See docs/MECHANISMS.md, docs/WIRING.md, docs/TRANSPORT.md.
-key_files: [package.json, README.md, docs/MECHANISMS.md, src/server.ts, src/context.ts, src/catalog-gen.ts, src/transport/http.ts, src/bin.ts]
+  how: TypeScript on the MCP SDK. Dual transport in src/bin.ts. The Server Card _meta block and ai-catalog.json are generated from the same three sources (AGENTS.md, project.fafm, .well-known/fafa) — a CI check fails on drift. remember/recall are real file-backed reads/writes proven across a process boundary in demo.ts and the test suite. See docs/MECHANISMS.md, docs/WIRING.md, docs/TRANSPORT.md.
+key_files: [package.json, README.md, AGENTS.md, docs/MECHANISMS.md, src/server.ts, src/agents-md.ts, src/catalog-gen.ts, src/transport/http.ts]

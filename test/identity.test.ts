@@ -82,17 +82,28 @@ test("identity: malformed .fafa → null (whoami falls back)", () => {
   }
 });
 
-test("trinityMeta: three namespaced keys, each typed + IANA-anchored", () => {
+test("trinityMeta: three publisher-namespaced keys — context is AGENTS.md/markdown", () => {
   const m = trinityMeta();
   assert.deepEqual(Object.keys(m), [
-    "one.faf/context",
-    "one.faf/memory",
-    "one.faf/agent",
+    "io.github.wolfe-jam.mcp-trinity/context",
+    "io.github.wolfe-jam.mcp-trinity/memory",
+    "io.github.wolfe-jam.mcp-trinity/identity",
   ]);
-  assert.equal(m["one.faf/context"].mediaType, "application/vnd.faf+yaml");
-  assert.equal(m["one.faf/memory"].mediaType, "application/vnd.fafm+yaml");
-  assert.equal(m["one.faf/agent"].mediaType, "application/vnd.fafa+yaml");
-  for (const v of Object.values(m)) {
-    assert.ok(v.iana.startsWith("https://www.iana.org/assignments/media-types/"));
-  }
+
+  const ctx = m["io.github.wolfe-jam.mcp-trinity/context"];
+  assert.equal(ctx.source, "AGENTS.md");
+  assert.equal(ctx.mediaType, "text/markdown");
+  assert.equal((ctx as Record<string, unknown>).iana, undefined); // markdown needs no vnd anchor
+
+  const mem = m["io.github.wolfe-jam.mcp-trinity/memory"];
+  assert.equal(mem.mediaType, "application/vnd.fafm+yaml");
+  assert.ok(mem.iana.startsWith("https://www.iana.org/assignments/media-types/"));
+  assert.match(mem.note, /no de-facto standard/);
+
+  const id = m["io.github.wolfe-jam.mcp-trinity/identity"];
+  assert.equal(id.mediaType, "application/vnd.fafa+yaml");
+  assert.ok(id.iana.startsWith("https://www.iana.org/assignments/media-types/"));
+
+  // no `one.faf/*` key anywhere — the wire is publisher-namespaced
+  assert.ok(Object.keys(m).every((k) => k.startsWith("io.github.wolfe-jam.mcp-trinity/")));
 });
