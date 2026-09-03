@@ -27,6 +27,16 @@ export function parseFaf(path: string): ProjectContext {
   const project = doc.project ?? {};
   const human = doc.human_context ?? {};
 
+  let stack: Record<string, string> | undefined;
+  if (doc.stack && typeof doc.stack === "object") {
+    stack = {};
+    for (const [k, v] of Object.entries(doc.stack)) {
+      const s = str(v);
+      if (s && s !== "slotignored") stack[k] = s;
+    }
+    if (!Object.keys(stack).length) stack = undefined;
+  }
+
   const ctx: ProjectContext = {
     name: str(project.name),
     goal: str(project.goal),
@@ -38,6 +48,8 @@ export function parseFaf(path: string): ProjectContext {
     where: str(human.where),
     when: str(human.when),
     how: str(human.how),
+    stack,
+    keyFiles: Array.isArray(doc.key_files) ? doc.key_files.map(String) : undefined,
     fields: {},
   };
 

@@ -15,8 +15,8 @@ entries.
 ## What it is / what it is not
 
 **It is** — an MCP server for a project's `AGENTS.md`, memory, and identity.
-Eight tools, two discovery surfaces (Server Card `_meta`, `ai-catalog.json`), a
-rendered [card](#the-card). ~600 lines, MIT — read it, `npx` it, or fork it.
+Nine tools, two discovery surfaces (Server Card `_meta`, `ai-catalog.json`), a
+rendered [card](#the-card). ~800 lines, MIT — read it, `npx` it, or fork it.
 
 **It is not**
 
@@ -34,6 +34,7 @@ github‑mcp‑server, your test runner's MCP. A piece, not the toolbox.
 
 | You want… | Reach for |
 |---|---|
+| an `AGENTS.md` and you don't have one | `npx mcp-context-card init` |
 | your agent to pull *one* `AGENTS.md` section on demand, not the whole file | `read_agents_md` · `list_agents_md_sections` |
 | a persistent notepad for your agent — survives restarts, no setup | `remember` · `recall` · `forget` |
 | a shareable view of what your MCP server exposes to agents | `GET /card` · `npx mcp-context-card card` |
@@ -41,7 +42,17 @@ github‑mcp‑server, your test runner's MCP. A piece, not the toolbox.
 
 ## Add it to your setup
 
-Render your project's card in one command — no host, no config:
+**No `AGENTS.md` yet?** Author one:
+
+```bash
+npx mcp-context-card init      # writes AGENTS.md · BEST from a project.faf, else BETTER from repo detection
+```
+
+BETTER is a real AGENTS.md from your manifests — commands, CI, layout — with
+`<!-- TODO -->` on the judgement parts. Add a `project.faf` and re‑run for BEST.
+It never overwrites an existing `AGENTS.md` — it prints the draft to diff.
+
+**See the card** in one command — no host, no config:
 
 ```bash
 npx mcp-context-card card > card.html
@@ -111,6 +122,7 @@ defaults to the AAIF palette and takes any hex.
 
 | Tool | What it's for |
 |---|---|
+| `author_agents_md` | draft an `AGENTS.md` — BEST from a `project.faf`, else BETTER from repo detection |
 | `read_agents_md` | return the project's `AGENTS.md` — whole, or one section by heading |
 | `list_agents_md_sections` | the headings, so a client pulls one section instead of the whole file |
 | `remember` | write a fact that will still be there next session |
@@ -134,7 +146,7 @@ defaults to the AAIF palette and takes any hex.
 5. **Param-fill** — a host fills another server's required params from
    `project.faf` in one wrapped call (`src/context.ts`, see WIRING §4).
 
-**91 tests** across Linux / macOS / Windows, coverage‑gated in CI — including a
+**108 tests** across Linux / macOS / Windows, coverage‑gated in CI — including a
 real `child_process` spawn that proves memory across a genuine process boundary,
 and stdio/HTTP tool‑surface parity.
 
@@ -142,7 +154,7 @@ and stdio/HTTP tool‑surface parity.
 
 | Path | What |
 |---|---|
-| `src/server.ts` | the eight tools + the Server Card resource |
+| `src/server.ts` | the nine tools + the Server Card resource |
 | `src/agents-md.ts` | reads and section‑splits `AGENTS.md` |
 | `src/md.ts` | a minimal dependency‑free Markdown → HTML renderer |
 | `src/render-card.ts` | the card — identity + `AGENTS.md` + memory + discovery, as one HTML page |
@@ -150,7 +162,8 @@ and stdio/HTTP tool‑surface parity.
 | `src/identity.ts` | `whoami` + the `_meta` context block |
 | `src/catalog-gen.ts` | writes `ai-catalog.json` from the same three sources |
 | `src/transport/http.ts` | the stateless Streamable HTTP app (Hono) |
-| `src/bin.ts` | the entry point — `stdio` · `--http` · `card` |
+| `src/bin.ts` | the entry point — `stdio` · `--http` · `card` · `init` |
+| `src/detect.ts` · `src/author.ts` | repo detection + AGENTS.md authoring for `init` |
 
 ## Related
 
