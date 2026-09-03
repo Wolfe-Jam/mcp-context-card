@@ -5,7 +5,7 @@
 #   docker run -p 3000:3000 mcp-trinity
 #   curl localhost:3000/.well-known/mcp/server-card
 #
-# Serves the bundled reference project.faf / project.fafm / .well-known/fafa.
+# Serves the bundled AGENTS.md / project.fafm / .well-known/fafa.
 # For a real project, mount it and set MCP_TRINITY_ROOT:
 #   docker run -p 3000:3000 -v "$PWD:/project:ro" -e MCP_TRINITY_ROOT=/project mcp-trinity
 
@@ -23,7 +23,7 @@ ENV NODE_ENV=production PORT=3000
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
-COPY project.faf project.fafm ./
+COPY AGENTS.md project.fafm ./
 COPY .well-known ./.well-known
 EXPOSE 3000
 # --http is implied by PORT, but explicit is clearer in a CMD
