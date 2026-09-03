@@ -38,6 +38,6 @@ test("resolveLaunch: MCP_TRINITY_ROOT is resolved to an absolute path", () => {
 });
 
 test("resolveLaunch: --http + MCP_TRINITY_ROOT compose", () => {
-  const l = resolveLaunch(["--http"], { MCP_TRINITY_ROOT: "/srv/proj", PORT: "9000" });
-  assert.deepEqual(l, { http: true, port: 9000, root: "/srv/proj" });
+  const l = resolveLaunch(["--http"], { MCP_TRINITY_ROOT: "srv/proj", PORT: "9000" });
+  assert.deepEqual(l, { http: true, port: 9000, root: resolve("srv/proj") });
 });
