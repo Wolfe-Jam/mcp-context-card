@@ -38,7 +38,7 @@ async function connect(): Promise<Client> {
 
 const say = (r: any) => r.content.map((c: any) => c.text).join("\n");
 
-console.log(`\n🔺 mcp-context-card — context, memory & identity, discoverable, proven live\n`);
+console.log(`\n🔺 mcp-context-card — context, memory & identity, over both transports\n`);
 
 // ── 1. CONTEXT ───────────────────────────────────────────────────────────
 console.log(`${line}\n1. CONTEXT — the client pulls one AGENTS.md section, not the whole file\n${line}`);
@@ -52,7 +52,7 @@ console.log(`${line}\n1. CONTEXT — the client pulls one AGENTS.md section, not
 }
 
 // ── 2. MEMORY ────────────────────────────────────────────────────────────
-console.log(`\n${line}\n2. MEMORY — remember() → kill process → spawn fresh → recall()\n${line}`);
+console.log(`\n${line}\n2. MEMORY — remember() → stop the process → start a new one → recall()\n${line}`);
 const factId = "demo-run";
 const factText = `demo ran at ${new Date().toISOString()}`;
 {
@@ -165,9 +165,7 @@ console.log(`\n${line}\n5. PARAM-FILL — a host fills a 3rd-party tool's params
 
 console.log(
   `\n${"═".repeat(68)}\n` +
-    `Same three sources (AGENTS.md, project.fafm, .well-known/fafa) drive\n` +
-    `both exposure mechanisms, over stdio and stateless HTTP alike. Memory\n` +
-    `crossed a real process boundary; the _meta block was read back from a\n` +
-    `live client; the host filled another server's params from project.faf.\n` +
-    `Nothing here is decorative.\n${"═".repeat(68)}\n`,
+    `The same three sources (AGENTS.md, project.fafm, .well-known/fafa) back\n` +
+    `both discovery surfaces, over stdio and stateless HTTP alike. Every step\n` +
+    `above ran for real — a spawned process, files on disk, an HTTP round-trip.\n${"═".repeat(68)}\n`,
 );
