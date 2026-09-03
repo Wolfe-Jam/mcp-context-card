@@ -22,7 +22,7 @@ memory:
       type: "reference"
       priority: "high"
       tags: ["scope", "trinity"]
-      source: "PLANET-FAF/DEV-NOTES/PLAN-mcp-trinity-aaif-40.md"
+      source: "README.md"
       verification_status: "verified"
 
     - text: "Both exposure mechanisms this repo demonstrates — the MCP Server Card _meta block and a self-published ai-catalog.json — were already running in production at faf.one and context.faf.one before this repo existed. This is the minimal, forkable extraction of that pattern."
@@ -31,7 +31,7 @@ memory:
       priority: "high"
       tags: ["mcp", "ai-catalog", "precedent"]
       links: ["mcp-trinity-scope"]
-      source: "INTEL/trinity-venue-fit-matrix-faf-fafm-fafa-2026-08-10.md"
+      source: "https://faf.one/.well-known/ai-catalog.json"
       verification_status: "verified"
 
     - text: "Distribution: a published npm package (bin `mcp-trinity`) AND a GitHub template. The three source files (project.faf, project.fafm, .well-known/fafa) ship with the package so a fork is a working discovery target on clone. The three IANA-registered formats are the worked example — the contribution is the two-surface pattern."
@@ -39,7 +39,7 @@ memory:
       type: "reference"
       priority: "standard"
       tags: ["distribution", "mit", "npm"]
-      source: "PLANET-FAF/DEV-NOTES/PLAN-mcp-trinity-aaif-40.md"
+      source: "README.md"
       verification_status: "verified"
   sessions: []
   preferences: {}

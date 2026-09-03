@@ -31,6 +31,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/bin.js",
+    "start:http": "node dist/bin.js --http",
     "dev": "tsx src/bin.ts",
     "demo": "tsx demo.ts",
     "catalog": "tsx src/catalog-gen.ts",
@@ -38,7 +39,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@hono/node-server": "^1.19.17",
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "hono": "^4.13.5",
     "yaml": "^2.9.0"
   },
   "devDependencies": {

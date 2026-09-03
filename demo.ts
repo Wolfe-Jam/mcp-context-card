@@ -94,10 +94,33 @@ console.log(`\n${line}\n3. IDENTITY — whoami() + Server Card _meta (read back,
   await client.close();
 }
 
+// ── 4. TRANSPORT — same server, two ways in ──────────────────────────────
+console.log(`\n${line}\n4. TRANSPORT — the same server over stateless Streamable HTTP\n${line}`);
+{
+  const { serve } = await import("@hono/node-server");
+  const { httpApp } = await import("./src/transport/http.js");
+  const { StreamableHTTPClientTransport } = await import(
+    "@modelcontextprotocol/sdk/client/streamableHttp.js"
+  );
+  const srv = serve({ fetch: httpApp(here).fetch, port: 0 });
+  await new Promise((r) => setTimeout(r, 50));
+  const { port } = srv.address() as { port: number };
+
+  const httpClient = new Client({ name: "demo-host", version: "0.2.0" }, { capabilities: {} });
+  await httpClient.connect(new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${port}/mcp`)));
+  const tools = (await httpClient.listTools()).tools.map((t) => t.name);
+  console.log(`· POST http://127.0.0.1:${port}/mcp → tools: ${tools.join(", ")}`);
+
+  const card = await (await fetch(`http://127.0.0.1:${port}/.well-known/mcp/server-card`)).json();
+  console.log(`· GET  /.well-known/mcp/server-card → _meta keys: ${Object.keys(card._meta).join(", ")}`);
+  await httpClient.close();
+  srv.close();
+}
+
 console.log(
   `\n${"═".repeat(68)}\n` +
     `Same three files (project.faf, project.fafm, .well-known/fafa) drive\n` +
-    `both exposure mechanisms. Memory genuinely crossed a process boundary,\n` +
-    `and the _meta block was read back from a live client — nothing here is\n` +
-    `decorative.\n${"═".repeat(68)}\n`,
+    `both exposure mechanisms, over stdio and stateless HTTP alike. Memory\n` +
+    `genuinely crossed a process boundary; the _meta block was read back\n` +
+    `from a live client — nothing here is decorative.\n${"═".repeat(68)}\n`,
 );
