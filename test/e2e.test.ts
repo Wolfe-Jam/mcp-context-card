@@ -7,6 +7,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { spawn, execFileSync } from "node:child_process";
+import { readFileSync, rmSync } from "node:fs";
 import { once } from "node:events";
 import type { AddressInfo } from "node:net";
 import { createServer as createNetServer } from "node:net";
@@ -59,13 +60,14 @@ describe("e2e — real child process", () => {
     }
   });
 
-  test("stdio child: the eight tools + the Server Card resource + _meta", async () => {
+  test("stdio child: the nine tools + the Server Card resource + _meta", async () => {
     const fx = fixture();
     try {
       const c = await stdioChild(fx.root);
       assert.equal(c.getServerVersion()?.name, "mcp-context-card");
       const tools = (await c.listTools()).tools.map((t) => t.name).sort();
       assert.deepEqual(tools, [
+        "author_agents_md",
         "forget",
         "list_agents_md_sections",
         "list_context_sources",
@@ -142,12 +144,37 @@ describe("e2e — real child process", () => {
     }
   });
 
+  test("`init` subcommand: writes AGENTS.md when absent, never clobbers when present", () => {
+    const fx = fixture(); // ships an AGENTS.md + a project.faf
+    try {
+      // present → prints a draft, writes nothing
+      const before = readFileSync(join(fx.root, "AGENTS.md"), "utf8");
+      const printed = execFileSync(runner.command, [...runner.base, "init"], {
+        env: { ...process.env, MCP_CONTEXT_CARD_ROOT: fx.root },
+        encoding: "utf8",
+      });
+      assert.match(printed, /# AGENTS\.md/);
+      assert.equal(readFileSync(join(fx.root, "AGENTS.md"), "utf8"), before, "must not overwrite");
+
+      // absent → writes it
+      rmSync(join(fx.root, "AGENTS.md"));
+      execFileSync(runner.command, [...runner.base, "init"], {
+        env: { ...process.env, MCP_CONTEXT_CARD_ROOT: fx.root },
+        encoding: "utf8",
+      });
+      assert.match(readFileSync(join(fx.root, "AGENTS.md"), "utf8"), /^# AGENTS\.md/);
+      assert.match(readFileSync(join(fx.root, "AGENTS.md"), "utf8"), /BEST — from project\.faf/);
+    } finally {
+      fx.cleanup();
+    }
+  });
+
   test("bin mode selection: default → stdio, --http → http, --stdio wins over PORT", async () => {
     // default (no PORT, no flag) → speaks stdio (a client can connect)
     const fx = fixture();
     try {
       const c = await stdioChild(fx.root);
-      assert.ok((await c.listTools()).tools.length === 8);
+      assert.ok((await c.listTools()).tools.length === 9);
       await c.close();
 
       // --stdio with PORT set → still stdio, nothing listening on PORT

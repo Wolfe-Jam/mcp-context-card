@@ -25,7 +25,9 @@ import {
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { existsSync } from "node:fs";
 import { findSection, parseAgentsMd } from "./agents-md.js";
+import { authorAgentsMd } from "./author.js";
 import { forget, parseFafm, recall, remember } from "./memory.js";
 import { trinityMeta, whoami } from "./identity.js";
 import { renderCard, safeAccent, type Theme } from "./render-card.js";
@@ -102,6 +104,12 @@ export function createServer(root: string = ROOT): Server {
             },
           },
         },
+      },
+      {
+        name: "author_agents_md",
+        description:
+          "Author an AGENTS.md for this project and return the draft (does not write a file). BEST if a project.faf is present — from the structured source; BETTER otherwise — from repo detection, with TODO markers on the judgement parts.",
+        inputSchema: { type: "object", properties: {} },
       },
       {
         name: "list_agents_md_sections",
@@ -187,6 +195,15 @@ export function createServer(root: string = ROOT): Server {
             null,
             2,
           ),
+        );
+      }
+      case "author_agents_md": {
+        const a = authorAgentsMd(root);
+        const exists = existsSync(AGENTS);
+        return text(
+          `<!-- ${a.tier} · from ${a.from.join(", ")}${
+            exists ? " · AGENTS.md already exists — this is a draft to diff, not overwrite" : ""
+          } -->\n\n${a.markdown}`,
         );
       }
       case "remember": {

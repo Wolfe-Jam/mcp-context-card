@@ -9,9 +9,14 @@ the versioned, tested, installable server.
 
 ### The tools
 
-- **context** — `read_agents_md` (whole file or one section by heading),
-  `list_agents_md_sections`. Serves the project's `AGENTS.md` — the file a
-  client otherwise has to know to look for and read wholesale.
+- **context** — `author_agents_md` (draft one when there isn't one),
+  `read_agents_md` (whole file or one section by heading),
+  `list_agents_md_sections`. The register the other two serve is `AGENTS.md`.
+  `author_agents_md` / `npx mcp-context-card init`: **BEST** from a `project.faf`
+  (intent from the structured source, mechanics from detection), **BETTER**
+  otherwise (real commands / CI / layout from the repo's manifests, `<!-- TODO
+  -->` on the judgement parts). Never overwrites an existing `AGENTS.md`.
+  `src/detect.ts` (Node / Rust / Python / Go) + `src/author.ts`.
 - **memory** — `remember`, `recall`, `forget`. File-backed against a `.fafm`;
   a fact survives a full server-process restart.
 - **identity** — `whoami`. The server's own name / vendor / version / status /
@@ -45,7 +50,7 @@ the versioned, tested, installable server.
 
 ### Engineering
 
-- 91 tests across Linux / macOS / Windows, coverage-gated
+- 108 tests across Linux / macOS / Windows, coverage-gated
   (lines 90 / funcs 85 / branches 80, `src/` only). A real `child_process`
   spawn proves memory across a genuine process boundary; stdio/HTTP
   tool-surface parity is asserted.

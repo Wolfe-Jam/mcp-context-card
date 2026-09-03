@@ -22,6 +22,10 @@ export interface ProjectContext {
   where?: string;
   when?: string;
   how?: string;
+  /** `stack.*` — tool-chain facts (`runtime`, `build`, `cicd`, …), `slotignored` values dropped. */
+  stack?: Record<string, string>;
+  /** `key_files` — the files that matter, in order. */
+  keyFiles?: string[];
   /**
    * Flat scalar fields, keyed by the exact name a tool `inputSchema` might
    * declare (`project_name`, `project_goal`, `main_language`, …). This is
