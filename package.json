@@ -33,6 +33,7 @@
   "files": [
     "dist",
     "docs",
+    "AGENTS.md",
     "project.faf",
     "project.fafm",
     ".well-known",
