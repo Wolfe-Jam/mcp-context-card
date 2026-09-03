@@ -69,16 +69,17 @@ test("remember: preserves comments and doesn't reformat the whole file", () => {
   const { root, cleanup } = fixture();
   try {
     const path = join(root, "project.fafm");
-    const before = readFileSync(path, "utf8");
+    const lf = (s: string) => s.replace(/\r\n/g, "\n"); // Windows checkout tolerance
+    const before = lf(readFileSync(path, "utf8"));
     remember(path, "new-fact", "a new fact");
-    const after = readFileSync(path, "utf8");
+    const after = lf(readFileSync(path, "utf8"));
 
     // header comments survive
     assert.ok(after.includes("# application/vnd.fafm+yaml"));
     // the authored facts are byte-identical (only last_etched + the new
-    // fact should differ) — count how many authored lines changed
+    // fact should differ) — every authored line still present verbatim
     const authoredLines = before.split("\n").filter((l) => l.includes("mcp-trinity-scope"));
-    for (const l of authoredLines) assert.ok(after.includes(l), `line churned: ${l}`);
+    for (const l of authoredLines) assert.ok(after.includes(l), `line churned: ${JSON.stringify(l)}`);
     // new scalars are double-quoted (house convention)
     assert.ok(after.includes('id: "new-fact"'));
     assert.ok(after.includes('source: "remember()"'));

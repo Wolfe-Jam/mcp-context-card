@@ -1,0 +1,9 @@
+# The three source files are byte-stable artifacts — the tests assert that
+# `remember()` doesn't reformat them. Force LF so a Windows checkout doesn't
+# introduce CRLF churn.
+* text=auto eol=lf
+*.faf   text eol=lf
+*.fafm  text eol=lf
+fafa    text eol=lf
+*.json  text eol=lf
+*.ts    text eol=lf
