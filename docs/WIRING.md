@@ -118,3 +118,11 @@ This is [`mcp-project-context`](https://github.com/Wolfe-Jam/mcp-project-context
 generalized — that server special‑cased one field; this fills whichever flat
 scalar fields the context exposes into whichever tool declares them. The field
 source shown here is a `.faf`; any `Record<string,string>` works.
+
+**Who calls it, and when.** The *host* calls it, in host code — not the model,
+not the server, not a config flag. It's safe to route *every* `client.callTool`
+through it: it only fills a parameter the target tool **declares** and the
+caller **left out**, and it never overrides an explicit argument. So the
+decision is made once ("this is my `callTool`"), not per call. `npm run demo`
+step 5 runs it against a throwaway `deploy` tool, filling `project_name` and
+`main_language` from `project.faf` when the model supplied only `target`.

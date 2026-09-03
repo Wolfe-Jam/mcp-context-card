@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { join } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
@@ -7,7 +8,8 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { callToolWithContext } from "../src/context.js";
+import { callToolWithContext, contextFieldsFromProjectFaf } from "../src/context.js";
+import { fixture } from "./helpers.js";
 
 /** A tiny server whose one tool echoes back the arguments it received. */
 async function echoClient(): Promise<Client> {
@@ -27,6 +29,20 @@ async function echoClient(): Promise<Client> {
       },
       // a tool that declares NO matching field
       { name: "noparams", description: "", inputSchema: { type: "object", properties: {} } },
+      // a tool that needs several project facts at once
+      {
+        name: "deploy",
+        description: "",
+        inputSchema: {
+          type: "object",
+          properties: {
+            project_name: { type: "string" },
+            main_language: { type: "string" },
+            target: { type: "string" },
+          },
+          required: ["project_name", "main_language", "target"],
+        },
+      },
     ],
   }));
   server.setRequestHandler(CallToolRequestSchema, async (req) => ({
@@ -80,4 +96,26 @@ test("only fills fields the schema actually declares", async () => {
   });
   assert.deepEqual(filled, ["project_name"]);
   assert.equal(echoed(result).not_in_schema, undefined);
+});
+
+test("the demo scenario: fills several required params from a real project.faf; the model's arg wins", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const client = await echoClient();
+    const fields = contextFieldsFromProjectFaf(join(root, "project.faf"));
+    // project.faf declares name: mcp-trinity, main_language: TypeScript
+    const { result, filled } = await callToolWithContext(
+      client,
+      "deploy",
+      { target: "staging" }, // all the model produced
+      fields,
+    );
+    assert.deepEqual(filled.sort(), ["main_language", "project_name"]);
+    const got = echoed(result);
+    assert.equal(got.project_name, "mcp-trinity");
+    assert.equal(got.main_language, "TypeScript");
+    assert.equal(got.target, "staging"); // the explicit arg is untouched
+  } finally {
+    cleanup();
+  }
 });
