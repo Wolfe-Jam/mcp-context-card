@@ -63,3 +63,30 @@ test("parseFaf: malformed YAML → empty context, no throw", () => {
     cleanup();
   }
 });
+
+test("parseFaf: `slotignored` stack values don't break the parse", () => {
+  const { root, cleanup } = fixture();
+  try {
+    // the fixture's project.faf already has several `stack.* : slotignored`
+    const ctx = parseFaf(join(root, "project.faf"));
+    assert.equal(ctx.name, "mcp-trinity");
+    assert.equal(ctx.type, "mcp");
+  } finally {
+    cleanup();
+  }
+});
+
+test("parseFaf: a .faf with no human_context → the six Ws are all undefined", () => {
+  const { root, cleanup } = fixture();
+  try {
+    writeFileSync(join(root, "project.faf"), `project:\n  name: bare\n  main_language: Go\n`);
+    const ctx = parseFaf(join(root, "project.faf"));
+    assert.equal(ctx.name, "bare");
+    assert.equal(ctx.language, "Go");
+    for (const w of ["who", "what", "why", "where", "when", "how"] as const) {
+      assert.equal(ctx[w], undefined);
+    }
+  } finally {
+    cleanup();
+  }
+});

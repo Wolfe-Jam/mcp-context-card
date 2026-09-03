@@ -6,7 +6,10 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { httpApp } from "../src/transport/http.js";
+import { callToolWithContext } from "../src/context.js";
 import { createServer, SERVER_CARD_URI } from "../src/server.js";
+import { parseFaf } from "../src/faf/parse-faf.js";
+import { join } from "node:path";
 import { fixture } from "./helpers.js";
 
 let fx: ReturnType<typeof fixture>;
@@ -84,6 +87,66 @@ test("http: /.well-known/fafa serves the raw agent card", async () => {
   assert.equal(r.status, 200);
   assert.match(r.headers.get("content-type") ?? "", /vnd\.fafa\+yaml/);
   assert.match(await r.text(), /name: "mcp-trinity"/);
+});
+
+test("http: memory tools round-trip over the wire", async () => {
+  const client = await httpClient();
+  await client.callTool({ name: "remember", arguments: { id: "w", text: "wire" } });
+  const r = (await client.callTool({ name: "recall", arguments: { id: "w" } })) as any;
+  assert.equal(r.content[0].text, "wire");
+  await client.close();
+});
+
+test("http: the host-side context fill works end to end over HTTP", async () => {
+  const client = await httpClient();
+  const fields = parseFaf(join(fx.root, "project.faf")).fields;
+  const { result, filled } = await callToolWithContext(client, "describe_project", {}, fields);
+  assert.deepEqual(filled, ["project_name"]);
+  assert.match((result as any).content[0].text, /Scoped to project: mcp-trinity/);
+  await client.close();
+});
+
+test("http: /mcp is genuinely stateless — no session header, independent inits", async () => {
+  const init = {
+    jsonrpc: "2.0",
+    id: 1,
+    method: "initialize",
+    params: {
+      protocolVersion: "2025-06-18",
+      capabilities: {},
+      clientInfo: { name: "raw", version: "0" },
+    },
+  };
+  const headers = {
+    "content-type": "application/json",
+    accept: "application/json, text/event-stream",
+  };
+  const r1 = await fetch(`${base}/mcp`, { method: "POST", headers, body: JSON.stringify(init) });
+  assert.equal(r1.status, 200);
+  assert.equal(r1.headers.get("mcp-session-id"), null, "stateless mode must not issue a session id");
+
+  // a second, entirely independent initialize also succeeds — no session state carried
+  const r2 = await fetch(`${base}/mcp`, { method: "POST", headers, body: JSON.stringify(init) });
+  assert.equal(r2.status, 200);
+  const b2 = await r2.json();
+  assert.equal(b2.result?.serverInfo?.name, "mcp-trinity");
+});
+
+test("http: CORS is open (preflight answered)", async () => {
+  const r = await fetch(`${base}/mcp`, {
+    method: "OPTIONS",
+    headers: {
+      origin: "https://example.com",
+      "access-control-request-method": "POST",
+    },
+  });
+  assert.ok(r.status === 204 || r.status === 200);
+  assert.equal(r.headers.get("access-control-allow-origin"), "*");
+});
+
+test("http: unknown well-known path → 404, not a crash", async () => {
+  const r = await fetch(`${base}/.well-known/nope`);
+  assert.equal(r.status, 404);
 });
 
 test("stdio and http expose the identical tool surface", async () => {

@@ -101,3 +101,33 @@ test("parseFafm: missing / malformed file → empty facts, no throw", () => {
     cleanup();
   }
 });
+
+test("parseFafm: a file with no `memory:` key → empty facts, no throw", () => {
+  const { root, cleanup } = fixture();
+  try {
+    const p = join(root, "project.fafm");
+    writeFileSync(p, `version: "1.1"\nprofile: "knowledge"\n`);
+    const m = parseFafm(p);
+    assert.equal(m.profile, "knowledge");
+    assert.deepEqual(m.facts, []);
+    // remember() into it still works — it creates the memory/facts structure
+    remember(p, "first", "hello");
+    assert.equal(recall(p, "first")?.text, "hello");
+  } finally {
+    cleanup();
+  }
+});
+
+test("remember: updating a fact keeps its other fields (tags, type, priority)", () => {
+  const { root, cleanup } = fixture();
+  try {
+    const p = join(root, "project.fafm");
+    remember(p, "mcp-trinity-scope", "rewritten text"); // an authored fact with tags
+    const f = recall(p, "mcp-trinity-scope");
+    assert.equal(f?.text, "rewritten text");
+    assert.deepEqual(f?.tags, ["scope", "trinity"]); // preserved
+    assert.equal(f?.priority, "high"); // preserved
+  } finally {
+    cleanup();
+  }
+});

@@ -94,3 +94,30 @@ test("server: whoami reads the .fafa", async () => {
     cleanup();
   }
 });
+
+test("server: recall of an unknown id returns the (no memory) sentinel", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const client = await connected(root);
+    const r = (await client.callTool({ name: "recall", arguments: { id: "ghost" } })) as any;
+    assert.match(r.content[0].text, /no memory for "ghost"/);
+    await client.close();
+  } finally {
+    cleanup();
+  }
+});
+
+test("server: an unknown tool or resource rejects, it doesn't hang", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const client = await connected(root);
+    await assert.rejects(client.callTool({ name: "no_such_tool", arguments: {} }));
+    await assert.rejects(client.readResource({ uri: "mcp-trinity://nope" }));
+    // the connection is still usable afterwards
+    const { tools } = await client.listTools();
+    assert.equal(tools.length, 4);
+    await client.close();
+  } finally {
+    cleanup();
+  }
+});

@@ -36,6 +36,7 @@
     "demo": "tsx demo.ts",
     "catalog": "tsx src/catalog-gen.ts",
     "test": "node --import tsx --test \"test/*.test.ts\"",
+    "test:coverage": "node --import tsx --test --experimental-test-coverage --test-coverage-exclude=\"test/**\" --test-coverage-exclude=\"demo.ts\" --test-coverage-lines=90 --test-coverage-functions=85 --test-coverage-branches=80 \"test/*.test.ts\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
