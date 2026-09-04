@@ -56,9 +56,10 @@ file access, no shell, no search.
 
 ## The card
 
-That's it, above — the same three sources rendered as one self‑contained
-HTML page: identity, `AGENTS.md`, memory, and how a machine fetches it. The
-view for people: screenshot it, drop it in a PR, put it on a status page.
+The screenshot at the top of this page is exactly this — the same three
+sources rendered as one self‑contained HTML page: identity, `AGENTS.md`,
+memory, and how a machine fetches it. The view for people: screenshot it,
+drop it in a PR, put it on a status page.
 
 ```
 GET /card                      # live, on the HTTP transport
