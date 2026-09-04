@@ -4,7 +4,7 @@ All notable changes to this project. Adheres to [Semantic Versioning](https://se
 
 ## 0.5.1
 
-First-hour ergonomics, from the 0.5.0 soak.
+First-hour ergonomics and wording, from the 0.5.0 soak.
 
 - `--help` / `-h` and `--version` / `-V` (and the `help` / `version` subcommands)
   — a bare `mcp-context-card` is a stdio server that waits on stdin, so at a
@@ -12,6 +12,11 @@ First-hour ergonomics, from the 0.5.0 soak.
 - stdio mode now prints one line to **stderr** on start
   (`… · stdio · waiting for an MCP host on stdin`) — mirrors what `--http`
   already did. stdout stays clean for the JSON-RPC wire.
+- The npm and `server.json` descriptions no longer open with "Reference MCP
+  server" — they now match the README ("An MCP server that makes a project's
+  context, memory, and identity discoverable…"). Same in `.well-known/fafa`;
+  the three `project.fafm` facts are `type: fact`. `package.json` `author` set
+  to the LICENSE holder.
 
 ## 0.5.0
 
@@ -81,6 +86,6 @@ tested server.
 
 ## v0.1.0 (2026-08-12)
 
-- Initial private reference implementation (as `faf-trinity`): project context,
+- Initial private implementation (as `faf-trinity`): project context,
   persistent memory, and agent identity in one MCP server, through two
   mechanisms already live in production. `demo.ts` proved all three.

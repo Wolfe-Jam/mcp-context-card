@@ -2,7 +2,7 @@
   "name": "mcp-context-card",
   "version": "0.5.1",
   "mcpName": "io.github.wolfe-jam/mcp-context-card",
-  "description": "Reference MCP server: project context, persistent memory, and agent identity — through the two exposure surfaces already in the ecosystem (Server Card _meta, ai-catalog sibling entries).",
+  "description": "An MCP server that makes a project's context (AGENTS.md), cross-session memory, and identity discoverable to any MCP client — through the Server Card _meta block and ai-catalog.json sibling entries.",
   "keywords": [
     "mcp",
     "model-context-protocol",
@@ -12,7 +12,7 @@
     "agent-memory",
     "agent-identity"
   ],
-  "author": "wolfejam",
+  "author": "James Wolfe",
   "license": "MIT",
   "type": "module",
   "private": false,

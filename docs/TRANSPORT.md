@@ -81,6 +81,6 @@ streaming tools would flip this. See `src/transport/http.ts`.
 
 ### DNS-rebinding protection
 
-Off by default (a reference server should run anywhere with no config). For
-a real deployment, pass `allowedHosts` / `allowedOrigins` to the transport
-and set `enableDnsRebindingProtection: true`.
+Off by default (the server should run anywhere with no config). For a real
+deployment, pass `allowedHosts` / `allowedOrigins` to the transport and set
+`enableDnsRebindingProtection: true`.

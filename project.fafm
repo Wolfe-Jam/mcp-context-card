@@ -17,9 +17,9 @@ index:
 
 memory:
   facts:
-    - text: "The context concern points at AGENTS.md — the de-facto standard for agent instructions. read_agents_md serves it whole or one section at a time, so a client pulls '## Test' without spending its context window on the whole file. Memory and identity have no de-facto standard, so the reference uses .fafm and .fafa as one instantiation each."
+    - text: "The context concern points at AGENTS.md — the de-facto standard for agent instructions. read_agents_md serves it whole or one section at a time, so a client pulls '## Test' without spending its context window on the whole file. Memory and identity have no de-facto standard, so this server uses .fafm and .fafa as one instantiation each."
       id: "mcp-context-card-scope"
-      type: "reference"
+      type: "fact"
       priority: "high"
       tags: ["scope", "agents-md"]
       source: "README.md"
@@ -27,7 +27,7 @@ memory:
 
     - text: "Both exposure mechanisms — the Server Card _meta block and a self-published ai-catalog.json — already exist in the MCP ecosystem. This server wires all three concerns through them, from one set of source files, with a CI check (catalog:check) that fails if the two surfaces drift apart."
       id: "mechanisms-already-proven"
-      type: "reference"
+      type: "fact"
       priority: "high"
       tags: ["mcp", "server-card", "ai-catalog"]
       links: ["mcp-context-card-scope"]
@@ -36,7 +36,7 @@ memory:
 
     - text: "Distribution: a published npm package (bin `mcp-context-card`, dual transport). The three source files (AGENTS.md, project.fafm, .well-known/fafa) ship with the package so it is a working discovery target on install. MCP_CONTEXT_CARD_ROOT points it at a real project."
       id: "distribution-model"
-      type: "reference"
+      type: "fact"
       priority: "standard"
       tags: ["distribution", "mit", "npm"]
       source: "README.md"

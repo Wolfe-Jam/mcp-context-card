@@ -5,7 +5,7 @@ mechanisms that already exist in the MCP ecosystem. This is the wire‑level
 detail.
 
 The **context** concern points at `AGENTS.md` (`text/markdown`). Memory and
-identity have no de‑facto standard, so the reference points them at `.fafm` and
+identity have no de‑facto standard, so this server points them at `.fafm` and
 `.fafa`. Everything below is about the *shape* — swap the artifacts and the
 mechanism is unchanged.
 

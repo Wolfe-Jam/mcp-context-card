@@ -11,8 +11,8 @@ agent:
   vendor: "reference"
   version: "0.5.1"
   description: >-
-    Reference MCP server that makes a project's context (AGENTS.md), memory,
-    and identity discoverable to any MCP client, through the Server Card _meta
-    block and a self-published ai-catalog.json.
+    An MCP server that makes a project's context (AGENTS.md), cross-session
+    memory, and identity discoverable to any MCP client, through the Server
+    Card _meta block and a self-published ai-catalog.json.
   status: "reference"
   license: "MIT"
