@@ -6,6 +6,14 @@ All notable changes to this project. Adheres to [Semantic Versioning](https://se
 
 First-hour ergonomics and wording, from the 0.5.0 soak.
 
+- **`author_agents_md` now authors BEST, not just BETTER, when it can.**
+  BETTER is still the facts-only draft from `agents-md-facts` (build/test
+  commands, entry points, conventions — nothing invented). **BEST** is that
+  plus a `## Project` section ahead of it — goal, who it's for, why, and a
+  "start here" file list — read straight from `project.faf` when one exists.
+  This is the point of the app: give the best AGENTS.md the project actually
+  has the material for, not a fixed floor. `whoami`-style tier reporting in
+  the tool's response (`BEST (project.faf + facts)` / `BETTER (facts only)`).
 - `--help` / `-h` and `--version` / `-V` (and the `help` / `version` subcommands)
   — a bare `mcp-context-card` is a stdio server that waits on stdin, so at a
   terminal it looked idle with no way to ask what it was.

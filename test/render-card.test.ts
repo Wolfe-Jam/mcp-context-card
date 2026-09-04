@@ -35,7 +35,7 @@ test("renderCard: renders all three concerns from the real sources", () => {
     assert.match(html, /Context — AGENTS\.md/);
     assert.match(html, /class="toc"/); // section index
     assert.match(html, /<h2 id="setup">Setup<\/h2>/); // AGENTS.md rendered
-    assert.match(html, /Memory — 3 facts/);
+    assert.match(html, /Memory — 4 facts/);
     assert.match(html, /class="tag">scope</); // a real fact tag
     assert.match(html, /Discovery/);
     assert.match(html, /text\/markdown/);

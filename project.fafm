@@ -41,6 +41,15 @@ memory:
       tags: ["distribution", "mit", "npm"]
       source: "README.md"
       verification_status: "verified"
+
+    - text: "author_agents_md authors the best AGENTS.md the project has the material for, not a fixed floor. BETTER is the facts-only draft (via agents-md-facts: build/test commands, entry points, conventions — nothing invented). BEST is that plus a '## Project' section ahead of it, read straight from project.faf when one exists — goal, who it's for, why, and a start-here file list. The rule is concrete: project.faf present means BEST, absent means BETTER."
+      id: "author-agents-md-best-not-just-better"
+      type: "fact"
+      priority: "high"
+      tags: ["agents-md", "author_agents_md", "faf"]
+      links: ["mcp-context-card-scope"]
+      source: "src/author.ts"
+      verification_status: "verified"
   sessions: []
   preferences: {}
   custom: {}
