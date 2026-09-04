@@ -49,10 +49,10 @@ It composes:
 - **author BETTER, keep true** — [`agents-md-facts`](https://github.com/Wolfe-Jam/agents-md-facts) (`author_agents_md` wraps it for the facts layer; adds a BEST layer of its own from `project.faf` when one exists)
 - **files · shell · git** — [`server-filesystem`](https://github.com/modelcontextprotocol/servers), [`server-git`](https://github.com/modelcontextprotocol/servers) / github‑mcp‑server, your test runner's MCP
 
-Not a framework or a platform — three concerns, nothing more. Not a file,
-shell, or search tool — it never touches your files or runs commands. Not
-tied to FAF — context is plain Markdown (`AGENTS.md`); the memory and identity
-formats are swappable examples.
+Vendor-free — context is plain Markdown (`AGENTS.md`); the memory and
+identity formats are swappable examples. It reads and writes only its own
+three files (`AGENTS.md`, `project.fafm`, `.well-known/fafa`) — no general
+file access, no shell, no search.
 
 ## The card
 
