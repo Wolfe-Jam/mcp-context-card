@@ -10,18 +10,14 @@ tested server.
 
 ### The tools
 
-- **context** — `author_agents_md` (draft one when there isn't one),
-  `read_agents_md` (whole file or one section by heading),
-  `list_agents_md_sections`. The register the other two serve is `AGENTS.md`.
-  `author_agents_md` / `npx mcp-context-card init`: **BEST** from a `project.faf`
-  (intent from the structured source, mechanics from detection), **BETTER**
-  otherwise (real commands / CI / layout from the repo's manifests, `<!-- TODO
-  -->` on the judgement parts). Never overwrites an existing `AGENTS.md`.
-  `src/detect.ts` (Node / Rust / Python / Go) + `src/author.ts`.
+- **context** — `read_agents_md` (whole file or one section by heading),
+  `list_agents_md_sections`, and `author_agents_md` (draft one when there
+  isn't one, via `agents-md-facts`). The register the other two serve is
+  `AGENTS.md`.
 - **memory** — `remember`, `recall`, `forget`. File-backed against a `.fafm`;
   a fact survives a full server-process restart.
-- **identity** — `whoami`. The server's own name / vendor / version / status /
-  license from its `.fafa`.
+- **identity** — `whoami`. From the server's `.well-known/fafa`, or
+  `package.json` when there isn't one.
 - **discovery** — `list_context_sources`. What the project publishes, in what
   media types, through which surface.
 - **the card** — `render_context_card`, `GET /card`, and `npx mcp-context-card
@@ -51,7 +47,7 @@ tested server.
 
 ### Engineering
 
-- 108 tests across Linux / macOS / Windows, coverage-gated
+- 88 tests across Linux / macOS / Windows, coverage-gated
   (lines 90 / funcs 85 / branches 80, `src/` only). A real `child_process`
   spawn proves memory across a genuine process boundary; stdio/HTTP
   tool-surface parity is asserted.
@@ -59,8 +55,10 @@ tested server.
   declarations. `docs/MECHANISMS.md`, `docs/WIRING.md`, `docs/TRANSPORT.md`;
   `examples/` (Dockerfile, compose, client configs). `server.json` registry
   manifest.
-- `src/context.ts` — a standalone host-side param-fill helper
-  (`mcp-project-context` generalized), documented in WIRING.
+- `author_agents_md` wraps [`agents-md-facts`](https://github.com/Wolfe-Jam/agents-md-facts)
+  — a published, standalone AGENTS.md authoring engine (real commands / entry
+  points / conventions, nothing invented; `--check` keeps it true).
+- `whoami` falls back to `package.json` when a project has no `.well-known/fafa`.
 
 ### Since v0.1.0
 

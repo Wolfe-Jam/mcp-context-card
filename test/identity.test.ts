@@ -25,16 +25,34 @@ test("identity: parses this server's own .fafa", () => {
   }
 });
 
-test("whoami: one-line summary, falls back on missing card", () => {
+test("whoami: one-line summary from the .fafa when present", () => {
   const { root, cleanup } = fixture();
   try {
     const s = whoami(root);
     assert.ok(s.includes("mcp-context-card"));
     assert.ok(s.includes("MIT"));
-    assert.equal(whoami("/no/such/root").startsWith("(no .well-known/fafa"), true);
   } finally {
     cleanup();
   }
+});
+
+test("whoami: no .fafa → falls back to package.json", () => {
+  const dir = mkdtempSync(join(tmpdir(), "mcp-cc-whoami-"));
+  try {
+    writeFileSync(
+      join(dir, "package.json"),
+      JSON.stringify({ name: "widget", version: "2.1.0", license: "Apache-2.0", description: "a thing" }),
+    );
+    const s = whoami(dir);
+    assert.match(s, /widget · v2\.1\.0 · Apache-2\.0/);
+    assert.match(s, /a thing/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("whoami: neither .fafa nor package.json → a clear nothing", () => {
+  assert.match(whoami("/no/such/root"), /no \.well-known\/fafa or package\.json/);
 });
 
 test("whoami: a bare card (name only) still renders, no stray separators", () => {

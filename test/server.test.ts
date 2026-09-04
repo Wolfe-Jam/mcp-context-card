@@ -142,22 +142,22 @@ test("server: render_context_card returns a self-contained HTML card", async () 
   }
 });
 
-test("server: author_agents_md returns a BEST draft (the fixture has a project.faf), notes it exists", async () => {
+test("server: author_agents_md returns an agents-md-facts managed block, notes the file exists", async () => {
   const { root, cleanup } = fixture();
   try {
     const client = await connected(root);
     const draft = say(await client.callTool({ name: "author_agents_md", arguments: {} }));
-    assert.match(draft, /BEST · from project\.faf/);
     assert.match(draft, /AGENTS\.md already exists/); // the fixture ships one
-    assert.match(draft, /# AGENTS\.md/);
-    assert.match(draft, /## Safety/);
+    assert.match(draft, /<!-- agents:from-facts:start -->/);
+    assert.match(draft, /<!-- agents:from-facts:end -->/);
+    assert.match(draft, /authored by agents-md-facts/);
     await client.close();
   } finally {
     cleanup();
   }
 });
 
-test("server: list_context_sources reports all three concerns + both surfaces", async () => {
+test("server: list_context_sources — three concerns, surfaces split by transport", async () => {
   const { root, cleanup } = fixture();
   try {
     const client = await connected(root);
@@ -166,9 +166,10 @@ test("server: list_context_sources reports all three concerns + both surfaces", 
     assert.equal(s.context.present, true);
     assert.ok(s.context.sections > 0);
     assert.equal(s.memory.mediaType, "application/vnd.fafm+yaml");
-    assert.equal(s.identity.present, true);
-    assert.ok(s.surfaces.serverCard.some((x: string) => x.includes("/.well-known/mcp/server-card")));
-    assert.ok(s.surfaces.aiCatalog[0].includes("/.well-known/ai-catalog.json"));
+    assert.equal(s.identity.present, true); // the fixture ships a .fafa
+    assert.match(s.surfaces.mcp.serverCard, /mcp-context-card:\/\/server-card/);
+    assert.match(s.surfaces.http.serverCard, /GET \/\.well-known\/mcp\/server-card/);
+    assert.match(s.surfaces.http.card, /GET \/card/);
     await client.close();
   } finally {
     cleanup();

@@ -12,7 +12,7 @@
 import { join } from "node:path";
 import { parseAgentsMd } from "./agents-md.js";
 import { parseFafm } from "./memory.js";
-import { identity, trinityMeta, META_NS } from "./identity.js";
+import { resolveIdentity, trinityMeta, META_NS } from "./identity.js";
 import { NAME, SERVER_CARD_URI } from "./constants.js";
 import { escapeHtml, renderInline, renderMarkdown, slug } from "./md.js";
 
@@ -107,7 +107,7 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
 
   const agents = parseAgentsMd(join(root, "AGENTS.md"));
   const mem = parseFafm(join(root, "project.fafm"));
-  const id = identity(root);
+  const id = resolveIdentity(root);
   const meta = trinityMeta() as Record<string, { source: string; mediaType: string; note?: string }>;
 
   const name = id?.displayName ?? id?.name ?? NAME;
@@ -190,9 +190,9 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
   <section>
     <p class="label">Discovery</p>
     <table class="disc"><thead><tr><th>concern</th><th>source</th><th>media type</th></tr></thead><tbody>${rows}</tbody></table>
-    <p class="fetch">A machine reads this from
-      <code>${escapeHtml(SERVER_CARD_URI)}</code>,
-      <code>GET /.well-known/mcp/server-card</code>, or
+    <p class="fetch">A machine reads this over <b>MCP</b> from the
+      <code>${escapeHtml(SERVER_CARD_URI)}</code> resource; over <b>HTTP</b> also
+      from <code>GET /.well-known/mcp/server-card</code> and
       <code>GET /.well-known/ai-catalog.json</code>.</p>
   </section>
   <div class="foot">${escapeHtml(name)} · context card</div>

@@ -40,15 +40,15 @@ Windows for every push and PR to `main` (`.github/workflows/ci.yml`).
 |---|---|
 | `src/server.ts` | the MCP server — the nine tools + the Server Card resource |
 | `src/agents-md.ts` | reads and section-splits this file |
-| `src/author.ts` → `src/detect.ts` | authors an AGENTS.md (BEST from `project.faf`, else BETTER from detection) |
+| `src/author.ts` | `author_agents_md` — wraps `agents-md-facts` (the AGENTS.md authoring engine) |
 | `src/md.ts` | a minimal dependency-free Markdown → HTML renderer |
 | `src/render-card.ts` | the card — identity + this file + memory + discovery, as one HTML page |
 | `src/memory.ts` → `src/faf/parse-fafm.ts` | file-backed `remember` / `recall` / `forget` |
-| `src/identity.ts` | `whoami` + the `_meta` context block |
+| `src/identity.ts` | `whoami` (`.fafa` → `package.json` fallback) + the `_meta` context block |
 | `src/catalog-gen.ts` | writes `.well-known/ai-catalog.json` from the same three sources |
 | `src/transport/http.ts` | the stateless Streamable HTTP app (Hono) |
-| `src/bin.ts` | the entry point (`resolveLaunch`) — `stdio` · `--http` · `card` · `init` |
-| `src/faf/parse-*.ts` | parsers for the worked-example artifacts |
+| `src/bin.ts` | the entry point (`resolveLaunch`) — `stdio` · `--http` · `card` |
+| `src/faf/parse-fafm.ts` · `parse-fafa.ts` | the `.fafm` / `.fafa` parsers |
 
 ## Conventions
 
