@@ -20,7 +20,7 @@ stack:
 tech_stack: [TypeScript, "@modelcontextprotocol/sdk", hono, yaml]
 human_context:
   who: MCP host and server implementers who want a project's AGENTS.md, memory, and identity available over MCP without inventing an ad-hoc shape for each.
-  what: An MCP server with seven tools — read_agents_md / list_agents_md_sections (context), remember / recall / forget (memory), whoami (identity), list_context_sources (discovery) — exposed through the Server Card _meta block and a self-published ai-catalog.json. Dual transport (stdio + stateless Streamable HTTP).
+  what: An MCP server with nine tools — read_agents_md / list_agents_md_sections / author_agents_md (context), remember / recall / forget (memory), whoami (identity), list_context_sources / render_context_card (discovery) — exposed through the Server Card _meta block and a self-published ai-catalog.json. Dual transport (stdio + stateless Streamable HTTP).
   why: AGENTS.md is the de-facto standard for agent instructions, but a client has to know the file exists and read it whole. There is no standard way for a server to publish "here is my AGENTS.md, here is what I remember, here is who I am". This does it through mechanisms that already exist.
   where: github.com/Wolfe-Jam/mcp-context-card
   when: "2026-08-12"
