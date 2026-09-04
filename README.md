@@ -3,8 +3,8 @@
 [![CI](https://github.com/Wolfe-Jam/mcp-context-card/actions/workflows/ci.yml/badge.svg)](https://github.com/Wolfe-Jam/mcp-context-card/actions/workflows/ci.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
-An MCP server that makes a project's context, memory, and identity discoverable
-to any MCP client — and renders them as one card you can read.
+The essential MCP server for a project's context, memory, and identity —
+discoverable to any MCP client, and rendered as one card you can read.
 
 - **context** — the project's `AGENTS.md`, served whole or one section at a time
 - **memory** — facts that persist across sessions, in a file
@@ -13,18 +13,23 @@ to any MCP client — and renders them as one card you can read.
 Discovery goes through two surfaces already in the ecosystem: the Server Card
 `_meta` block and `ai-catalog.json` sibling entries.
 
-## What it is / what it is not
+## A base MCP — or an extension for any other
 
-**It is** — an MCP server for a project's `AGENTS.md`, memory, and identity: nine
-tools, two discovery surfaces (Server Card `_meta`, `ai-catalog.json`), and a
-rendered [card](#the-card). Small, MIT — read it, `npx` it, or fork it.
+Context, memory, and identity are essential — every MCP host needs an agent
+that knows a project's instructions, remembers facts across sessions, and can
+say what it is. `mcp-context-card` is those three, done once:
 
-**It is not**
+- **Stand it up as your base MCP.** Point a host at it and an agent already
+  has `AGENTS.md` served section‑by‑section, `remember` / `recall` / `forget`
+  memory that survives a restart, and a `whoami` identity — before a single
+  tool of your own is written.
+- **Or extend any existing MCP with it.** Run it alongside a server you
+  already have — filesystem, git, a database, your own — and that agent
+  gains context, memory, and identity discovery it didn't have. Nothing to
+  migrate; it composes.
 
-- a framework or a platform — three concerns, nothing more
-- a file, shell, or search tool — it never touches your files or runs commands
-- tied to FAF — context is plain Markdown (`AGENTS.md`); the memory and identity
-  formats are swappable examples
+Nine tools, two discovery surfaces already in the ecosystem (Server Card
+`_meta`, `ai-catalog.json`), and a rendered [card](#the-card). MIT, on npm.
 
 It composes:
 
@@ -32,7 +37,10 @@ It composes:
 - **author · keep true** — [`agents-md-facts`](https://github.com/Wolfe-Jam/agents-md-facts) (the `author_agents_md` tool wraps it)
 - **files · shell · git** — [`server-filesystem`](https://github.com/modelcontextprotocol/servers), [`server-git`](https://github.com/modelcontextprotocol/servers) / github‑mcp‑server, your test runner's MCP
 
-A piece, not the toolbox.
+Not a framework or a platform — three concerns, nothing more. Not a file,
+shell, or search tool — it never touches your files or runs commands. Not
+tied to FAF — context is plain Markdown (`AGENTS.md`); the memory and identity
+formats are swappable examples.
 
 ## The card
 
@@ -109,6 +117,11 @@ memory tools work with or without it; identity is optional. Over HTTP instead:
 [docs/WIRING.md](./docs/WIRING.md); transport choice in
 [docs/TRANSPORT.md](./docs/TRANSPORT.md).
 
+Extending an MCP you already run: most hosts accept more than one
+`mcpServers` entry — add `context-card` alongside `server-filesystem`,
+`server-git`, or your own, and every agent in that host gains context,
+memory, and identity discovery without anything else changing.
+
 ## Why
 
 `AGENTS.md` is the de-facto standard for telling a coding agent how to work in a
@@ -177,7 +190,7 @@ one; another checks the stdio and HTTP tool surfaces match.
 | `src/identity.ts` | `whoami` (`.fafa` → `package.json` fallback) + the `_meta` block |
 | `src/catalog-gen.ts` | writes `ai-catalog.json` from the same three sources |
 | `src/transport/http.ts` | the stateless Streamable HTTP app (Hono) |
-| `src/bin.ts` | the entry point — `stdio` · `--http` · `card` |
+| `src/bin.ts` | the entry point — `stdio` · `--http` · `card` · `--help` · `--version` |
 
 ## Related
 

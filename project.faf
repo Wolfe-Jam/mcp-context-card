@@ -1,7 +1,7 @@
 faf_version: "3.0"
 project:
   name: mcp-context-card
-  goal: An MCP server that makes a project's context (its AGENTS.md), memory, and identity discoverable to any MCP client — through the Server Card _meta block and ai-catalog.json sibling entries, the two surfaces already in the ecosystem.
+  goal: The essential MCP server for a project's context (its AGENTS.md), memory, and identity — usable as a base MCP on its own, or as a drop-in extension for any existing MCP server. Discoverable to any MCP client through the Server Card _meta block and ai-catalog.json sibling entries, the two surfaces already in the ecosystem.
   main_language: TypeScript
   type: mcp
 stack:
@@ -20,8 +20,8 @@ stack:
 tech_stack: [TypeScript, "@modelcontextprotocol/sdk", "agents-md-facts", hono, yaml]
 human_context:
   who: MCP host and server implementers who want a project's AGENTS.md, memory, and identity available over MCP without inventing an ad-hoc shape for each.
-  what: An MCP server with nine tools — read_agents_md / list_agents_md_sections / author_agents_md (context), remember / recall / forget (memory), whoami (identity), list_context_sources / render_context_card (discovery) — exposed through the Server Card _meta block and a self-published ai-catalog.json. Dual transport (stdio + stateless Streamable HTTP).
-  why: AGENTS.md is the de-facto standard for agent instructions, but a client has to know the file exists and read it whole. There is no standard way for a server to publish "here is my AGENTS.md, here is what I remember, here is who I am". This does it through mechanisms that already exist.
+  what: The essential context, memory, and identity components for MCP — usable as a base MCP on its own, or dropped into any existing MCP server as an extension. Nine tools — read_agents_md / list_agents_md_sections / author_agents_md (context), remember / recall / forget (memory), whoami (identity), list_context_sources / render_context_card (discovery) — exposed through the Server Card _meta block and a self-published ai-catalog.json. Dual transport (stdio + stateless Streamable HTTP).
+  why: AGENTS.md is the de-facto standard for agent instructions, but a client has to know the file exists and read it whole. There is no standard way for a server to publish "here is my AGENTS.md, here is what I remember, here is who I am" — every server that wants this grows its own shape, or does without. This does it once, through mechanisms that already exist — as a base MCP, or dropped into what you've already built.
   where: github.com/Wolfe-Jam/mcp-context-card
   when: "2026-08-12"
   how: TypeScript on the MCP SDK. Dual transport in src/bin.ts. The Server Card _meta block and ai-catalog.json are generated from the same three sources (AGENTS.md, project.fafm, .well-known/fafa) — a CI check fails on drift. remember/recall are real file-backed reads/writes proven across a process boundary in demo.ts and the test suite. See docs/MECHANISMS.md, docs/WIRING.md, docs/TRANSPORT.md.

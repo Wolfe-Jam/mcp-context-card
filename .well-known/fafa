@@ -11,8 +11,9 @@ agent:
   vendor: "io.github.wolfe-jam"
   version: "0.5.1"
   description: >-
-    An MCP server that makes a project's context (AGENTS.md), cross-session
-    memory, and identity discoverable to any MCP client, through the Server
-    Card _meta block and a self-published ai-catalog.json.
+    The essential MCP components for a project's context (AGENTS.md),
+    cross-session memory, and identity — a base MCP on its own, or a
+    drop-in extension for any existing MCP server, discoverable through the
+    Server Card _meta block and a self-published ai-catalog.json.
   status: "published"
   license: "MIT"

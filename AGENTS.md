@@ -1,9 +1,10 @@
 # AGENTS.md
 
-`mcp-context-card` is an MCP server that makes a project's **context**
-(this file), **memory**, and **identity** discoverable to any MCP client —
-through the two surfaces already in the ecosystem: the Server Card `_meta`
-block and `ai-catalog.json` sibling entries.
+`mcp-context-card` is the essential MCP server for a project's **context**
+(this file), **memory**, and **identity** — usable as your base MCP, or
+dropped into any existing MCP server as an extension. Discoverable to any
+MCP client through the two surfaces already in the ecosystem: the Server
+Card `_meta` block and `ai-catalog.json` sibling entries.
 
 `read_agents_md` serves this file, section by section, over the same MCP
 connection.
