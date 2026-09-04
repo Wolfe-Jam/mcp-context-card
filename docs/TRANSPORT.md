@@ -41,7 +41,7 @@ the wire, so all logging goes to `stderr`.
 ```
 GET  /                          → index (endpoints)
 POST /mcp                       → MCP (initialize, tools/list, tools/call, …)
-GET  /.well-known/mcp/server-card   → the Server Card + _meta trinity block
+GET  /.well-known/mcp/server-card   → the Server Card + _meta block
 GET  /.well-known/ai-catalog.json   → the three sibling entries
 GET  /.well-known/fafa              → the agent identity card
 ```

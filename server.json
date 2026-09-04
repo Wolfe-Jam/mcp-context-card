@@ -37,7 +37,7 @@
         "source": "./project.fafm",
         "mediaType": "application/vnd.fafm+yaml",
         "iana": "https://www.iana.org/assignments/media-types/application/vnd.fafm+yaml",
-        "note": "no de-facto standard for agent memory yet — one instantiation"
+        "note": "no de-facto standard for agent memory yet — this is one instantiation"
       },
       "io.github.wolfe-jam.mcp-context-card/identity": {
         "source": "./.well-known/fafa",

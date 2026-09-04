@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { identity, trinityMeta, whoami } from "../src/identity.js";
+import { identity, serverCardMeta, whoami } from "../src/identity.js";
 import { fixture } from "./helpers.js";
 
 /** A temp root carrying only a bespoke `.well-known/fafa`. */
@@ -100,8 +100,8 @@ test("identity: malformed .fafa → null (whoami falls back)", () => {
   }
 });
 
-test("trinityMeta: three publisher-namespaced keys — context is AGENTS.md/markdown", () => {
-  const m = trinityMeta();
+test("serverCardMeta: three publisher-namespaced keys — context is AGENTS.md/markdown", () => {
+  const m = serverCardMeta();
   assert.deepEqual(Object.keys(m), [
     "io.github.wolfe-jam.mcp-context-card/context",
     "io.github.wolfe-jam.mcp-context-card/memory",
