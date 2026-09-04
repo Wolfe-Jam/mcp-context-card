@@ -1,6 +1,6 @@
 # docker compose -f examples/compose.yaml up --build
 services:
-  trinity:
+  context-card:
     build:
       context: ..
       dockerfile: examples/Dockerfile

@@ -28,7 +28,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { findSection, parseAgentsMd } from "./agents-md.js";
 import { authorAgentsMd } from "./author.js";
 import { forget, parseFafm, recall, remember } from "./memory.js";
-import { identity, trinityMeta, whoami } from "./identity.js";
+import { identity, serverCardMeta, whoami } from "./identity.js";
 import { renderCard, safeAccent, type Theme } from "./render-card.js";
 
 export { NAME, VERSION, SERVER_CARD_URI } from "./constants.js";
@@ -45,7 +45,7 @@ export const ROOT = join(here, "..");
  * `/.well-known/mcp/server-card`.
  */
 export function serverCard() {
-  return { name: NAME, version: VERSION, _meta: trinityMeta() };
+  return { name: NAME, version: VERSION, _meta: serverCardMeta() };
 }
 
 const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] });

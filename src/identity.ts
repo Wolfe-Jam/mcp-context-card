@@ -66,7 +66,7 @@ export function whoami(root: string): string {
  * other two point at their worked-example artifacts; `memory` carries a note
  * because there is no de-facto standard for it yet.
  */
-export function trinityMeta() {
+export function serverCardMeta() {
   return {
     [`${META_NS}/context`]: {
       source: "AGENTS.md",

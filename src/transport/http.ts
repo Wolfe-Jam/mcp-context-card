@@ -11,7 +11,7 @@
  * transports in a map; this one deliberately does not.
  *
  * Alongside the MCP endpoint it serves the discovery documents:
- *   GET /.well-known/mcp/server-card   — the Server Card + _meta trinity
+ *   GET /.well-known/mcp/server-card   — the Server Card + _meta block
  *   GET /.well-known/ai-catalog.json   — the three sibling entries
  *   GET /.well-known/fafa              — the agent identity card
  */

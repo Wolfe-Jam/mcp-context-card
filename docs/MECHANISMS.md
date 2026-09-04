@@ -64,7 +64,7 @@ Both return:
   is for instructions; the block says so rather than implying `.fafm` is a
   standard.
 
-Built by `trinityMeta()` in [`src/identity.ts`](../src/identity.ts).
+Built by `serverCardMeta()` in [`src/identity.ts`](../src/identity.ts).
 
 ---
 
@@ -129,7 +129,7 @@ project.fafm   ─┼─→  Server Card _meta   (context · memory · identity)
   fafa
 ```
 
-`catalog-gen.ts` reads exactly the files `trinityMeta()` names. The CI job
+`catalog-gen.ts` reads exactly the files `serverCardMeta()` names. The CI job
 `npm run catalog:check` regenerates `ai-catalog.json` and fails on any drift —
 change a source, both surfaces move together.
 

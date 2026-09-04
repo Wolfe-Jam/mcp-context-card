@@ -94,11 +94,11 @@ To serve *your* artifacts:
 1. **Replace the three files** — `AGENTS.md`, `project.fafm`, `.well-known/fafa`
    — with your own, or point `MCP_CONTEXT_CARD_ROOT` at a directory that has them.
    `AGENTS.md` is the one with a real standard; the other two are swappable.
-2. **Rename the namespace.** `trinityMeta()` in `src/identity.ts` uses
+2. **Rename the namespace.** `serverCardMeta()` in `src/identity.ts` uses
    `io.github.wolfe-jam.mcp-context-card/*` keys, and `buildCatalog()` in
    `src/catalog-gen.ts` uses `urn:air:mcp-context-card:*` identifiers. Change both to
    a domain or GitHub identity you control ([MECHANISMS.md](./MECHANISMS.md)).
-3. **Swap the media types** in `trinityMeta()` if your memory / identity
+3. **Swap the media types** in `serverCardMeta()` if your memory / identity
    artifacts aren't `.fafm` / `.fafa`. Drop the `iana` field for any that isn't
    a registered type.
 4. `npm run catalog` to regenerate, `npm run demo` to confirm all three still

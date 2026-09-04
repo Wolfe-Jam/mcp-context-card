@@ -12,7 +12,7 @@
 import { join } from "node:path";
 import { parseAgentsMd } from "./agents-md.js";
 import { parseFafm } from "./memory.js";
-import { resolveIdentity, trinityMeta, META_NS } from "./identity.js";
+import { resolveIdentity, serverCardMeta, META_NS } from "./identity.js";
 import { NAME, SERVER_CARD_URI } from "./constants.js";
 import { escapeHtml, renderInline, renderMarkdown, slug } from "./md.js";
 
@@ -108,7 +108,7 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
   const agents = parseAgentsMd(join(root, "AGENTS.md"));
   const mem = parseFafm(join(root, "project.fafm"));
   const id = resolveIdentity(root);
-  const meta = trinityMeta() as Record<string, { source: string; mediaType: string; note?: string }>;
+  const meta = serverCardMeta() as Record<string, { source: string; mediaType: string; note?: string }>;
 
   const name = id?.displayName ?? id?.name ?? NAME;
 
