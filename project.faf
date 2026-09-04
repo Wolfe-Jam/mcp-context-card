@@ -16,8 +16,8 @@ stack:
   database: slotignored  # memory is a file, not a DB
   connection: slotignored  # no database
   hosting: Docker / any Node host — stdio for local, stateless Streamable HTTP for remote
-  cicd: GitHub Actions (typecheck + build + test + demo, 3 OSes)
-tech_stack: [TypeScript, "@modelcontextprotocol/sdk", hono, yaml]
+  cicd: GitHub Actions — typecheck + build + test:coverage + demo on 3 OSes; catalog:check + card:check on Linux
+tech_stack: [TypeScript, "@modelcontextprotocol/sdk", "agents-md-facts", hono, yaml]
 human_context:
   who: MCP host and server implementers who want a project's AGENTS.md, memory, and identity available over MCP without inventing an ad-hoc shape for each.
   what: An MCP server with nine tools — read_agents_md / list_agents_md_sections / author_agents_md (context), remember / recall / forget (memory), whoami (identity), list_context_sources / render_context_card (discovery) — exposed through the Server Card _meta block and a self-published ai-catalog.json. Dual transport (stdio + stateless Streamable HTTP).
@@ -25,4 +25,4 @@ human_context:
   where: github.com/Wolfe-Jam/mcp-context-card
   when: "2026-08-12"
   how: TypeScript on the MCP SDK. Dual transport in src/bin.ts. The Server Card _meta block and ai-catalog.json are generated from the same three sources (AGENTS.md, project.fafm, .well-known/fafa) — a CI check fails on drift. remember/recall are real file-backed reads/writes proven across a process boundary in demo.ts and the test suite. See docs/MECHANISMS.md, docs/WIRING.md, docs/TRANSPORT.md.
-key_files: [package.json, README.md, AGENTS.md, docs/MECHANISMS.md, src/server.ts, src/agents-md.ts, src/catalog-gen.ts, src/transport/http.ts]
+key_files: [package.json, README.md, AGENTS.md, docs/MECHANISMS.md, src/server.ts, src/identity.ts, src/render-card.ts, src/author.ts, src/agents-md.ts, src/catalog-gen.ts, src/transport/http.ts]
