@@ -8,6 +8,8 @@
  *   mcp-context-card --stdio      → force stdio even when PORT is set
  *   mcp-context-card card         → render THIS directory's context card to stdout
  *                                   ( > card.html · --theme light|dark · --accent #hex )
+ *   mcp-context-card --help       → usage
+ *   mcp-context-card --version    → version
  *
  * MCP_CONTEXT_CARD_ROOT=/path/to/project → read AGENTS.md / project.fafm /
  *   .well-known/ from there instead of the package's own bundled copies.
@@ -15,9 +17,10 @@
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { NAME, VERSION } from "./constants.js";
 import { ROOT, serve } from "./server.js";
 
-export type Mode = "stdio" | "http" | "card";
+export type Mode = "stdio" | "http" | "card" | "help" | "version";
 
 export interface Launch {
   mode: Mode;
@@ -27,19 +30,48 @@ export interface Launch {
   root: string;
 }
 
+/** what a bare `--help` / `help` prints. */
+export const HELP = `${NAME} ${VERSION}
+Serve a project's context (AGENTS.md), memory, and identity over MCP.
+
+USAGE
+  mcp-context-card                  stdio MCP server — what an MCP host spawns (default)
+  mcp-context-card --http           stateless Streamable HTTP on PORT (default 3000)
+  mcp-context-card --stdio          force stdio even when PORT is set
+  mcp-context-card card [> f.html]  render this directory's context card to stdout
+                                      --theme light|dark    --accent #hex
+  mcp-context-card --help           this text
+  mcp-context-card --version        print version
+
+ENV
+  MCP_CONTEXT_CARD_ROOT   read AGENTS.md / project.fafm / .well-known/ from here
+  PORT                    if set, run HTTP instead of stdio
+
+A bare run is an stdio server: it waits for a host to speak JSON-RPC on stdin,
+so it looks idle at a terminal. Try \`card\` or \`--http\` to see output directly.
+https://github.com/Wolfe-Jam/mcp-context-card
+`;
+
 /**
  * Decide how to launch, from argv + env. Pure — so the mode matrix is unit
  * tested without spawning a process.
  *
- *   card               → render the cwd's card to stdout
- *   (nothing)          → stdio
- *   --http | PORT=<n>  → http
- *   --stdio            → stdio, even when PORT is set
+ *   --help  | -h  | help     → print usage
+ *   --version | -V | version → print version
+ *   card                     → render the cwd's card to stdout
+ *   (nothing)                → stdio
+ *   --http | PORT=<n>        → http
+ *   --stdio                  → stdio, even when PORT is set
  */
 export function resolveLaunch(
   argv: readonly string[],
   env: NodeJS.ProcessEnv = process.env,
 ): Launch {
+  const has = (...flags: string[]) => flags.some((f) => argv.includes(f));
+
+  if (argv[0] === "help" || has("--help", "-h")) return { mode: "help", port: 0, root: ROOT };
+  if (argv[0] === "version" || has("--version", "-V")) return { mode: "version", port: 0, root: ROOT };
+
   if (argv[0] === "card") {
     return {
       mode: "card",
@@ -66,7 +98,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const argv = process.argv.slice(2);
   const { mode, port, root } = resolveLaunch(argv);
 
-  if (mode === "card") {
+  if (mode === "help") {
+    process.stdout.write(HELP);
+  } else if (mode === "version") {
+    process.stdout.write(`${VERSION}\n`);
+  } else if (mode === "card") {
     const { renderCard, safeAccent } = await import("./render-card.js");
     const theme = flagValue(argv, "--theme");
     process.stdout.write(
@@ -80,8 +116,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     const { serve: serveHttp } = await import("@hono/node-server");
     serveHttp({ fetch: httpApp(root).fetch, port });
     // stderr, not stdout — stdout is the MCP wire in stdio mode.
-    console.error(`mcp-context-card · http · :${port}  (POST /mcp · GET /card · GET /.well-known/*)`);
+    console.error(`${NAME} · http · :${port}  (POST /mcp · GET /card · GET /.well-known/*)`);
   } else {
+    // stderr so it never touches the JSON-RPC wire on stdout; a bare run at a
+    // terminal otherwise looks hung.
+    console.error(`${NAME} · stdio · waiting for an MCP host on stdin  (--help for usage · Ctrl-C to exit)`);
     await serve(new StdioServerTransport(), root);
   }
 }

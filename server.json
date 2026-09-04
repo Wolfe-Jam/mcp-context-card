@@ -3,7 +3,7 @@
   "name": "io.github.wolfe-jam/mcp-context-card",
   "title": "mcp-context-card",
   "description": "Reference MCP server that makes a project's context (AGENTS.md), memory, and identity discoverable to any MCP client — through the Server Card _meta block and ai-catalog.json sibling entries.",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "repository": {
     "url": "https://github.com/Wolfe-Jam/mcp-context-card",
     "source": "github"
@@ -13,7 +13,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "mcp-context-card",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"
