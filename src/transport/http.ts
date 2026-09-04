@@ -4,9 +4,9 @@
  * A Hono app. `POST /mcp` is the MCP endpoint, run **stateless**: a fresh
  * server + transport per request, `sessionIdGenerator: undefined`, and
  * `enableJsonResponse` so every response is a complete JSON body (no SSE
- * stream, nothing to keep open). That's the right default for a reference
- * server — it scales horizontally, needs no sticky sessions, and there's
- * no per-connection state to leak. A server that needs server-streamed
+ * stream, nothing to keep open). That's the right default here — it scales
+ * horizontally, needs no sticky sessions, and there's no per-connection
+ * state to leak. A server that needs server-streamed
  * notifications or resumability would set a `sessionIdGenerator` and hold
  * transports in a map; this one deliberately does not.
  *

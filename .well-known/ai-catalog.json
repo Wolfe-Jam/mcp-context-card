@@ -29,7 +29,7 @@
       "displayName": "mcp-context-card — agent identity (.fafa)",
       "type": "application/vnd.fafa+yaml",
       "mediaType": "application/vnd.fafa+yaml",
-      "description": "Reference MCP server that makes a project's context (AGENTS.md), memory, and identity discoverable to any MCP client, through the Server Card _meta block and a self-published ai-catalog.json.",
+      "description": "An MCP server that makes a project's context (AGENTS.md), cross-session memory, and identity discoverable to any MCP client, through the Server Card _meta block and a self-published ai-catalog.json.",
       "url": "./.well-known/fafa",
       "_meta": {
         "io.github.wolfe-jam.mcp-context-card/iana": "https://www.iana.org/assignments/media-types/application/vnd.fafa+yaml"

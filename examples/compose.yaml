@@ -6,7 +6,7 @@ services:
       dockerfile: examples/Dockerfile
     ports:
       - "3000:3000"
-    # Point at a real project instead of the bundled reference files:
+    # Point at a real project instead of the bundled example files:
     # volumes:
     #   - ./my-project:/project:ro
     # environment:
