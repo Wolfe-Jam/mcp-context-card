@@ -34,7 +34,7 @@ Nine tools, two discovery surfaces already in the ecosystem (Server Card
 It composes:
 
 - **serve · discover · render** — this server
-- **author · keep true** — [`agents-md-facts`](https://github.com/Wolfe-Jam/agents-md-facts) (the `author_agents_md` tool wraps it)
+- **author BETTER, keep true** — [`agents-md-facts`](https://github.com/Wolfe-Jam/agents-md-facts) (`author_agents_md` wraps it for the facts layer; adds a BEST layer of its own from `project.faf` when one exists)
 - **files · shell · git** — [`server-filesystem`](https://github.com/modelcontextprotocol/servers), [`server-git`](https://github.com/modelcontextprotocol/servers) / github‑mcp‑server, your test runner's MCP
 
 Not a framework or a platform — three concerns, nothing more. Not a file,
@@ -63,7 +63,7 @@ Light, dark, or auto; the accent defaults to the AAIF palette and takes any hex.
 
 | You want… | Reach for |
 |---|---|
-| an `AGENTS.md` and you don't have one | `author_agents_md` — or [`npx agents-md-facts`](https://github.com/Wolfe-Jam/agents-md-facts) |
+| an `AGENTS.md` and you don't have one | `author_agents_md` — BEST with a `project.faf`, BETTER without |
 | your agent to pull *one* `AGENTS.md` section on demand, not the whole file | `read_agents_md` · `list_agents_md_sections` |
 | a persistent notepad for your agent — survives restarts, no setup | `remember` · `recall` · `forget` |
 | a shareable view of what your MCP server exposes to agents | `GET /card` · `npx mcp-context-card card` |
@@ -73,19 +73,20 @@ Light, dark, or auto; the accent defaults to the AAIF palette and takes any hex.
 
 ### No `AGENTS.md` yet?
 
-The `author_agents_md` tool authors one from your repo's facts — real
-build/test commands, entry points, toolchain conventions — and hands the agent
-the draft. It's a thin wrapper over
-[`agents-md-facts`](https://github.com/Wolfe-Jam/agents-md-facts); to author or
-keep one true outside a session:
+The `author_agents_md` tool authors one — **BETTER** from your repo's real
+facts (build/test commands, entry points, toolchain conventions, via
+[`agents-md-facts`](https://github.com/Wolfe-Jam/agents-md-facts)), or
+**BEST** when a `project.faf` exists: the same facts, plus its structured
+goal, who it's for, and why, as a section ahead of them. Nothing to
+configure — the tier follows what's actually there.
+([The ladder this follows.](https://github.com/Wolfe-Jam/agents-md-facts/blob/main/docs/BETTER-BEST.md))
+
+To author or keep the facts layer true outside a session:
 
 ```bash
 npx agents-md-facts          # author / refresh AGENTS.md
 npx agents-md-facts --check  # fail if missing or stale (CI, pre-commit)
 ```
-
-A `project.faf` is the next rung — a structured source that refreshes the file.
-Short model: [`agents-md-facts/docs/BETTER-BEST.md`](https://github.com/Wolfe-Jam/agents-md-facts/blob/main/docs/BETTER-BEST.md).
 
 ### See the card
 
@@ -150,7 +151,7 @@ The wire‑level detail is in [docs/MECHANISMS.md](./docs/MECHANISMS.md).
 
 | Tool | What it's for |
 |---|---|
-| `author_agents_md` | draft an `AGENTS.md` from the repo's facts (via `agents-md-facts`) — a managed block, ready to drop in |
+| `author_agents_md` | draft an `AGENTS.md` — BETTER from the repo's facts (via `agents-md-facts`), BEST when a `project.faf` exists — ready to drop in |
 | `read_agents_md` | return the project's `AGENTS.md` — whole, or one section by heading |
 | `list_agents_md_sections` | the headings, so a client pulls one section instead of the whole file |
 | `remember` | write a fact that will still be there next session |
@@ -183,7 +184,7 @@ one; another checks the stdio and HTTP tool surfaces match.
 |---|---|
 | `src/server.ts` | the nine tools + the Server Card resource |
 | `src/agents-md.ts` | reads and section‑splits `AGENTS.md` |
-| `src/author.ts` | `author_agents_md` — wraps [`agents-md-facts`](https://github.com/Wolfe-Jam/agents-md-facts) |
+| `src/author.ts` | `author_agents_md` — BETTER via [`agents-md-facts`](https://github.com/Wolfe-Jam/agents-md-facts), BEST when `project.faf` exists |
 | `src/md.ts` | a minimal dependency‑free Markdown → HTML renderer |
 | `src/render-card.ts` | the card — identity + `AGENTS.md` + memory + discovery, as one HTML page |
 | `src/memory.ts` | file‑backed `remember` / `recall` / `forget` |

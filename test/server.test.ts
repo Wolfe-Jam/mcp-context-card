@@ -142,12 +142,15 @@ test("server: render_context_card returns a self-contained HTML card", async () 
   }
 });
 
-test("server: author_agents_md returns an agents-md-facts managed block, notes the file exists", async () => {
+test("server: author_agents_md — the fixture ships a project.faf, so this is BEST", async () => {
   const { root, cleanup } = fixture();
   try {
     const client = await connected(root);
     const draft = say(await client.callTool({ name: "author_agents_md", arguments: {} }));
+    assert.match(draft, /BEST \(project\.faf \+ facts\)/);
     assert.match(draft, /AGENTS\.md already exists/); // the fixture ships one
+    assert.match(draft, /<!-- context:from-faf:start -->/);
+    assert.match(draft, /## Project/);
     assert.match(draft, /<!-- agents:from-facts:start -->/);
     assert.match(draft, /<!-- agents:from-facts:end -->/);
     assert.match(draft, /authored by agents-md-facts/);

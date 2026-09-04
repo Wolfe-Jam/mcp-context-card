@@ -47,7 +47,7 @@ test("buildCatalog: descriptions derive from real file content", () => {
 
     // memory entry names the real fact count
     const mem = cat.entries.find((e) => e.type === "application/vnd.fafm+yaml")!;
-    assert.match(mem.description, /\b3 fact\(s\)/);
+    assert.match(mem.description, /\b4 fact\(s\)/);
   } finally {
     cleanup();
   }
@@ -60,7 +60,7 @@ test("buildCatalog: reflects a change to a source file", () => {
     const mem = buildCatalog(root).entries.find(
       (e) => e.type === "application/vnd.fafm+yaml",
     )!;
-    assert.match(mem.description, /\b4 fact\(s\)/); // 3 authored + 1 added
+    assert.match(mem.description, /\b5 fact\(s\)/); // 4 authored + 1 added
   } finally {
     cleanup();
   }

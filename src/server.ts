@@ -107,7 +107,7 @@ export function createServer(root: string = ROOT): Server {
       {
         name: "author_agents_md",
         description:
-          "Author an AGENTS.md for this project from its repo facts (via agents-md-facts) and return the draft — a managed block, ready to drop in. Detects real build/test commands, entry points, and toolchain conventions; nothing invented. Does not write a file.",
+          "Author an AGENTS.md for this project and return the draft — BETTER from repo facts alone (via agents-md-facts: real build/test commands, entry points, toolchain conventions, nothing invented), or BEST when a project.faf exists (facts plus its structured goal/who/why as a second managed block ahead of them). Does not write a file.",
         inputSchema: { type: "object", properties: {} },
       },
       {
@@ -198,9 +198,10 @@ export function createServer(root: string = ROOT): Server {
       }
       case "author_agents_md": {
         const a = authorAgentsMd(root);
+        const tier = a.tier === "best" ? "BEST (project.faf + facts)" : "BETTER (facts only)";
         const note = a.exists
-          ? "AGENTS.md already exists — diff this managed block in, don't overwrite"
-          : "no AGENTS.md yet — write this, then `npx agents-md-facts --check` keeps it true";
+          ? `${tier} — AGENTS.md already exists, diff this in, don't overwrite`
+          : `${tier} — no AGENTS.md yet, write this, then \`npx agents-md-facts --check\` keeps the facts block true`;
         return text(`<!-- ${note} -->\n\n${a.markdown}`);
       }
       case "remember": {

@@ -41,7 +41,7 @@ Windows for every push and PR to `main` (`.github/workflows/ci.yml`).
 |---|---|
 | `src/server.ts` | the MCP server — the nine tools + the Server Card resource |
 | `src/agents-md.ts` | reads and section-splits this file |
-| `src/author.ts` | `author_agents_md` — wraps `agents-md-facts` (the AGENTS.md authoring engine) |
+| `src/author.ts` | `author_agents_md` — BETTER via `agents-md-facts`, BEST when `project.faf` exists |
 | `src/md.ts` | a minimal dependency-free Markdown → HTML renderer |
 | `src/render-card.ts` | the card — identity + this file + memory + discovery, as one HTML page |
 | `src/memory.ts` → `src/faf/parse-fafm.ts` | file-backed `remember` / `recall` / `forget` |
@@ -81,6 +81,7 @@ plus `npm run catalog:check` and `npm run card:check` clean if you touched
 
 ## Authoring this file
 
-`AGENTS.md` here is maintained by hand. It can also be generated from the
-repo's `project.faf` with `faf export --agents` — the server doesn't care how
-the file was authored, only that it's valid Markdown.
+`AGENTS.md` here is maintained by hand. The `author_agents_md` tool (or
+`faf export --agents`) would draft a BEST version straight from this repo's
+own `project.faf` plus its detected facts — the server doesn't care how the
+file was authored, only that it's valid Markdown.
