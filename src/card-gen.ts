@@ -7,6 +7,10 @@
  * docs/card-dark.html) — docs/card.html stays "auto" (follows the viewer's
  * OS preference); the two siblings are for linking a forced theme from the
  * README, since a static host can't answer a `?theme=` query param.
+ *
+ * GitHub Pages serves this repo from main /docs (wolfe-jam.github.io/
+ * mcp-context-card/) — docs/index.html (a copy of the auto card) is what
+ * answers the bare root, so it isn't a 404.
  */
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -15,10 +19,12 @@ import { renderCard } from "./render-card.js";
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-  writeFileSync(join(root, "docs/card.html"), renderCard(root));
+  const auto = renderCard(root);
+  writeFileSync(join(root, "docs/card.html"), auto);
+  writeFileSync(join(root, "docs/index.html"), auto);
   writeFileSync(join(root, "docs/card-light.html"), renderCard(root, { theme: "light" }));
   writeFileSync(join(root, "docs/card-dark.html"), renderCard(root, { theme: "dark" }));
   console.log(
-    "wrote docs/card.html (auto) + card-light.html + card-dark.html — the context card, rendered from AGENTS.md / project.fafm / .well-known/fafa",
+    "wrote docs/card.html + docs/index.html (auto) + card-light.html + card-dark.html — the context card, rendered from AGENTS.md / project.fafm / .well-known/fafa",
   );
 }
