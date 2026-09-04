@@ -26,6 +26,13 @@
 - **`MCP_CONTEXT_CARD_ROOT`** — directory holding `AGENTS.md`, `project.fafm`, and
   `.well-known/fafa`. Omit it and the server uses its own bundled copies.
 - `stdout` is the JSON‑RPC wire; logging is on `stderr`.
+- **`command: "npx"` fails to spawn on some hosts** (`spawn npx ENOENT`) — the
+  host's process spawn doesn't inherit a shell `PATH` that has `npx` on it,
+  even though a login shell does. Observed with Cursor. Fix: point `command`
+  at an absolute path to `node`, with the installed package's `dist/bin.js` as
+  the arg — e.g. `command: "node"`, `args: ["/path/to/node_modules/mcp-context-card/dist/bin.js"]`
+  (or wherever `npm install -g` / your package manager put it; find it with
+  `npm root -g` or `which mcp-context-card` after a global install).
 
 ### Streamable HTTP (remote)
 
@@ -72,7 +79,10 @@ And to discover what a server offers before committing to it:
 await client.callTool({ name: "list_context_sources", arguments: {} });
 // → { context: { source: "AGENTS.md", mediaType: "text/markdown", present: true, sections: 9 },
 //     memory:  { … }, identity: { … },
-//     surfaces: { serverCard: [...], aiCatalog: [...] } }
+//     surfaces: { mcp: { serverCard: "resource mcp-context-card://server-card" },
+//                 http: { serverCard: "GET /.well-known/mcp/server-card",
+//                         aiCatalog: "GET /.well-known/ai-catalog.json",
+//                         card: "GET /card" } } }
 ```
 
 ---

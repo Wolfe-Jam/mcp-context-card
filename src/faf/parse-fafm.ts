@@ -31,8 +31,28 @@ function factMap(entries: Record<string, string>): YAMLMap {
   return m;
 }
 
+/** A brand-new .fafm — what `remember()` writes the first time a project has none. */
+const FRESH_FAFM = `version: "1.1"
+memory:
+  facts: []
+  sessions: []
+  preferences: {}
+  custom: {}
+`;
+
+/**
+ * Load the .fafm at `path`. A missing file is not an error here — it means
+ * "no memory yet", and remember()/forget() need a document to edit even
+ * before anything has ever been written. Any other read error (permissions,
+ * a directory in the way, …) still throws.
+ */
 function load(path: string): Document {
-  return parseDocument(readFileSync(path, "utf8"));
+  try {
+    return parseDocument(readFileSync(path, "utf8"));
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return parseDocument(FRESH_FAFM);
+    throw err;
+  }
 }
 
 export function parseFafm(path: string): Memory {
