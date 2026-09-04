@@ -68,7 +68,10 @@ npx mcp-context-card card       # or:  npm run card  →  docs/card.html
 ```
 
 Light, dark, or auto; the accent defaults to the AAIF palette and takes any hex.
-[docs/card.html](./docs/card.html) is this repo's, rendered.
+[docs/card.html](./docs/card.html) is this repo's, rendered — see it live:
+[light](https://htmlpreview.github.io/?https://github.com/Wolfe-Jam/mcp-context-card/blob/main/docs/card-light.html) ·
+[dark](https://htmlpreview.github.io/?https://github.com/Wolfe-Jam/mcp-context-card/blob/main/docs/card-dark.html)
+(both in the AAIF accent shown here — pass any hex to change it).
 
 ## Add it to your setup
 
