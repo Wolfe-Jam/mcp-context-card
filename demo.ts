@@ -1,13 +1,14 @@
 /**
- * demo — every tool, run live, over both transports. Not a description.
+ * demo — every tool, run live, over both transports.
  *
- *   1. CONTEXT   — list the AGENTS.md sections, then pull just one.
- *   2. MEMORY    — remember() a fact, kill the server process, spawn a fresh
- *      one, recall() the same fact. Only the file survives that.
- *   3. IDENTITY  — whoami(), and the Server Card _meta block read back from
+ *   1. CONTEXT    — list the AGENTS.md sections, then pull just one.
+ *   2. MEMORY     — remember() a fact, stop the server process, start a new
+ *      one, recall() the same fact. Only the file carries it across.
+ *   3. IDENTITY   — whoami(), and the Server Card _meta block read back from
  *      the `mcp-context-card://server-card` resource.
- *   4. DISCOVERY — list_context_sources(), then the same server over
- *      stateless Streamable HTTP with its .well-known routes.
+ *   4. DISCOVERY  — list_context_sources(), then the same server over
+ *      stateless Streamable HTTP with its .well-known routes and /card.
+ *   5. PARAM-FILL — a host fills another server's params from project.faf.
  */
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
@@ -31,7 +32,7 @@ async function connect(): Promise<Client> {
     command: process.execPath,
     args: ["--import", "tsx", join(here, "src/server.ts")],
   });
-  const client = new Client({ name: "demo-host", version: "0.2.0" }, { capabilities: {} });
+  const client = new Client({ name: "demo-host", version: "0.5.0" }, { capabilities: {} });
   await client.connect(transport);
   return client;
 }
@@ -104,7 +105,7 @@ console.log(`\n${line}\n4. DISCOVERY — list_context_sources(), then the same s
   await new Promise((r) => setTimeout(r, 50));
   const { port } = srv.address() as { port: number };
 
-  const httpClient = new Client({ name: "demo-host", version: "0.2.0" }, { capabilities: {} });
+  const httpClient = new Client({ name: "demo-host", version: "0.5.0" }, { capabilities: {} });
   await httpClient.connect(new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${port}/mcp`)));
   const tools = (await httpClient.listTools()).tools.map((t) => t.name);
   console.log(`· POST http://127.0.0.1:${port}/mcp → ${tools.length} tools: ${tools.join(", ")}`);
@@ -149,7 +150,7 @@ console.log(`\n${line}\n5. PARAM-FILL — a host fills a 3rd-party tool's params
   }));
 
   const [a, b] = InMemoryTransport.createLinkedPair();
-  const host = new Client({ name: "demo-host", version: "0.2.0" }, { capabilities: {} });
+  const host = new Client({ name: "demo-host", version: "0.5.0" }, { capabilities: {} });
   await Promise.all([deployer.connect(b), host.connect(a)]);
 
   // the model produced only `target`; the host wraps callTool and fills the

@@ -1,6 +1,6 @@
 {
   "name": "mcp-context-card",
-  "version": "0.2.0",
+  "version": "0.5.0",
   "description": "Reference MCP server: project context, persistent memory, and agent identity — through the two exposure surfaces already in the ecosystem (Server Card _meta, ai-catalog sibling entries).",
   "keywords": [
     "mcp",
