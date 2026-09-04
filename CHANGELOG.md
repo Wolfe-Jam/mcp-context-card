@@ -73,7 +73,7 @@ tested server.
 
 ### Engineering
 
-- 88 tests across Linux / macOS / Windows, coverage-gated
+- 90 tests across Linux / macOS / Windows, coverage-gated
   (lines 90 / funcs 85 / branches 80, `src/` only). A real `child_process`
   spawn proves memory across a genuine process boundary; stdio/HTTP
   tool-surface parity is asserted.

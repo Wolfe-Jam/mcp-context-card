@@ -47,7 +47,7 @@ Windows for every push and PR to `main` (`.github/workflows/ci.yml`).
 | `src/identity.ts` | `whoami` (`.fafa` → `package.json` fallback) + the `_meta` context block |
 | `src/catalog-gen.ts` | writes `.well-known/ai-catalog.json` from the same three sources |
 | `src/transport/http.ts` | the stateless Streamable HTTP app (Hono) |
-| `src/bin.ts` | the entry point (`resolveLaunch`) — `stdio` · `--http` · `card` |
+| `src/bin.ts` | the entry point (`resolveLaunch`) — `stdio` · `--http` · `card` · `--help` · `--version` |
 | `src/faf/parse-fafm.ts` · `parse-fafa.ts` | the `.fafm` / `.fafa` parsers |
 
 ## Conventions

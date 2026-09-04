@@ -2,10 +2,10 @@
  * mcp-context-card server — makes a project's context, memory, and identity
  * discoverable to any MCP client.
  *
- *   context   — read_agents_md · list_agents_md_sections   (this project's AGENTS.md)
- *   memory    — remember · recall · forget                 (a .fafm file)
- *   identity  — whoami                                     (this server's .fafa)
- *   discovery — list_context_sources                       (what's published, and how)
+ *   context   — read_agents_md · list_agents_md_sections · author_agents_md   (this project's AGENTS.md)
+ *   memory    — remember · recall · forget                                    (a .fafm file)
+ *   identity  — whoami                                                        (this server's .fafa)
+ *   discovery — list_context_sources · render_context_card                    (what's published, and how)
  *
  * ...exposed through the two mechanisms already in the ecosystem:
  *
