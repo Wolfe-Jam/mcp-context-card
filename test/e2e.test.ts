@@ -8,8 +8,10 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { spawn, execFileSync } from "node:child_process";
 import { once } from "node:events";
+import { mkdtempSync, rmSync } from "node:fs";
 import type { AddressInfo } from "node:net";
 import { createServer as createNetServer } from "node:net";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
@@ -56,6 +58,31 @@ describe("e2e — real child process", () => {
       await c2.close();
     } finally {
       fx.cleanup();
+    }
+  });
+
+  // A real host check (Cursor, 2026-09-04) found remember() threw on a root
+  // that had never had a project.fafm — the fixture() dir above always ships
+  // one, so it never exercised that path. This starts from a genuinely bare
+  // directory, over the real stdio wire, through a real process restart.
+  test("memory: cold root (no project.fafm yet) → remember creates it, survives a restart", async () => {
+    const root = mkdtempSync(join(tmpdir(), "mcp-cc-cold-e2e-"));
+    try {
+      const c1 = await stdioChild(root);
+      const fact = `cold e2e ${Date.now()}`;
+      const remembered = (await c1.callTool({
+        name: "remember",
+        arguments: { id: "cold", text: fact },
+      })) as any;
+      assert.equal(remembered.content[0].text, "remembered: cold");
+      await c1.close();
+
+      const c2 = await stdioChild(root); // brand-new OS process, same bare root
+      const r = (await c2.callTool({ name: "recall", arguments: { id: "cold" } })) as any;
+      assert.equal(r.content[0].text, fact);
+      await c2.close();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
     }
   });
 
