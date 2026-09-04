@@ -15,8 +15,7 @@
   "author": "wolfejam",
   "license": "MIT",
   "type": "module",
-  "private": true,
-  "//private": "flip to false at publish time — GO-gated. prepublishOnly is the build/test latch.",
+  "private": false,
   "bin": {
     "mcp-context-card": "dist/bin.js"
   },
