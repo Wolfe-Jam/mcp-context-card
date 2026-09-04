@@ -3,8 +3,11 @@
 [![CI](https://github.com/Wolfe-Jam/mcp-context-card/actions/workflows/ci.yml/badge.svg)](https://github.com/Wolfe-Jam/mcp-context-card/actions/workflows/ci.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
-The essential MCP server for a project's context, memory, and identity —
-discoverable to any MCP client, and rendered as one card you can read.
+**Get one. Or add it to yours.** The essential MCP server for a project's
+context, memory, and identity — discoverable to any MCP client, and
+rendered as one card you can read.
+
+![the context card](./docs/img/card.png)
 
 - **context** — the project's `AGENTS.md`, served whole or one section at a time
 - **memory** — facts that persist across sessions, in a file
@@ -12,6 +15,15 @@ discoverable to any MCP client, and rendered as one card you can read.
 
 Discovery goes through two surfaces already in the ecosystem: the Server Card
 `_meta` block and `ai-catalog.json` sibling entries.
+
+## Pick one
+
+| You want to… | |
+|---|---|
+| **Add an `AGENTS.md`** — you don't have one | `author_agents_md` drafts one from your repo's real facts |
+| **Improve an `AGENTS.md`** — you have one, make it the best it can be | the same tool, automatically — drop in a `project.faf` and it upgrades to BEST: goal, who it's for, why |
+| **Get a new MCP server base** — context, memory, identity, wired | stand this up as-is; a host has all three before you write a tool of your own |
+| **Improve your MCP with context, memory, ID** — you already run one | run it alongside your existing server; nothing to migrate, it composes |
 
 ## A base MCP — or an extension for any other
 
@@ -44,11 +56,9 @@ formats are swappable examples.
 
 ## The card
 
-![the context card](./docs/img/card.png)
-
-The same three sources render as one self‑contained HTML page — identity,
-`AGENTS.md`, memory, and how a machine fetches it. The view for people:
-screenshot it, drop it in a PR, put it on a status page.
+That's it, above — the same three sources rendered as one self‑contained
+HTML page: identity, `AGENTS.md`, memory, and how a machine fetches it. The
+view for people: screenshot it, drop it in a PR, put it on a status page.
 
 ```
 GET /card                      # live, on the HTTP transport
@@ -58,16 +68,6 @@ npx mcp-context-card card       # or:  npm run card  →  docs/card.html
 
 Light, dark, or auto; the accent defaults to the AAIF palette and takes any hex.
 [docs/card.html](./docs/card.html) is this repo's, rendered.
-
-## Who it's for
-
-| You want… | Reach for |
-|---|---|
-| an `AGENTS.md` and you don't have one | `author_agents_md` — BEST with a `project.faf`, BETTER without |
-| your agent to pull *one* `AGENTS.md` section on demand, not the whole file | `read_agents_md` · `list_agents_md_sections` |
-| a persistent notepad for your agent — survives restarts, no setup | `remember` · `recall` · `forget` |
-| a shareable view of what your MCP server exposes to agents | `GET /card` · `npx mcp-context-card card` |
-| the two‑surface discovery pattern to copy into your own server | read `src/` |
 
 ## Add it to your setup
 
@@ -173,7 +173,7 @@ The wire‑level detail is in [docs/MECHANISMS.md](./docs/MECHANISMS.md).
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-99 tests on Linux, macOS, and Windows, coverage‑gated in CI. Two spawn a real
+102 tests on Linux, macOS, and Windows, coverage‑gated in CI. Two spawn a real
 child process and check a remembered fact survives the restart — one against
 an existing `project.fafm`, one starting from a project that has never had
 one; another checks the stdio and HTTP tool surfaces match.
