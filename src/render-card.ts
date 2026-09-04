@@ -38,15 +38,20 @@ const CSS = (accent: string) => `
   --accent:${accent};
   --bg:#f4f4f5; --card:#fff; --fg:#0a0a0a; --muted:#6b6b70;
   --line:rgba(0,0,0,.09); --chip:rgba(0,0,0,.05);
+  --card-shadow:0 1px 3px rgba(0,0,0,.06), 0 12px 32px rgba(0,0,0,.10);
 }
 :root[data-theme="dark"]{
   --bg:#000; --card:#0d0d0d; --fg:#fafafa; --muted:#9a9aa0;
   --line:rgba(255,255,255,.13); --chip:rgba(255,255,255,.07);
+  --card-shadow:0 0 0 1px rgba(255,255,255,.16),
+    0 8px 40px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --bg:#000; --card:#0d0d0d; --fg:#fafafa; --muted:#9a9aa0;
     --line:rgba(255,255,255,.13); --chip:rgba(255,255,255,.07);
+    --card-shadow:0 0 0 1px rgba(255,255,255,.16),
+      0 8px 40px color-mix(in srgb, var(--accent) 20%, transparent);
   }
 }
 *{box-sizing:border-box}
@@ -54,7 +59,7 @@ body{margin:0;background:var(--bg);color:var(--fg);
   font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   padding:40px 18px}
 .card{max-width:760px;margin:0 auto;background:var(--card);border:1px solid var(--line);
-  border-radius:14px;overflow:hidden}
+  border-radius:14px;overflow:hidden;box-shadow:var(--card-shadow)}
 .card>*{padding:26px 30px}
 .top{border-top:4px solid var(--accent);border-bottom:1px solid var(--line)}
 h1{margin:0 0 10px;font-size:1.7rem;letter-spacing:-.02em}
