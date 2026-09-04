@@ -29,7 +29,7 @@ Both return:
 ```jsonc
 {
   "name": "mcp-context-card",
-  "version": "0.2.0",
+  "version": "0.5.1",
   "_meta": {
     "io.github.wolfe-jam.mcp-context-card/context": {
       "source": "AGENTS.md",
@@ -39,7 +39,7 @@ Both return:
       "source": "project.fafm",
       "mediaType": "application/vnd.fafm+yaml",
       "iana": "https://www.iana.org/assignments/media-types/application/vnd.fafm+yaml",
-      "note": "no de-facto standard for agent memory yet — one instantiation"
+      "note": "no de-facto standard for agent memory yet — this is one instantiation"
     },
     "io.github.wolfe-jam.mcp-context-card/identity": {
       "source": ".well-known/fafa",
