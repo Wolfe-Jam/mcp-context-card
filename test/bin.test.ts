@@ -1,13 +1,37 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { flagValue, resolveLaunch } from "../src/bin.js";
+import { HELP, flagValue, resolveLaunch } from "../src/bin.js";
 import { ROOT } from "../src/server.js";
+import { VERSION } from "../src/constants.js";
 
 test("resolveLaunch: no args, no env → stdio at the package root", () => {
   const l = resolveLaunch([], {});
   assert.equal(l.mode, "stdio");
   assert.equal(l.root, ROOT);
+});
+
+test("resolveLaunch: --help / -h / help → help mode", () => {
+  for (const argv of [["--help"], ["-h"], ["help"], ["card", "--help"]]) {
+    assert.equal(resolveLaunch(argv, {}).mode, "help", JSON.stringify(argv));
+  }
+});
+
+test("resolveLaunch: --version / -V / version → version mode", () => {
+  for (const argv of [["--version"], ["-V"], ["version"]]) {
+    assert.equal(resolveLaunch(argv, {}).mode, "version", JSON.stringify(argv));
+  }
+});
+
+test("resolveLaunch: help wins over PORT / --http", () => {
+  assert.equal(resolveLaunch(["--help"], { PORT: "8080" }).mode, "help");
+  assert.equal(resolveLaunch(["--http", "--version"], {}).mode, "version");
+});
+
+test("HELP text: names the tool, the version, and the stdin gotcha", () => {
+  assert.match(HELP, /^mcp-context-card /);
+  assert.ok(HELP.includes(VERSION));
+  assert.match(HELP, /waits for a host to speak JSON-RPC on stdin/);
 });
 
 test("resolveLaunch: --http → http on the default port", () => {

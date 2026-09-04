@@ -128,6 +128,15 @@ describe("e2e — real child process", () => {
     }
   });
 
+  test("`--help` / `--version`: print and exit 0, no server", () => {
+    const help = execFileSync(runner.command, [...runner.base, "--help"], { encoding: "utf8" });
+    assert.match(help, /^mcp-context-card \d+\.\d+\.\d+/);
+    assert.match(help, /USAGE/);
+
+    const version = execFileSync(runner.command, [...runner.base, "--version"], { encoding: "utf8" });
+    assert.match(version.trim(), /^\d+\.\d+\.\d+$/);
+  });
+
   test("`card` subcommand: renders the target dir's card to stdout, then exits", () => {
     const fx = fixture();
     try {

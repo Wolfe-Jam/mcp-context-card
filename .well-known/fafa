@@ -9,7 +9,7 @@ agent:
   name: "mcp-context-card"
   displayName: "mcp-context-card"
   vendor: "reference"
-  version: "0.5.0"
+  version: "0.5.1"
   description: >-
     Reference MCP server that makes a project's context (AGENTS.md), memory,
     and identity discoverable to any MCP client, through the Server Card _meta

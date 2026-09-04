@@ -2,6 +2,17 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## 0.5.1
+
+First-hour ergonomics, from the 0.5.0 soak.
+
+- `--help` / `-h` and `--version` / `-V` (and the `help` / `version` subcommands)
+  — a bare `mcp-context-card` is a stdio server that waits on stdin, so at a
+  terminal it looked idle with no way to ask what it was.
+- stdio mode now prints one line to **stderr** on start
+  (`… · stdio · waiting for an MCP host on stdin`) — mirrors what `--http`
+  already did. stdout stays clean for the JSON-RPC wire.
+
 ## 0.5.0
 
 The first public release — installable, and settling in the open before a
