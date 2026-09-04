@@ -2,10 +2,11 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
-## [Unreleased]
+## 0.5.0
 
-The first published release. `faf-trinity` v0.1.0 was a private demo; this is
-the versioned, tested, installable server.
+The first public release — installable, and settling in the open before a
+`1.0.0` cut. `faf-trinity` v0.1.0 was a private demo; this is the versioned,
+tested server.
 
 ### The tools
 

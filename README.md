@@ -4,12 +4,14 @@
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 An MCP server that makes a project's context, memory, and identity discoverable
-to any MCP client — through two surfaces already in the ecosystem: the Server
-Card `_meta` block and `ai-catalog.json` sibling entries.
+to any MCP client — and renders them as one card you can read.
 
 - **context** — the project's `AGENTS.md`, served whole or one section at a time
 - **memory** — facts that persist across sessions, in a file
 - **identity** — what this server is, from its own agent card
+
+Discovery goes through two surfaces already in the ecosystem: the Server Card
+`_meta` block and `ai-catalog.json` sibling entries.
 
 ## What it is / what it is not
 
@@ -28,6 +30,23 @@ It composes: run it alongside
 [`server-filesystem`](https://github.com/modelcontextprotocol/servers),
 [`server-git`](https://github.com/modelcontextprotocol/servers) /
 github‑mcp‑server, your test runner's MCP. A piece, not the toolbox.
+
+## The card
+
+![the context card](./docs/img/card.png)
+
+The same three sources render as one self‑contained HTML page — identity,
+`AGENTS.md`, memory, and how a machine fetches it. The view for people:
+screenshot it, drop it in a PR, put it on a status page.
+
+```
+GET /card                      # live, on the HTTP transport
+GET /card?theme=light&accent=%230066cc
+npx mcp-context-card card       # or:  npm run card  →  docs/card.html
+```
+
+Light, dark, or auto; the accent defaults to the AAIF palette and takes any hex.
+[docs/card.html](./docs/card.html) is this repo's, rendered.
 
 ## Who it's for
 
@@ -105,22 +124,6 @@ have no de‑facto standard yet, so the examples here use
 swap in your own.
 
 The wire‑level detail is in [docs/MECHANISMS.md](./docs/MECHANISMS.md).
-
-## The card
-
-The same three sources render as one self‑contained HTML page — identity,
-`AGENTS.md`, memory, and how a machine fetches it. The view for people:
-screenshot it, drop it in a PR, put it on a status page.
-
-```
-GET /card                      # live, on the HTTP transport
-GET /card?theme=light&accent=%230066cc
-npm run card                   # writes docs/card.html
-```
-
-[docs/card.html](./docs/card.html) is the rendered card for this repo (open it
-raw, or `npm run card` to regenerate). Light, dark, or auto; the accent defaults
-to the AAIF palette and takes any hex.
 
 ## Tools
 
