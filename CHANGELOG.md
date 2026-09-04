@@ -2,18 +2,49 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## 0.5.2
+
+The soak, closed out. Two Cursor host checks — a real bug found and fixed, a
+real gap found and fixed, both confirmed against a real independent MCP host
+on the current build.
+
+- **`author_agents_md` now authors BEST, not just BETTER, when it can.**
+  BETTER is the facts-only draft from `agents-md-facts` (build/test
+  commands, entry points, conventions — nothing invented). **BEST** is that
+  plus a `## Project` section ahead of it — goal, who it's for, why, and a
+  "start here" file list — read straight from `project.faf` when one
+  exists. This is the point of the app: give the best AGENTS.md the
+  project has the material for, not a fixed floor. The tool's response
+  names the tier it produced.
+- **Fix:** `remember` on a project that had never had a `project.fafm`
+  threw `ENOENT` instead of starting one — the single most common
+  first-use case. `remember` now creates a fresh `.fafm` on first write;
+  `forget` / `parseFafm` were already safe and are unchanged. A real
+  child-process e2e test (a cold root, two separate OS processes) makes
+  this a permanent regression guard, not just a fix.
+- `docs/WIRING.md`: a note on hosts whose spawn `PATH` lacks `npx`
+  (`spawn npx ENOENT`, observed in Cursor) — point `command` at `node` +
+  the installed `dist/bin.js` instead.
+- **The README / AGENTS.md / `project.faf` / manifest reframe** — dropped
+  "Small, MIT…" / "a piece, not the toolbox" for the real positioning:
+  essential context, memory, and identity components, usable as a base MCP
+  on their own, or a drop-in extension for any existing MCP server.
+- An accuracy pass across every shipped surface, caught by re-reading
+  rather than by any check: stale test/tool counts (README, CHANGELOG,
+  and `project.faf`'s own `human_context.what` — it undercounted its own
+  tools), 3-release-old version strings sitting in two hand-shown examples
+  (`examples/README.md`, `docs/MECHANISMS.md`), a pre-rename
+  docker-compose service name (`trinity` → `context-card`), an internal
+  function that still carried the pre-rename product name (`trinityMeta` →
+  `serverCardMeta` — not a public export). `project.faf` itself rechecked
+  against the current architecture (`tech_stack`, `key_files`, `cicd`).
+- 102 tests, coverage gate held, `card:check` / `catalog:check` green,
+  `faf-cli check`: ✪ Trophy 100%, 15/15 slots.
+
 ## 0.5.1
 
 First-hour ergonomics and wording, from the 0.5.0 soak.
 
-- **`author_agents_md` now authors BEST, not just BETTER, when it can.**
-  BETTER is still the facts-only draft from `agents-md-facts` (build/test
-  commands, entry points, conventions — nothing invented). **BEST** is that
-  plus a `## Project` section ahead of it — goal, who it's for, why, and a
-  "start here" file list — read straight from `project.faf` when one exists.
-  This is the point of the app: give the best AGENTS.md the project actually
-  has the material for, not a fixed floor. `whoami`-style tier reporting in
-  the tool's response (`BEST (project.faf + facts)` / `BETTER (facts only)`).
 - `--help` / `-h` and `--version` / `-V` (and the `help` / `version` subcommands)
   — a bare `mcp-context-card` is a stdio server that waits on stdin, so at a
   terminal it looked idle with no way to ask what it was.
@@ -27,14 +58,6 @@ First-hour ergonomics and wording, from the 0.5.0 soak.
   to the LICENSE holder.
 - `.well-known/fafa` — `vendor: io.github.wolfe-jam`, `status: published`
   (were both `reference`). Shows in `whoami` and as the card's pills.
-- **Fix:** `remember` on a project that has never had a `project.fafm` threw
-  `ENOENT` instead of starting one — the single most common first-use case.
-  Found by a real host check (Cursor, 2026-09-04). `remember` now creates a
-  fresh `.fafm` on first write; `forget` and `parseFafm` were already safe on
-  a missing file and are unchanged in behaviour.
-- `docs/WIRING.md`: a note on hosts whose spawn `PATH` lacks `npx`
-  (`spawn npx ENOENT`, observed in Cursor) — point `command` at `node` +
-  the installed `dist/bin.js` instead.
 
 ## 0.5.0
 

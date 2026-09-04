@@ -1,6 +1,6 @@
 {
   "name": "mcp-context-card",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "mcpName": "io.github.wolfe-jam/mcp-context-card",
   "description": "The essential MCP components for a project's context (AGENTS.md), cross-session memory, and identity — a base MCP on its own, or a drop-in extension for any existing MCP server. Discoverable through the Server Card _meta block and ai-catalog.json sibling entries.",
   "keywords": [
