@@ -17,7 +17,7 @@ Discovery goes through two surfaces already in the ecosystem: the Server Card
 
 **It is** — an MCP server for a project's `AGENTS.md`, memory, and identity: nine
 tools, two discovery surfaces (Server Card `_meta`, `ai-catalog.json`), and a
-rendered [card](#the-card). About 800 lines, MIT — read it, `npx` it, or fork it.
+rendered [card](#the-card). Small, MIT — read it, `npx` it, or fork it.
 
 **It is not**
 
@@ -26,10 +26,13 @@ rendered [card](#the-card). About 800 lines, MIT — read it, `npx` it, or fork 
 - tied to FAF — context is plain Markdown (`AGENTS.md`); the memory and identity
   formats are swappable examples
 
-It composes: run it alongside
-[`server-filesystem`](https://github.com/modelcontextprotocol/servers),
-[`server-git`](https://github.com/modelcontextprotocol/servers) /
-github‑mcp‑server, your test runner's MCP. A piece, not the toolbox.
+It composes:
+
+- **serve · discover · render** — this server
+- **author · keep true** — [`agents-md-facts`](https://github.com/Wolfe-Jam/agents-md-facts) (the `author_agents_md` tool wraps it)
+- **files · shell · git** — [`server-filesystem`](https://github.com/modelcontextprotocol/servers), [`server-git`](https://github.com/modelcontextprotocol/servers) / github‑mcp‑server, your test runner's MCP
+
+A piece, not the toolbox.
 
 ## The card
 
@@ -52,7 +55,7 @@ Light, dark, or auto; the accent defaults to the AAIF palette and takes any hex.
 
 | You want… | Reach for |
 |---|---|
-| an `AGENTS.md` and you don't have one | `npx mcp-context-card init` |
+| an `AGENTS.md` and you don't have one | `author_agents_md` — or [`npx agents-md-facts`](https://github.com/Wolfe-Jam/agents-md-facts) |
 | your agent to pull *one* `AGENTS.md` section on demand, not the whole file | `read_agents_md` · `list_agents_md_sections` |
 | a persistent notepad for your agent — survives restarts, no setup | `remember` · `recall` · `forget` |
 | a shareable view of what your MCP server exposes to agents | `GET /card` · `npx mcp-context-card card` |
@@ -62,14 +65,19 @@ Light, dark, or auto; the accent defaults to the AAIF palette and takes any hex.
 
 ### No `AGENTS.md` yet?
 
+The `author_agents_md` tool authors one from your repo's facts — real
+build/test commands, entry points, toolchain conventions — and hands the agent
+the draft. It's a thin wrapper over
+[`agents-md-facts`](https://github.com/Wolfe-Jam/agents-md-facts); to author or
+keep one true outside a session:
+
 ```bash
-npx mcp-context-card init
+npx agents-md-facts          # author / refresh AGENTS.md
+npx agents-md-facts --check  # fail if missing or stale (CI, pre-commit)
 ```
 
-`init` authors an `AGENTS.md` for the current directory. It works from a
-`project.faf` if one is there, otherwise from what it can detect — commands, CI,
-layout — leaving `<!-- TODO -->` where a person needs to decide. It won't
-overwrite an existing `AGENTS.md`; it prints the draft for you to diff.
+A `project.faf` is the next rung — a structured source that refreshes the file.
+Short model: [`agents-md-facts/docs/BETTER-BEST.md`](https://github.com/Wolfe-Jam/agents-md-facts/blob/main/docs/BETTER-BEST.md).
 
 ### See the card
 
@@ -129,7 +137,7 @@ The wire‑level detail is in [docs/MECHANISMS.md](./docs/MECHANISMS.md).
 
 | Tool | What it's for |
 |---|---|
-| `author_agents_md` | draft an `AGENTS.md` — from a `project.faf` if present, else from repo detection |
+| `author_agents_md` | draft an `AGENTS.md` from the repo's facts (via `agents-md-facts`) — a managed block, ready to drop in |
 | `read_agents_md` | return the project's `AGENTS.md` — whole, or one section by heading |
 | `list_agents_md_sections` | the headings, so a client pulls one section instead of the whole file |
 | `remember` | write a fact that will still be there next session |
@@ -150,10 +158,8 @@ The wire‑level detail is in [docs/MECHANISMS.md](./docs/MECHANISMS.md).
    live client.
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
-5. **Param-fill** — a host fills another server's required params from
-   `project.faf` in one wrapped call (`src/context.ts`, see WIRING §4).
 
-108 tests on Linux, macOS, and Windows, coverage‑gated in CI. One spawns a real
+88 tests on Linux, macOS, and Windows, coverage‑gated in CI. One spawns a real
 child process and checks a remembered fact survives the restart; another checks
 the stdio and HTTP tool surfaces match.
 
@@ -163,14 +169,14 @@ the stdio and HTTP tool surfaces match.
 |---|---|
 | `src/server.ts` | the nine tools + the Server Card resource |
 | `src/agents-md.ts` | reads and section‑splits `AGENTS.md` |
+| `src/author.ts` | `author_agents_md` — wraps [`agents-md-facts`](https://github.com/Wolfe-Jam/agents-md-facts) |
 | `src/md.ts` | a minimal dependency‑free Markdown → HTML renderer |
 | `src/render-card.ts` | the card — identity + `AGENTS.md` + memory + discovery, as one HTML page |
 | `src/memory.ts` | file‑backed `remember` / `recall` / `forget` |
-| `src/identity.ts` | `whoami` + the `_meta` context block |
+| `src/identity.ts` | `whoami` (`.fafa` → `package.json` fallback) + the `_meta` block |
 | `src/catalog-gen.ts` | writes `ai-catalog.json` from the same three sources |
 | `src/transport/http.ts` | the stateless Streamable HTTP app (Hono) |
-| `src/bin.ts` | the entry point — `stdio` · `--http` · `card` · `init` |
-| `src/detect.ts` · `src/author.ts` | repo detection + AGENTS.md authoring for `init` |
+| `src/bin.ts` | the entry point — `stdio` · `--http` · `card` |
 
 ## Related
 
@@ -182,5 +188,5 @@ the stdio and HTTP tool surfaces match.
 
 MIT.
 
-This repo runs the tool on itself — its `AGENTS.md` is authored from its
-`project.faf`, the same thing `npx mcp-context-card init` does for any project.
+This repo dogfoods what it serves — its `AGENTS.md` is a real, current file, and
+it ships a `project.faf` as the structured source behind it.

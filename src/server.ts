@@ -25,11 +25,10 @@ import {
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { existsSync } from "node:fs";
 import { findSection, parseAgentsMd } from "./agents-md.js";
 import { authorAgentsMd } from "./author.js";
 import { forget, parseFafm, recall, remember } from "./memory.js";
-import { trinityMeta, whoami } from "./identity.js";
+import { identity, trinityMeta, whoami } from "./identity.js";
 import { renderCard, safeAccent, type Theme } from "./render-card.js";
 
 export { NAME, VERSION, SERVER_CARD_URI } from "./constants.js";
@@ -108,7 +107,7 @@ export function createServer(root: string = ROOT): Server {
       {
         name: "author_agents_md",
         description:
-          "Author an AGENTS.md for this project and return the draft (does not write a file). BEST if a project.faf is present — from the structured source; BETTER otherwise — from repo detection, with TODO markers on the judgement parts.",
+          "Author an AGENTS.md for this project from its repo facts (via agents-md-facts) and return the draft — a managed block, ready to drop in. Detects real build/test commands, entry points, and toolchain conventions; nothing invented. Does not write a file.",
         inputSchema: { type: "object", properties: {} },
       },
       {
@@ -199,12 +198,10 @@ export function createServer(root: string = ROOT): Server {
       }
       case "author_agents_md": {
         const a = authorAgentsMd(root);
-        const exists = existsSync(AGENTS);
-        return text(
-          `<!-- ${a.tier} · from ${a.from.join(", ")}${
-            exists ? " · AGENTS.md already exists — this is a draft to diff, not overwrite" : ""
-          } -->\n\n${a.markdown}`,
-        );
+        const note = a.exists
+          ? "AGENTS.md already exists — diff this managed block in, don't overwrite"
+          : "no AGENTS.md yet — write this, then `npx agents-md-facts --check` keeps it true";
+        return text(`<!-- ${note} -->\n\n${a.markdown}`);
       }
       case "remember": {
         remember(FAFM, args.id, args.text);
@@ -252,11 +249,15 @@ export function createServer(root: string = ROOT): Server {
               identity: {
                 source: ".well-known/fafa",
                 mediaType: "application/vnd.fafa+yaml",
-                present: !whoami(root).startsWith("(no "),
+                present: identity(root) !== null,
               },
               surfaces: {
-                serverCard: [`resource: ${SERVER_CARD_URI}`, "GET /.well-known/mcp/server-card"],
-                aiCatalog: ["GET /.well-known/ai-catalog.json"],
+                mcp: { serverCard: `resource ${SERVER_CARD_URI}` },
+                http: {
+                  serverCard: "GET /.well-known/mcp/server-card",
+                  aiCatalog: "GET /.well-known/ai-catalog.json",
+                  card: "GET /card",
+                },
               },
             },
             null,

@@ -47,12 +47,6 @@ test("resolveLaunch: `card` → card mode, root is the cwd", () => {
   assert.equal(l.root, process.cwd());
 });
 
-test("resolveLaunch: `init` → init mode, root is the cwd", () => {
-  const l = resolveLaunch(["init"], {});
-  assert.equal(l.mode, "init");
-  assert.equal(l.root, process.cwd());
-});
-
 test("resolveLaunch: `card` honours MCP_CONTEXT_CARD_ROOT over cwd", () => {
   const l = resolveLaunch(["card", "--theme", "dark"], { MCP_CONTEXT_CARD_ROOT: "x/y" });
   assert.equal(l.mode, "card");

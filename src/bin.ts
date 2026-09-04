@@ -8,8 +8,6 @@
  *   mcp-context-card --stdio      → force stdio even when PORT is set
  *   mcp-context-card card         → render THIS directory's context card to stdout
  *                                   ( > card.html · --theme light|dark · --accent #hex )
- *   mcp-context-card init         → author an AGENTS.md for THIS directory
- *                                   (BEST from a project.faf, else BETTER; never clobbers)
  *
  * MCP_CONTEXT_CARD_ROOT=/path/to/project → read AGENTS.md / project.fafm /
  *   .well-known/ from there instead of the package's own bundled copies.
@@ -19,7 +17,7 @@ import { pathToFileURL } from "node:url";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { ROOT, serve } from "./server.js";
 
-export type Mode = "stdio" | "http" | "card" | "init";
+export type Mode = "stdio" | "http" | "card";
 
 export interface Launch {
   mode: Mode;
@@ -42,9 +40,9 @@ export function resolveLaunch(
   argv: readonly string[],
   env: NodeJS.ProcessEnv = process.env,
 ): Launch {
-  if (argv[0] === "card" || argv[0] === "init") {
+  if (argv[0] === "card") {
     return {
-      mode: argv[0],
+      mode: "card",
       port: 0,
       root: env.MCP_CONTEXT_CARD_ROOT ? resolve(env.MCP_CONTEXT_CARD_ROOT) : process.cwd(),
     };
@@ -77,21 +75,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
         accent: safeAccent(flagValue(argv, "--accent")),
       }),
     );
-  } else if (mode === "init") {
-    const { writeFileSync, existsSync } = await import("node:fs");
-    const { join } = await import("node:path");
-    const { authorAgentsMd } = await import("./author.js");
-    const target = join(root, "AGENTS.md");
-    const a = authorAgentsMd(root);
-    if (existsSync(target)) {
-      process.stdout.write(a.markdown);
-      console.error(
-        `\nmcp-context-card · AGENTS.md already exists — printed a ${a.tier} draft (from ${a.from.join(", ")}) above; diff it in, nothing written.`,
-      );
-    } else {
-      writeFileSync(target, a.markdown);
-      console.error(`mcp-context-card · wrote AGENTS.md · ${a.tier} · from ${a.from.join(", ")}`);
-    }
   } else if (mode === "http") {
     const { httpApp } = await import("./transport/http.js");
     const { serve: serveHttp } = await import("@hono/node-server");

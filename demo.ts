@@ -8,14 +8,12 @@
  *      the `mcp-context-card://server-card` resource.
  *   4. DISCOVERY  — list_context_sources(), then the same server over
  *      stateless Streamable HTTP with its .well-known routes and /card.
- *   5. PARAM-FILL — a host fills another server's params from project.faf.
  */
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { callToolWithContext, contextFieldsFromProjectFaf } from "./src/context.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const line = "─".repeat(68);
@@ -115,53 +113,6 @@ console.log(`\n${line}\n4. DISCOVERY — list_context_sources(), then the same s
   console.log(`· GET  /card → ${card.length.toLocaleString()} bytes of self-contained HTML (the view for people)`);
   await httpClient.close();
   srv.close();
-}
-
-// ── 5. PARAM-FILL — the host side: spend project context on another server ─
-console.log(`\n${line}\n5. PARAM-FILL — a host fills a 3rd-party tool's params from project.faf\n${line}`);
-{
-  const { Server } = await import("@modelcontextprotocol/sdk/server/index.js");
-  const { InMemoryTransport } = await import("@modelcontextprotocol/sdk/inMemory.js");
-  const { CallToolRequestSchema, ListToolsRequestSchema } = await import(
-    "@modelcontextprotocol/sdk/types.js"
-  );
-
-  // a throwaway server whose `deploy` tool needs facts the host already has
-  const deployer = new Server({ name: "deployer", version: "0" }, { capabilities: { tools: {} } });
-  deployer.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: [
-      {
-        name: "deploy",
-        description: "deploy the project",
-        inputSchema: {
-          type: "object",
-          properties: {
-            project_name: { type: "string" },
-            main_language: { type: "string" },
-            target: { type: "string" },
-          },
-          required: ["project_name", "main_language", "target"],
-        },
-      },
-    ],
-  }));
-  deployer.setRequestHandler(CallToolRequestSchema, async (req) => ({
-    content: [{ type: "text", text: `deploy(${JSON.stringify(req.params.arguments)})` }],
-  }));
-
-  const [a, b] = InMemoryTransport.createLinkedPair();
-  const host = new Client({ name: "demo-host", version: "0.5.0" }, { capabilities: {} });
-  await Promise.all([deployer.connect(b), host.connect(a)]);
-
-  // the model produced only `target`; the host wraps callTool and fills the
-  // required params it already knows, from project.faf — no server change,
-  // no re-prompt. This is `mcp-project-context`, generalized.
-  const fields = contextFieldsFromProjectFaf(join(here, "project.faf"));
-  const { result, filled } = await callToolWithContext(host, "deploy", { target: "staging" }, fields);
-  console.log(`· model supplied:         { target: "staging" }`);
-  console.log(`· host filled from .faf:  ${filled.join(", ")}`);
-  console.log(`· ${say(result)}`);
-  await host.close();
 }
 
 console.log(

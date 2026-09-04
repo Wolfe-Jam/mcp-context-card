@@ -24,7 +24,6 @@
   "exports": {
     ".": "./dist/server.js",
     "./server": "./dist/server.js",
-    "./context": "./dist/context.js",
     "./package.json": "./package.json"
   },
   "engines": {
@@ -61,6 +60,7 @@
   "dependencies": {
     "@hono/node-server": "^1.19.17",
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "agents-md-facts": "^0.1.0",
     "hono": "^4.13.5",
     "yaml": "^2.9.0"
   },

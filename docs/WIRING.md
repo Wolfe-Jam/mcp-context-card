@@ -3,7 +3,6 @@
 1. [Running it in a host](#1-running-it-in-a-host)
 2. [The tools in practice](#2-the-tools-in-practice)
 3. [Adapting it for your own artifacts](#3-adapting-it)
-4. [Also: host-side context-fill](#4-also-host-side-context-fill)
 
 ---
 
@@ -96,33 +95,3 @@ To serve *your* artifacts:
    round‑trip, `npm test` for the suite.
 
 ---
-
-## 4. Also: host-side context-fill
-
-`src/context.ts` (`callToolWithContext`) is a small, standalone helper — not
-part of the server. It wraps `client.callTool`: before dispatching, it reads the
-target tool's **own** `inputSchema` and fills any declared parameter the caller
-left out that the project context already knows.
-
-```ts
-import { callToolWithContext, contextFieldsFromProjectFaf } from "mcp-context-card/context";
-
-const fields = contextFieldsFromProjectFaf("/abs/path/to/project.faf");
-// { project_name: "acme-api", main_language: "TypeScript", … }
-
-const { result, filled } = await callToolWithContext(client, "some_tool", {}, fields);
-// filled → ["project_name"]   (only schema-declared, never overrides an explicit arg)
-```
-
-This is [`mcp-project-context`](https://github.com/Wolfe-Jam/mcp-project-context)
-generalized — that server special‑cased one field; this fills whichever flat
-scalar fields the context exposes into whichever tool declares them. The field
-source shown here is a `.faf`; any `Record<string,string>` works.
-
-**Who calls it, and when.** The *host* calls it, in host code — not the model,
-not the server, not a config flag. It's safe to route *every* `client.callTool`
-through it: it only fills a parameter the target tool **declares** and the
-caller **left out**, and it never overrides an explicit argument. So the
-decision is made once ("this is my `callTool`"), not per call. `npm run demo`
-step 5 runs it against a throwaway `deploy` tool, filling `project_name` and
-`main_language` from `project.faf` when the model supplied only `target`.
