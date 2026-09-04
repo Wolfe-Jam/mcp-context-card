@@ -17,6 +17,8 @@ First-hour ergonomics and wording, from the 0.5.0 soak.
   context, memory, and identity discoverable…"). Same in `.well-known/fafa`;
   the three `project.fafm` facts are `type: fact`. `package.json` `author` set
   to the LICENSE holder.
+- `.well-known/fafa` — `vendor: io.github.wolfe-jam`, `status: published`
+  (were both `reference`). Shows in `whoami` and as the card's pills.
 
 ## 0.5.0
 

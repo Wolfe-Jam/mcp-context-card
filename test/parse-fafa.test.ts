@@ -12,7 +12,7 @@ test("parseFafa: reads the agent card", () => {
     assert.ok(id);
     assert.equal(id.name, "mcp-context-card");
     assert.equal(id.license, "MIT");
-    assert.equal(id.status, "reference");
+    assert.equal(id.status, "published");
     assert.ok(id.description && !id.description.includes("\n")); // folded → single line
   } finally {
     cleanup();
