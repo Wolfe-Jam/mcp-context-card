@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { forget, parseFafm, recall, remember } from "../src/faf/parse-fafm.js";
 import { fixture } from "./helpers.js";
@@ -99,6 +100,47 @@ test("parseFafm: missing / malformed file → empty facts, no throw", () => {
     });
   } finally {
     cleanup();
+  }
+});
+
+test("parseFafm: no file at that path at all → empty facts, no throw", () => {
+  const root = mkdtempSync(join(tmpdir(), "mcp-cc-nofafm-"));
+  try {
+    const path = join(root, "project.fafm");
+    assert.ok(!existsSync(path));
+    assert.doesNotThrow(() => {
+      const m = parseFafm(path);
+      assert.deepEqual(m.facts, []);
+    });
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// Found by a real host check (Cursor, 2026-09-04): remember() on a project
+// that has never had a project.fafm threw ENOENT instead of starting one —
+// the single most common first-use case for a fresh project.
+test("remember: no project.fafm yet → creates one, doesn't throw", () => {
+  const root = mkdtempSync(join(tmpdir(), "mcp-cc-nofafm-"));
+  try {
+    const path = join(root, "project.fafm");
+    assert.ok(!existsSync(path));
+    assert.doesNotThrow(() => remember(path, "fresh", "born here"));
+    assert.ok(existsSync(path));
+    assert.equal(recall(path, "fresh")?.text, "born here");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("forget: no project.fafm yet → false, doesn't throw, doesn't create a file", () => {
+  const root = mkdtempSync(join(tmpdir(), "mcp-cc-nofafm-"));
+  try {
+    const path = join(root, "project.fafm");
+    assert.equal(forget(path, "nope"), false);
+    assert.ok(!existsSync(path)); // forget() only writes when it actually removes something
+  } finally {
+    rmSync(root, { recursive: true, force: true });
   }
 });
 

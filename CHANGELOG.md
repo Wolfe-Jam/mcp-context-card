@@ -19,6 +19,14 @@ First-hour ergonomics and wording, from the 0.5.0 soak.
   to the LICENSE holder.
 - `.well-known/fafa` — `vendor: io.github.wolfe-jam`, `status: published`
   (were both `reference`). Shows in `whoami` and as the card's pills.
+- **Fix:** `remember` on a project that has never had a `project.fafm` threw
+  `ENOENT` instead of starting one — the single most common first-use case.
+  Found by a real host check (Cursor, 2026-09-04). `remember` now creates a
+  fresh `.fafm` on first write; `forget` and `parseFafm` were already safe on
+  a missing file and are unchanged in behaviour.
+- `docs/WIRING.md`: a note on hosts whose spawn `PATH` lacks `npx`
+  (`spawn npx ENOENT`, observed in Cursor) — point `command` at `node` +
+  the installed `dist/bin.js` instead.
 
 ## 0.5.0
 
