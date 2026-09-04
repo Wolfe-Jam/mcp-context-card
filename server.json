@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.wolfe-jam/mcp-context-card",
   "title": "mcp-context-card",
-  "description": "An MCP server that makes a project's context (AGENTS.md), cross-session memory, and identity discoverable to any MCP client — through the Server Card _meta block and ai-catalog.json sibling entries.",
+  "description": "The essential MCP components for a project's context (AGENTS.md), cross-session memory, and identity — a base MCP on its own, or a drop-in extension for any existing MCP server. Discoverable through the Server Card _meta block and ai-catalog.json sibling entries.",
   "version": "0.5.1",
   "repository": {
     "url": "https://github.com/Wolfe-Jam/mcp-context-card",
