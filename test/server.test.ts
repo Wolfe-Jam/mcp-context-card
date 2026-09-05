@@ -50,12 +50,12 @@ test("server: the Server Card resource carries the _meta context block", async (
     const card = JSON.parse((res.contents[0] as { text: string }).text);
     assert.equal(card.name, "mcp-context-card");
     assert.deepEqual(Object.keys(card._meta), [
-      "io.github.wolfe-jam.mcp-context-card/context",
-      "io.github.wolfe-jam.mcp-context-card/memory",
-      "io.github.wolfe-jam.mcp-context-card/identity",
+      "io.github.Wolfe-Jam.mcp-context-card/context",
+      "io.github.Wolfe-Jam.mcp-context-card/memory",
+      "io.github.Wolfe-Jam.mcp-context-card/identity",
     ]);
-    assert.equal(card._meta["io.github.wolfe-jam.mcp-context-card/context"].source, "AGENTS.md");
-    assert.equal(card._meta["io.github.wolfe-jam.mcp-context-card/context"].mediaType, "text/markdown");
+    assert.equal(card._meta["io.github.Wolfe-Jam.mcp-context-card/context"].source, "AGENTS.md");
+    assert.equal(card._meta["io.github.Wolfe-Jam.mcp-context-card/context"].mediaType, "text/markdown");
   } finally {
     cleanup();
   }

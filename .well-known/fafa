@@ -8,8 +8,8 @@ version: "1.0"
 agent:
   name: "mcp-context-card"
   displayName: "mcp-context-card"
-  vendor: "io.github.wolfe-jam"
-  version: "0.6.0"
+  vendor: "io.github.Wolfe-Jam"
+  version: "0.6.1"
   description: >-
     The essential MCP components for a project's context (AGENTS.md),
     cross-session memory, and identity — a base MCP on its own, or a

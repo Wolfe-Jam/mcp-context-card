@@ -2,6 +2,38 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## 0.6.1
+
+Two real bugs, both caught by the actual `/pubaaif` publish run against
+0.6.0 — not a dry-run this time, the live registry rejected the first
+attempt and the live npm publish shipped the second one wrong.
+
+- **Fix: the publisher namespace was wrong-cased everywhere.** Every
+  `_meta` key, `server.json.name`, `package.json.mcpName`, and
+  `.well-known/fafa`'s `vendor` field used `io.github.wolfe-jam` —
+  lowercase. The MCP Registry checks this against the authenticated
+  GitHub identity byte-for-byte and rejected the publish: `403`, *"You
+  have permission to publish: `io.github.Wolfe-Jam/*`. Attempting to
+  publish: `io.github.wolfe-jam/mcp-context-card`."* The real GitHub
+  login is `Wolfe-Jam` (capital W, capital J) — an assumption baked in
+  since the original `mcp-trinity` rename that the registry lowercases
+  GitHub logins for namespace purposes was simply wrong. Fixed at the
+  source (`src/identity.ts`'s `META_NS` constant) and everywhere it was
+  hand-duplicated (`server.json`, `package.json`, `.well-known/fafa`,
+  tests, docs) — the 0.6.0 tarball actually shipped this wrong; anyone
+  who installed it got the incorrect namespace in the live `_meta` block.
+- **Fix: `server.json`'s description exceeded the MCP Registry's
+  100-character cap.** `mcp-publisher publish` rejected it: `422`,
+  `"expected length <= 100"` — ours was 263 characters. Trimmed to 97,
+  same claim. `package.json`'s longer description is unaffected — the
+  two are allowed to differ.
+- The 3 version-pill card images (`card-dark.png`, `card-light.png`,
+  `card-identity.png`) re-shot again — they render the vendor pill text,
+  which changed with the casing fix.
+
+No functional/behavioral change beyond the corrected namespace. 102/102
+tests, `card:check` + `catalog:check` green.
+
 ## 0.6.0
 
 The README as a hero, not just a description. Everything visual this repo
@@ -103,7 +135,7 @@ First-hour ergonomics and wording, from the 0.5.0 soak.
   context, memory, and identity discoverable…"). Same in `.well-known/fafa`;
   the three `project.fafm` facts are `type: fact`. `package.json` `author` set
   to the LICENSE holder.
-- `.well-known/fafa` — `vendor: io.github.wolfe-jam`, `status: published`
+- `.well-known/fafa` — `vendor: io.github.Wolfe-Jam`, `status: published`
   (were both `reference`). Shows in `whoami` and as the card's pills.
 
 ## 0.5.0
@@ -135,7 +167,7 @@ tested server.
 ### Exposure
 
 - Server Card `_meta` block — publisher-namespaced keys
-  (`io.github.wolfe-jam.mcp-context-card/{context,memory,identity}`), one per
+  (`io.github.Wolfe-Jam.mcp-context-card/{context,memory,identity}`), one per
   concern. `context` points at `AGENTS.md` / `text/markdown`.
 - `mcp-context-card://server-card` MCP resource (in-band) +
   `GET /.well-known/mcp/server-card` (out-of-band, HTTP transport).

@@ -7,7 +7,7 @@ import { buildCatalog } from "../src/catalog-gen.js";
 import { remember } from "../src/faf/parse-fafm.js";
 import { fixture } from "./helpers.js";
 
-const NS_IANA = "io.github.wolfe-jam.mcp-context-card/iana";
+const NS_IANA = "io.github.Wolfe-Jam.mcp-context-card/iana";
 
 test("buildCatalog: three sibling entries — context is AGENTS.md/markdown", () => {
   const { root, cleanup } = fixture();

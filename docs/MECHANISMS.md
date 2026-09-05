@@ -29,19 +29,19 @@ Both return:
 ```jsonc
 {
   "name": "mcp-context-card",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "_meta": {
-    "io.github.wolfe-jam.mcp-context-card/context": {
+    "io.github.Wolfe-Jam.mcp-context-card/context": {
       "source": "AGENTS.md",
       "mediaType": "text/markdown"
     },
-    "io.github.wolfe-jam.mcp-context-card/memory": {
+    "io.github.Wolfe-Jam.mcp-context-card/memory": {
       "source": "project.fafm",
       "mediaType": "application/vnd.fafm+yaml",
       "iana": "https://www.iana.org/assignments/media-types/application/vnd.fafm+yaml",
       "note": "no de-facto standard for agent memory yet — this is one instantiation"
     },
-    "io.github.wolfe-jam.mcp-context-card/identity": {
+    "io.github.Wolfe-Jam.mcp-context-card/identity": {
       "source": ".well-known/fafa",
       "mediaType": "application/vnd.fafa+yaml",
       "iana": "https://www.iana.org/assignments/media-types/application/vnd.fafa+yaml"
@@ -55,7 +55,7 @@ Both return:
 - **`_meta` is the extension point.** SEP‑2127 defines it as
   `additionalProperties: {}`. A consumer that doesn't know a key ignores it.
 - **Keys are reverse‑DNS‑namespaced to the publisher**
-  (`io.github.wolfe-jam.mcp-context-card/context`, not `context`). No collisions, and
+  (`io.github.Wolfe-Jam.mcp-context-card/context`, not `context`). No collisions, and
   the key's owner is unambiguous. Use a domain or GitHub identity you control.
 - **One key per concern**, each self‑describing: the source file, its media
   type, and — where the media type is IANA‑registered — the anchor. `context`

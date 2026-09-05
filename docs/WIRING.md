@@ -95,7 +95,7 @@ To serve *your* artifacts:
    — with your own, or point `MCP_CONTEXT_CARD_ROOT` at a directory that has them.
    `AGENTS.md` is the one with a real standard; the other two are swappable.
 2. **Rename the namespace.** `serverCardMeta()` in `src/identity.ts` uses
-   `io.github.wolfe-jam.mcp-context-card/*` keys, and `buildCatalog()` in
+   `io.github.Wolfe-Jam.mcp-context-card/*` keys, and `buildCatalog()` in
    `src/catalog-gen.ts` uses `urn:air:mcp-context-card:*` identifiers. Change both to
    a domain or GitHub identity you control ([MECHANISMS.md](./MECHANISMS.md)).
 3. **Swap the media types** in `serverCardMeta()` if your memory / identity
