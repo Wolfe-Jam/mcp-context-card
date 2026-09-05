@@ -39,6 +39,27 @@ test("server: advertises its name + the nine tools", async () => {
   }
 });
 
+test("server: every tool, and every tool parameter, carries a real description", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const client = await connected(root);
+    const { tools } = await client.listTools();
+    for (const t of tools) {
+      assert.ok((t.description ?? "").length > 20, `${t.name}: thin/absent tool description`);
+      const props = (t.inputSchema?.properties ?? {}) as Record<string, { description?: string }>;
+      for (const [param, schema] of Object.entries(props)) {
+        assert.ok(
+          (schema.description ?? "").length > 10,
+          `${t.name}.${param}: parameter has no real description — a bare { type } param is a Glama "Parameters" ding`,
+        );
+      }
+    }
+    await client.close();
+  } finally {
+    cleanup();
+  }
+});
+
 test("server: the Server Card resource carries the _meta context block", async () => {
   const { root, cleanup } = fixture();
   try {

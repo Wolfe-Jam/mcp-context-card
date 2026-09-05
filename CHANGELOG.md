@@ -2,6 +2,18 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+- **Every tool parameter now carries a real description.** Glama's
+  automated tool scoring flagged `remember` at 2/5 on parameters —
+  `id` and `text` were bare `{ type: "string" }`, and the non-obvious
+  bit (reusing an `id` replaces that fact in place, it doesn't add a
+  second) was left entirely to inference. `remember` / `recall` /
+  `forget` params now spell out the id semantics, the exact-match
+  lookup, and the update-vs-append behavior. A new test asserts every
+  tool and every tool parameter carries a description over a minimum
+  length — a bare param can't regress back in.
+
 ## 0.6.1
 
 Two real bugs, both caught by the actual `/pubaaif` publish run against
