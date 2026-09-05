@@ -118,28 +118,49 @@ export function createServer(root: string = ROOT): Server {
       },
       {
         name: "remember",
-        description: "Persist a fact past the session boundary — written to a .fafm file, not held in memory.",
+        description:
+          "Persist a fact past the session boundary — written to a .fafm file, not held in memory. Reusing an existing id replaces that fact's text in place (no duplicate); a new id appends. Facts are written verification_status: unverified.",
         inputSchema: {
           type: "object",
-          properties: { id: { type: "string" }, text: { type: "string" } },
+          properties: {
+            id: {
+              type: "string",
+              description:
+                "A stable key you choose for this fact — pass the same id later to recall or forget it. Exact match, case-sensitive, any string; keep it short and meaningful (e.g. \"deploy-target\", \"db-url\"). Reusing an id updates that fact rather than adding a second one.",
+            },
+            text: {
+              type: "string",
+              description: "The fact itself, as plain prose. Stored verbatim and returned as-is by recall.",
+            },
+          },
           required: ["id", "text"],
         },
       },
       {
         name: "recall",
-        description: "Retrieve a fact stored in a previous session by id.",
+        description: "Retrieve a fact stored in a previous session by id. Exact lookup — not fuzzy or substring.",
         inputSchema: {
           type: "object",
-          properties: { id: { type: "string" } },
+          properties: {
+            id: {
+              type: "string",
+              description: "The exact id a previous remember call used. Returns the stored text, or a \"no memory for <id>\" message if nothing matches.",
+            },
+          },
           required: ["id"],
         },
       },
       {
         name: "forget",
-        description: "Remove a fact by id — to correct or drop something stale.",
+        description: "Remove a fact by id — to correct or drop something stale. A missing id is reported, not an error.",
         inputSchema: {
           type: "object",
-          properties: { id: { type: "string" } },
+          properties: {
+            id: {
+              type: "string",
+              description: "The exact id of the fact to remove. Reports whether a fact was actually removed.",
+            },
+          },
           required: ["id"],
         },
       },
