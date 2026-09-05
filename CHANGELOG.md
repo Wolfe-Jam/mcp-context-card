@@ -14,14 +14,17 @@ The shape that's now stable: **nine tools** (`read_agents_md`,
 mechanisms** (the Server Card `_meta` block, a self-published
 `ai-catalog.json`), **two transports** (stdio, stateless Streamable HTTP).
 
-Verified against two independent clients before the cut:
+Verified against three independent clients before the cut:
 
-- **Cursor** (3.18.25 / Grok 4.6) — the full behavioural matrix, 10/10.
+- **Cursor** (3.18.25 / Grok 4.6) — the full behavioural matrix, **10/10**.
+- **Claude Code protocol pass** — the 10-item matrix run through the
+  MCP SDK `Client` + `StdioClientTransport` (the client stack Claude
+  Code uses), over stdio. **`CLAUDE CODE PROTOCOL PASS: 10/10`** —
+  every check, and `resources/templates/list` issued directly on the
+  wire (`[]`, not `-32601`).
 - **`@modelcontextprotocol/inspector`** (2.5.0, the canonical
-  conformance tool) — every method answers correctly on the wire,
-  including `resources/templates/list` → `[]` (not `-32601`);
-  `tools/list --strict` reports zero schema-portability problems
-  across all nine.
+  conformance tool) — every method answers correctly; `tools/list
+  --strict` reports zero schema-portability problems across all nine.
 
 - `docs/WIRING.md` gains one host-gotcha note: `@modelcontextprotocol/inspector`
   2.x reports `prompts/list` as `{ "prompts": [] }` — the server declares
