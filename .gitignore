@@ -2,3 +2,4 @@ node_modules/
 dist/
 *.log
 project.html
+.mcpregistry_*_token
