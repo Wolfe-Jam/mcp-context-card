@@ -1,0 +1,15 @@
+{
+  "$schema": "https://glama.ai/mcp/schemas/server.json",
+  "maintainers": ["Wolfe-Jam"],
+  "name": "mcp-context-card",
+  "description": "MCP server for a project's context (AGENTS.md), memory, and identity — discoverable to any MCP client via the Server Card _meta block and ai-catalog.json, and rendered as one card you can read.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "agents-md",
+    "agent-memory",
+    "server-card",
+    "ai-catalog",
+    "project-context"
+  ]
+}
