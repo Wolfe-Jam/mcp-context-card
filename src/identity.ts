@@ -13,7 +13,7 @@ import { parseFafa } from "./faf/parse-fafa.js";
 import type { AgentIdentity } from "./faf/types.js";
 
 /** The `_meta` key namespace — the publisher's, reverse-DNS. */
-export const META_NS = "io.github.wolfe-jam.mcp-context-card";
+export const META_NS = "io.github.Wolfe-Jam.mcp-context-card";
 
 const iana = (t: string) => `https://www.iana.org/assignments/media-types/${t}`;
 

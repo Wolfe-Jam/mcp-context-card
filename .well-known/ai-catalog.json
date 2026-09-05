@@ -21,7 +21,7 @@
       "description": "Cross-session memory — 4 fact(s), profile \"knowledge\". Recall survives a process restart. No de-facto standard for this concern yet.",
       "url": "./project.fafm",
       "_meta": {
-        "io.github.wolfe-jam.mcp-context-card/iana": "https://www.iana.org/assignments/media-types/application/vnd.fafm+yaml"
+        "io.github.Wolfe-Jam.mcp-context-card/iana": "https://www.iana.org/assignments/media-types/application/vnd.fafm+yaml"
       }
     },
     {
@@ -32,7 +32,7 @@
       "description": "The essential MCP components for a project's context (AGENTS.md), cross-session memory, and identity — a base MCP on its own, or a drop-in extension for any existing MCP server, discoverable through the Server Card _meta block and a self-published ai-catalog.json.",
       "url": "./.well-known/fafa",
       "_meta": {
-        "io.github.wolfe-jam.mcp-context-card/iana": "https://www.iana.org/assignments/media-types/application/vnd.fafa+yaml"
+        "io.github.Wolfe-Jam.mcp-context-card/iana": "https://www.iana.org/assignments/media-types/application/vnd.fafa+yaml"
       }
     }
   ]

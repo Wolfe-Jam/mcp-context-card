@@ -107,9 +107,9 @@ describe("e2e — real child process", () => {
       const res = await c.readResource({ uri: "mcp-context-card://server-card" });
       const card = JSON.parse((res.contents[0] as { text: string }).text);
       assert.deepEqual(Object.keys(card._meta), [
-        "io.github.wolfe-jam.mcp-context-card/context",
-        "io.github.wolfe-jam.mcp-context-card/memory",
-        "io.github.wolfe-jam.mcp-context-card/identity",
+        "io.github.Wolfe-Jam.mcp-context-card/context",
+        "io.github.Wolfe-Jam.mcp-context-card/memory",
+        "io.github.Wolfe-Jam.mcp-context-card/identity",
       ]);
       await c.close();
     } finally {

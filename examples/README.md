@@ -27,11 +27,11 @@ The three discovery routes need no MCP handshake:
 $ curl -s localhost:3000/.well-known/mcp/server-card
 {
   "name": "mcp-context-card",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "_meta": {
-    "io.github.wolfe-jam.mcp-context-card/context":  { "source": "AGENTS.md",          "mediaType": "text/markdown" },
-    "io.github.wolfe-jam.mcp-context-card/memory":   { "source": "project.fafm",       "mediaType": "application/vnd.fafm+yaml", "iana": "…", "note": "no de-facto standard for agent memory yet — this is one instantiation" },
-    "io.github.wolfe-jam.mcp-context-card/identity": { "source": ".well-known/fafa",   "mediaType": "application/vnd.fafa+yaml", "iana": "…" }
+    "io.github.Wolfe-Jam.mcp-context-card/context":  { "source": "AGENTS.md",          "mediaType": "text/markdown" },
+    "io.github.Wolfe-Jam.mcp-context-card/memory":   { "source": "project.fafm",       "mediaType": "application/vnd.fafm+yaml", "iana": "…", "note": "no de-facto standard for agent memory yet — this is one instantiation" },
+    "io.github.Wolfe-Jam.mcp-context-card/identity": { "source": ".well-known/fafa",   "mediaType": "application/vnd.fafa+yaml", "iana": "…" }
   }
 }
 

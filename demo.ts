@@ -30,7 +30,7 @@ async function connect(): Promise<Client> {
     command: process.execPath,
     args: ["--import", "tsx", join(here, "src/server.ts")],
   });
-  const client = new Client({ name: "demo-host", version: "0.6.0" }, { capabilities: {} });
+  const client = new Client({ name: "demo-host", version: "0.6.1" }, { capabilities: {} });
   await client.connect(transport);
   return client;
 }
@@ -78,7 +78,7 @@ console.log(`\n${line}\n3. IDENTITY — whoami() + the Server Card _meta block (
   const card = JSON.parse((cardRes.contents[0] as { text: string }).text);
   console.log(`\n· mcp-context-card://server-card → _meta keys: ${Object.keys(card._meta).join(", ")}`);
   for (const k of Object.keys(card._meta)) {
-    if (!k.startsWith("io.github.wolfe-jam.mcp-context-card/")) throw new Error(`unexpected _meta key: ${k}`);
+    if (!k.startsWith("io.github.Wolfe-Jam.mcp-context-card/")) throw new Error(`unexpected _meta key: ${k}`);
   }
   await client.close();
 }
@@ -103,7 +103,7 @@ console.log(`\n${line}\n4. DISCOVERY — list_context_sources(), then the same s
   await new Promise((r) => setTimeout(r, 50));
   const { port } = srv.address() as { port: number };
 
-  const httpClient = new Client({ name: "demo-host", version: "0.6.0" }, { capabilities: {} });
+  const httpClient = new Client({ name: "demo-host", version: "0.6.1" }, { capabilities: {} });
   await httpClient.connect(new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${port}/mcp`)));
   const tools = (await httpClient.listTools()).tools.map((t) => t.name);
   console.log(`· POST http://127.0.0.1:${port}/mcp → ${tools.length} tools: ${tools.join(", ")}`);

@@ -10,9 +10,9 @@ import { createServer, SERVER_CARD_URI } from "../src/server.js";
 import { fixture } from "./helpers.js";
 
 const META_KEYS = [
-  "io.github.wolfe-jam.mcp-context-card/context",
-  "io.github.wolfe-jam.mcp-context-card/memory",
-  "io.github.wolfe-jam.mcp-context-card/identity",
+  "io.github.Wolfe-Jam.mcp-context-card/context",
+  "io.github.Wolfe-Jam.mcp-context-card/memory",
+  "io.github.Wolfe-Jam.mcp-context-card/identity",
 ];
 
 let fx: ReturnType<typeof fixture>;

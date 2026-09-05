@@ -103,25 +103,25 @@ test("identity: malformed .fafa → null (whoami falls back)", () => {
 test("serverCardMeta: three publisher-namespaced keys — context is AGENTS.md/markdown", () => {
   const m = serverCardMeta();
   assert.deepEqual(Object.keys(m), [
-    "io.github.wolfe-jam.mcp-context-card/context",
-    "io.github.wolfe-jam.mcp-context-card/memory",
-    "io.github.wolfe-jam.mcp-context-card/identity",
+    "io.github.Wolfe-Jam.mcp-context-card/context",
+    "io.github.Wolfe-Jam.mcp-context-card/memory",
+    "io.github.Wolfe-Jam.mcp-context-card/identity",
   ]);
 
-  const ctx = m["io.github.wolfe-jam.mcp-context-card/context"];
+  const ctx = m["io.github.Wolfe-Jam.mcp-context-card/context"];
   assert.equal(ctx.source, "AGENTS.md");
   assert.equal(ctx.mediaType, "text/markdown");
   assert.equal((ctx as Record<string, unknown>).iana, undefined); // markdown needs no vnd anchor
 
-  const mem = m["io.github.wolfe-jam.mcp-context-card/memory"];
+  const mem = m["io.github.Wolfe-Jam.mcp-context-card/memory"];
   assert.equal(mem.mediaType, "application/vnd.fafm+yaml");
   assert.ok(mem.iana.startsWith("https://www.iana.org/assignments/media-types/"));
   assert.match(mem.note, /no de-facto standard/);
 
-  const id = m["io.github.wolfe-jam.mcp-context-card/identity"];
+  const id = m["io.github.Wolfe-Jam.mcp-context-card/identity"];
   assert.equal(id.mediaType, "application/vnd.fafa+yaml");
   assert.ok(id.iana.startsWith("https://www.iana.org/assignments/media-types/"));
 
   // no `one.faf/*` key anywhere — the wire is publisher-namespaced
-  assert.ok(Object.keys(m).every((k) => k.startsWith("io.github.wolfe-jam.mcp-context-card/")));
+  assert.ok(Object.keys(m).every((k) => k.startsWith("io.github.Wolfe-Jam.mcp-context-card/")));
 });
