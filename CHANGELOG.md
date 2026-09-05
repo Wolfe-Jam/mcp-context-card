@@ -22,7 +22,10 @@ nothing hand-drawn, nothing mocked up.
   visible ring plus a soft accent-tinted glow so it reads as a distinct
   card regardless of backdrop.
 - **GitHub Pages, live** — `wolfe-jam.github.io/mcp-context-card/` serves
-  the card in auto/light/dark; the repo's homepage field points at it.
+  the card in auto/light/dark. The GitHub repo's own "Website" field links
+  there. `package.json`'s `homepage` is a different field and stays on the
+  repo itself — that's where install steps and the tools table live, not a
+  bare rendered card.
 - "Vendor-free," not "Not tied to FAF" — dropped a defensive clause nobody
   needed, and reworded the vendor-boundary line to state the property
   without naming a vendor to disclaim against.
