@@ -13,6 +13,7 @@ jobs:
       - uses: actions/setup-node@v5
         with: { node-version: '22', cache: 'npm' }
       - run: npm ci
+      - run: npm run version:check
       - run: npm run typecheck
       - run: npm run build
       - run: npm run test:coverage
@@ -20,4 +21,8 @@ jobs:
       - run: npm run catalog:check
         if: runner.os == 'Linux'
       - run: npm run card:check
+        if: runner.os == 'Linux'
+      # project.faf ships in this repo (dogfood). Validate it stays Trophy —
+      # quality gate on committed content, not a dependency. Pinned for repro.
+      - run: npx -y faf-cli@7.10.1 check project.faf --strict
         if: runner.os == 'Linux'
