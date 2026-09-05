@@ -2,6 +2,34 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## 0.5.3
+
+The README as a hero, not just a description. Everything visual this repo
+claims is now backed by a real screenshot from the actual rendered card —
+nothing hand-drawn, nothing mocked up.
+
+- **The card leads the README** — a side-by-side "Light | Dark" table right
+  at the top, instead of one fixed screenshot. Shows the real range to
+  every viewer regardless of their own GitHub theme.
+- **Each of the three concerns gets its own proof** — context, memory, and
+  identity are each followed by a real crop from the card: the `AGENTS.md`
+  section + the `read_agents_md` line, an actual tagged and verified
+  memory fact, and the title + pills.
+- **"Pick one"** — a table right after the hero: add an `AGENTS.md`,
+  improve one to BEST, get a new MCP server base, or extend an MCP you
+  already run. Replaces the old "Who it's for" table.
+- The dark card no longer blends into GitHub's own dark mode — added a
+  visible ring plus a soft accent-tinted glow so it reads as a distinct
+  card regardless of backdrop.
+- **GitHub Pages, live** — `wolfe-jam.github.io/mcp-context-card/` serves
+  the card in auto/light/dark; the repo's homepage field points at it.
+- "Vendor-free," not "Not tied to FAF" — dropped a defensive clause nobody
+  needed, and reworded the vendor-boundary line to state the property
+  without naming a vendor to disclaim against.
+
+No functional change — README, docs, and card assets only. 102 tests,
+typecheck/build/demo clean, `card:check` + `catalog:check` green.
+
 ## 0.5.2
 
 The soak, closed out. Two Cursor host checks — a real bug found and fixed, a
