@@ -19,6 +19,14 @@ All notable changes to this project. Adheres to [Semantic Versioning](https://se
   on connect) was getting method-not-found. There are no templated
   resources — the Server Card URI is fixed — so it answers `[]`.
   Regression-tested.
+- **Two quality gates added to CI.** `npm run version:check`
+  (`scripts/check-versions.mjs`) fails on any drift between the ~10
+  version-bearing spots — the manual checklist that kept missing spots
+  through 0.5.x/0.6.x is now mechanical, and rides in `prepublishOnly`
+  too. And `faf-cli check project.faf --strict` (pinned) keeps the
+  dogfooded `project.faf` at Trophy — the repo shipped one and never
+  verified it. Both are quality tooling on content already in the repo,
+  no dependency added.
 
 ## 0.6.1
 

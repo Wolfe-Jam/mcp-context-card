@@ -45,7 +45,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
-    "prepublishOnly": "npm run clean && npm run build && npm run typecheck && npm test",
+    "version:check": "node scripts/check-versions.mjs",
+    "prepublishOnly": "npm run clean && npm run version:check && npm run build && npm run typecheck && npm test",
     "start": "node dist/bin.js",
     "start:http": "node dist/bin.js --http",
     "dev": "tsx src/bin.ts",
