@@ -13,6 +13,12 @@ All notable changes to this project. Adheres to [Semantic Versioning](https://se
   lookup, and the update-vs-append behavior. A new test asserts every
   tool and every tool parameter carries a description over a minimum
   length — a bare param can't regress back in.
+- **`resources/templates/list` now answers with an empty list instead of
+  `-32601`.** The server declares the `resources` capability, which
+  covers that method; a client calling it (Glama's MCP Inspector does,
+  on connect) was getting method-not-found. There are no templated
+  resources — the Server Card URI is fixed — so it answers `[]`.
+  Regression-tested.
 
 ## 0.6.1
 

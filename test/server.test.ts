@@ -82,6 +82,20 @@ test("server: the Server Card resource carries the _meta context block", async (
   }
 });
 
+test("server: resources/templates/list answers empty, not -32601", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const client = await connected(root);
+    // The `resources` capability covers this method — a client shouldn't get
+    // method-not-found for it (observed as a -32601 toast in Glama's Inspector).
+    const { resourceTemplates } = await client.listResourceTemplates();
+    assert.deepEqual(resourceTemplates, []);
+    await client.close();
+  } finally {
+    cleanup();
+  }
+});
+
 test("server: read_agents_md returns the whole file, or one section", async () => {
   const { root, cleanup } = fixture();
   try {
