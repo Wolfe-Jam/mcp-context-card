@@ -1,5 +1,6 @@
 # mcp-context-card
 
+[![npm](https://img.shields.io/npm/v/mcp-context-card.svg)](https://www.npmjs.com/package/mcp-context-card)
 [![CI](https://github.com/Wolfe-Jam/mcp-context-card/actions/workflows/ci.yml/badge.svg)](https://github.com/Wolfe-Jam/mcp-context-card/actions/workflows/ci.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![mcp-context-card MCP server](https://glama.ai/mcp/servers/Wolfe-Jam/mcp-context-card/badges/score.svg)](https://glama.ai/mcp/servers/Wolfe-Jam/mcp-context-card)
