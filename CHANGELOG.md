@@ -2,7 +2,7 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
-## 0.5.3
+## 0.6.0
 
 The README as a hero, not just a description. Everything visual this repo
 claims is now backed by a real screenshot from the actual rendered card —
@@ -35,6 +35,13 @@ nothing hand-drawn, nothing mocked up.
   until WIRING; `docs/WIRING.md`'s `list_agents_md_sections` example showed
   `sections: 9` — the real, parser-verified count is 10 (it includes the
   `AGENTS.md` H1, not just its nine `##` headings).
+- `docs/MECHANISMS.md` states the A2A position: Server Card is what this
+  server has. A2A's AgentCard is a different thing — a live agent, an
+  endpoint, skills, auth. We're ready for A2A: the same `.fafa` source
+  publishes a real AgentCard alongside it the day a project here is
+  reachable over one, not a reshape of `.fafa` itself.
+- Bumped straight to 0.6.0 — 0.5.3 was committed but never published;
+  no reason to leave a changelog entry for a version nobody received.
 
 No functional change — README, docs, and card assets only. 102 tests,
 typecheck/build/demo clean, `card:check` + `catalog:check` green.
