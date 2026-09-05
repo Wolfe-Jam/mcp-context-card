@@ -135,3 +135,21 @@ change a source, both surfaces move together.
 
 **Describe the artifacts once; expose them through whatever mechanism the
 consumer speaks.**
+
+---
+
+## A2A-ready — not A2A-shaped
+
+`.fafa` deliberately isn't shaped like an
+[A2A AgentCard](https://a2a-protocol.org/latest/specification/). An AgentCard
+describes a live, task-accepting agent — a service endpoint, `capabilities`
+(streaming, pushNotifications), `skills` it negotiates, authentication. This
+server has none of that to describe: it doesn't speak the A2A wire protocol,
+so populating those fields would be schema theater, not identity.
+
+What it does have is the same single source of truth — `.well-known/fafa` —
+already exposed through the two mechanisms above. That's what "ready" means
+here: adding an AgentCard is one more mechanism reading the same source, the
+day something in this project is actually A2A‑reachable, not a reshape of
+`.fafa` into a card describing capabilities it doesn't have. Same invariant,
+a consumer this project doesn't speak to yet.
