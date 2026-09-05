@@ -19,14 +19,28 @@ All notable changes to this project. Adheres to [Semantic Versioning](https://se
   on connect) was getting method-not-found. There are no templated
   resources — the Server Card URI is fixed — so it answers `[]`.
   Regression-tested.
-- **Two quality gates added to CI.** `npm run version:check`
-  (`scripts/check-versions.mjs`) fails on any drift between the ~10
-  version-bearing spots — the manual checklist that kept missing spots
-  through 0.5.x/0.6.x is now mechanical, and rides in `prepublishOnly`
-  too. And `faf-cli check project.faf --strict` (pinned) keeps the
-  dogfooded `project.faf` at Trophy — the repo shipped one and never
-  verified it. Both are quality tooling on content already in the repo,
-  no dependency added.
+- **Quality gates added to CI** — all on content already in the repo, no
+  dependency added:
+  - `version:check` (`scripts/check-versions.mjs`) fails on drift between
+    the ~10 version-bearing spots; rides in `prepublishOnly` too.
+  - `faf-cli check project.faf --strict` (pinned) keeps the dogfooded
+    `project.faf` at Trophy — the repo shipped one and never verified it.
+  - `faf:check` (`scripts/check-faf-consistency.mjs`) verifies the
+    mechanically checkable parts of "do the FAF files still describe
+    reality": every `project.faf` `key_files` path exists, every
+    `project.fafm` fact `source:` exists, every `package.json` dependency
+    is named in `tech_stack`, and `.well-known/fafa`'s name/vendor/license
+    agree with `package.json` + `server.json`. Already caught one drift —
+    `@hono/node-server` was a dependency missing from `tech_stack`.
+  - `faf:nudge` (`scripts/faf-drift-nudge.mjs`, PR-only, **non-blocking**)
+    warns when a change moves the code's shape (a `src/` file added,
+    removed, or renamed; a dependency changed) without touching
+    `project.faf` — a prompt to the author, in the PR, while the context
+    is fresh.
+- `project.fafm`'s header no longer claims to be continuously dogfooded —
+  it's a curated snapshot, reviewed at releases. The file is still one of
+  the three real sources the server reads and writes; the comment just
+  stopped overstating how often it's re-etched.
 
 ## 0.6.1
 

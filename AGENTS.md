@@ -31,12 +31,15 @@ npm test              # node:test — every test/*.test.ts
 npm run test:coverage # + the coverage gate (lines 90 / funcs 85 / branches 80, src/ only)
 npm run demo          # end to end: all tools over stdio, then over stateless HTTP
 npm run version:check # every version-bearing spot agrees with package.json
+npm run faf:check     # project.faf / project.fafm / .well-known/fafa still describe the project
 ```
 
-CI runs `version:check → typecheck → build → test:coverage → demo` on Linux,
-macOS, and Windows for every push and PR to `main` (`.github/workflows/ci.yml`),
-plus `catalog:check` / `card:check` and `faf-cli check project.faf --strict`
-(the repo dogfoods a `project.faf` — this keeps it Trophy) on Linux.
+CI runs `version:check → faf:check → typecheck → build → test:coverage → demo`
+on Linux, macOS, and Windows for every push and PR to `main`
+(`.github/workflows/ci.yml`), plus `catalog:check` / `card:check`,
+`faf-cli check project.faf --strict` (the repo dogfoods a `project.faf` —
+this keeps it Trophy), and `faf:nudge` (PR-only, non-blocking — warns if the
+code's shape moved without `project.faf`) on Linux.
 
 ## Layout
 
@@ -80,9 +83,12 @@ fails on any diff.
 
 `npm run typecheck && npm run build && npm test && npm run demo` all green,
 plus `npm run catalog:check` and `npm run card:check` clean if you touched
-`AGENTS.md`, `project.fafm`, or `.well-known/fafa`. On a version bump,
-`npm run version:check` green (it lists every spot that must move together)
-and `project.faf` still Trophy (`faf-cli check project.faf --strict`).
+`AGENTS.md`, `project.fafm`, or `.well-known/fafa`, and `npm run faf:check`
+green if you changed the layout, a dependency, or the identity. On a version
+bump, `npm run version:check` green (it lists every spot that must move
+together) and `project.faf` still Trophy (`faf-cli check project.faf --strict`).
+If CI's `faf:nudge` warns on your PR, reconcile `project.faf` (and re-check
+`project.fafm` facts if `AGENTS.md` moved) or say why it's fine.
 
 ## Authoring this file
 

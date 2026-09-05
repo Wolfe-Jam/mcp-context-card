@@ -17,7 +17,7 @@ stack:
   connection: slotignored  # no database
   hosting: Docker / any Node host — stdio for local, stateless Streamable HTTP for remote
   cicd: GitHub Actions — typecheck + build + test:coverage + demo on 3 OSes; catalog:check + card:check on Linux
-tech_stack: [TypeScript, "@modelcontextprotocol/sdk", "agents-md-facts", hono, yaml]
+tech_stack: [TypeScript, "@modelcontextprotocol/sdk", "agents-md-facts", hono, "@hono/node-server", yaml]
 human_context:
   who: MCP host and server implementers who want a project's AGENTS.md, memory, and identity available over MCP without inventing an ad-hoc shape for each.
   what: The essential context, memory, and identity components for MCP — usable as a base MCP on its own, or dropped into any existing MCP server as an extension. Nine tools — read_agents_md / list_agents_md_sections / author_agents_md (context), remember / recall / forget (memory), whoami (identity), list_context_sources / render_context_card (discovery) — exposed through the Server Card _meta block and a self-published ai-catalog.json. Dual transport (stdio + stateless Streamable HTTP).
