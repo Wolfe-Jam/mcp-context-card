@@ -3,7 +3,7 @@
   "name": "io.github.Wolfe-Jam/mcp-context-card",
   "title": "mcp-context-card",
   "description": "MCP server for a project's context (AGENTS.md), memory, and identity — base or drop-in extension.",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "repository": {
     "url": "https://github.com/Wolfe-Jam/mcp-context-card",
     "source": "github"
@@ -13,7 +13,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "mcp-context-card",
-      "version": "0.6.1",
+      "version": "0.6.2",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"

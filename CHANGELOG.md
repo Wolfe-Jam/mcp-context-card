@@ -2,7 +2,12 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 0.6.2
+
+Tool-description quality and anti-drift. Nothing here changes what the
+server does — it makes the tool surface read better to a fresh client
+(and to Glama's automated scorer), silences a spurious `-32601`, and
+adds CI gates so the release-hygiene mistakes of 0.5.x/0.6.x can't recur.
 
 - **Every tool parameter now carries a real description.** Glama's
   automated tool scoring flagged `remember` at 2/5 on parameters —
