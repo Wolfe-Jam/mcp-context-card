@@ -1,8 +1,9 @@
 # application/vnd.fafm+yaml — mcp-context-card project memory
-# Real, dogfooded memory about this repo's own build — not a static example.
-# This file itself is one of the three sources the server exposes:
-# `remember` / `recall` read and write it, and the demo proves a fact
-# survives a full server-process restart (then restores this file exactly).
+# A curated snapshot of what this repo knows about itself: real facts with
+# real sources, reviewed at releases rather than continuously re-etched.
+# This exact file is one of the three sources the server exposes — `remember`
+# / `recall` read and write it, and the demo proves a fact survives a full
+# server-process restart (then restores this file exactly).
 version: "1.1"
 profile: "knowledge"
 namepoint: "@mcp-context-card:public"
