@@ -77,7 +77,7 @@ And to discover what a server offers before committing to it:
 
 ```ts
 await client.callTool({ name: "list_context_sources", arguments: {} });
-// → { context: { source: "AGENTS.md", mediaType: "text/markdown", present: true, sections: 9 },
+// → { context: { source: "AGENTS.md", mediaType: "text/markdown", present: true, sections: 10 },
 //     memory:  { … }, identity: { … },
 //     surfaces: { mcp: { serverCard: "resource mcp-context-card://server-card" },
 //                 http: { serverCard: "GET /.well-known/mcp/server-card",
