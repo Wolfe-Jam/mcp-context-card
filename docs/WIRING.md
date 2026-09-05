@@ -33,6 +33,10 @@
   the arg — e.g. `command: "node"`, `args: ["/path/to/node_modules/mcp-context-card/dist/bin.js"]`
   (or wherever `npm install -g` / your package manager put it; find it with
   `npm root -g` or `which mcp-context-card` after a global install).
+- **`@modelcontextprotocol/inspector` 2.x reports `prompts/list` as `{ "prompts": [] }`** —
+  this server declares only `tools` + `resources`, so `prompts/list` returns
+  `-32601` on the wire; the current Inspector CLI masks that as an empty list
+  (raw JSON-RPC, or Inspector 0.21.x, shows the real `-32601`).
 
 ### Streamable HTTP (remote)
 
