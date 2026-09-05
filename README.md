@@ -7,7 +7,9 @@
 context, memory, and identity — discoverable to any MCP client, and
 rendered as one card you can read.
 
-![the context card](./docs/img/card.png)
+| Light | Dark |
+|---|---|
+| ![the context card, light theme](./docs/img/card-light.png) | ![the context card, dark theme](./docs/img/card-dark.png) |
 
 - **context** — the project's `AGENTS.md`, served whole or one section at a time
 - **memory** — facts that persist across sessions, in a file
