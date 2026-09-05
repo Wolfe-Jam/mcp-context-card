@@ -135,3 +135,20 @@ change a source, both surfaces move together.
 
 **Describe the artifacts once; expose them through whatever mechanism the
 consumer speaks.**
+
+---
+
+## Server Card, and A2A
+
+**Server Card** is what this server has: `AGENTS.md`, a memory file, an
+identity block — read in-band as an MCP resource, or out-of-band at
+`GET /.well-known/mcp/server-card`.
+
+**A2A's [AgentCard](https://a2a-protocol.org/latest/specification/)** is
+different: a live agent you can hand a task to — an endpoint, `capabilities`,
+`skills`, authentication.
+
+`.fafa` is the identity source behind the Server Card. We're ready for A2A:
+the day a project here is reachable over A2A, the same source publishes a
+real AgentCard alongside it — one more mechanism, same invariant, a real
+endpoint and real skills, not a reshape of `.fafa`.

@@ -26,6 +26,15 @@ nothing hand-drawn, nothing mocked up.
 - "Vendor-free," not "Not tied to FAF" — dropped a defensive clause nobody
   needed, and reworded the vendor-boundary line to state the property
   without naming a vendor to disclaim against.
+- An external README review caught four real gaps, fixed before publish:
+  the identity line said "agent card" — reworded to **Server Card**, the
+  term this repo already documents and owns (SEP‑2127), so it can't be read
+  as A2A's own, distinctly-specified AgentCard; the "Wire it into a host"
+  example now states the Node ≥22 requirement and cross-references the
+  documented `npx` `ENOENT` fix (Cursor) instead of leaving it undiscoverable
+  until WIRING; `docs/WIRING.md`'s `list_agents_md_sections` example showed
+  `sections: 9` — the real, parser-verified count is 10 (it includes the
+  `AGENTS.md` H1, not just its nine `##` headings).
 
 No functional change — README, docs, and card assets only. 102 tests,
 typecheck/build/demo clean, `card:check` + `catalog:check` green.

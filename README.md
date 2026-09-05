@@ -19,7 +19,7 @@ rendered as one card you can read.
 
 ![the card's memory section — a real, tagged, verified fact](./docs/img/card-memory.png)
 
-**identity** — what this server is, from its own agent card.
+**identity** — what this server is, from its own Server Card.
 
 ![the card's identity — name and pills](./docs/img/card-identity.png)
 
@@ -128,9 +128,13 @@ Claude Desktop, Cursor, or any stdio host:
 
 `MCP_CONTEXT_CARD_ROOT` points at the directory with your `AGENTS.md`. The
 memory tools work with or without it; identity is optional. Over HTTP instead:
-`PORT=8080 npx mcp-context-card`. Full wiring is in
-[docs/WIRING.md](./docs/WIRING.md); transport choice in
-[docs/TRANSPORT.md](./docs/TRANSPORT.md).
+`PORT=8080 npx mcp-context-card`. Requires Node ≥22.
+
+If `command: "npx"` fails to spawn (`spawn npx ENOENT` — seen on Cursor, whose
+host process doesn't inherit a shell `PATH`), point `command` at `node` and
+the installed `dist/bin.js` instead — see
+[docs/WIRING.md](./docs/WIRING.md#1-running-it-in-a-host). Transport choice is
+in [docs/TRANSPORT.md](./docs/TRANSPORT.md).
 
 Extending an MCP you already run: most hosts accept more than one
 `mcpServers` entry — add `context-card` alongside `server-filesystem`,
