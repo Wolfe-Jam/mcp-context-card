@@ -138,18 +138,17 @@ consumer speaks.**
 
 ---
 
-## A2A-ready — not A2A-shaped
+## Server Card, and A2A
 
-`.fafa` deliberately isn't shaped like an
-[A2A AgentCard](https://a2a-protocol.org/latest/specification/). An AgentCard
-describes a live, task-accepting agent — a service endpoint, `capabilities`
-(streaming, pushNotifications), `skills` it negotiates, authentication. This
-server has none of that to describe: it doesn't speak the A2A wire protocol,
-so populating those fields would be schema theater, not identity.
+**Server Card** is what this server has: `AGENTS.md`, a memory file, an
+identity block — read in-band as an MCP resource, or out-of-band at
+`GET /.well-known/mcp/server-card`.
 
-What it does have is the same single source of truth — `.well-known/fafa` —
-already exposed through the two mechanisms above. That's what "ready" means
-here: adding an AgentCard is one more mechanism reading the same source, the
-day something in this project is actually A2A‑reachable, not a reshape of
-`.fafa` into a card describing capabilities it doesn't have. Same invariant,
-a consumer this project doesn't speak to yet.
+**A2A's [AgentCard](https://a2a-protocol.org/latest/specification/)** is
+different: a live agent you can hand a task to — an endpoint, `capabilities`,
+`skills`, authentication.
+
+`.fafa` is the identity source behind the Server Card. We're ready for A2A:
+the day a project here is reachable over A2A, the same source publishes a
+real AgentCard alongside it — one more mechanism, same invariant, a real
+endpoint and real skills, not a reshape of `.fafa`.
