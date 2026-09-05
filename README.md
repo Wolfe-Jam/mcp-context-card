@@ -191,7 +191,7 @@ The wire‑level detail is in [docs/MECHANISMS.md](./docs/MECHANISMS.md).
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-103 tests on Linux, macOS, and Windows, coverage‑gated in CI. Two spawn a real
+104 tests on Linux, macOS, and Windows, coverage‑gated in CI. Two spawn a real
 child process and check a remembered fact survives the restart — one against
 an existing `project.fafm`, one starting from a project that has never had
 one; another checks the stdio and HTTP tool surfaces match.

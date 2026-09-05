@@ -19,6 +19,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import {
   CallToolRequestSchema,
   ListResourcesRequestSchema,
+  ListResourceTemplatesRequestSchema,
   ListToolsRequestSchema,
   ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
@@ -86,6 +87,13 @@ export function createServer(root: string = ROOT): Server {
       ],
     };
   });
+  // The `resources` capability implies resources/templates/list. There are no
+  // templated resources here (the Server Card URI is fixed), but answer with an
+  // empty list rather than -32601 — a client shouldn't get method-not-found for
+  // something the declared capability covers.
+  server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => ({
+    resourceTemplates: [],
+  }));
 
   // ── Tools ───────────────────────────────────────────────────────────
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
