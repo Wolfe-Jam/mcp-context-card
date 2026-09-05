@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/Wolfe-Jam/mcp-context-card/actions/workflows/ci.yml/badge.svg)](https://github.com/Wolfe-Jam/mcp-context-card/actions/workflows/ci.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![mcp-context-card MCP server](https://glama.ai/mcp/servers/Wolfe-Jam/mcp-context-card/badges/score.svg)](https://glama.ai/mcp/servers/Wolfe-Jam/mcp-context-card)
 
 **Get one. Or add it to yours.** The essential MCP server for a project's
 context, memory, and identity — discoverable to any MCP client, and
