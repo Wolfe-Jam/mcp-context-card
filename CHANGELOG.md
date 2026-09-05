@@ -2,6 +2,33 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## 1.0.0
+
+Stable surface. No functional change from 0.6.2 — this release declares
+the API settled and is the reference point everything downstream pins to.
+
+The shape that's now stable: **nine tools** (`read_agents_md`,
+`list_agents_md_sections`, `author_agents_md`, `remember`, `recall`,
+`forget`, `whoami`, `list_context_sources`, `render_context_card`),
+**three concerns** (context / memory / identity), **two discovery
+mechanisms** (the Server Card `_meta` block, a self-published
+`ai-catalog.json`), **two transports** (stdio, stateless Streamable HTTP).
+
+Verified against three independent clients before the cut:
+
+- **Cursor** (3.18.25 / Grok 4.6) — the full behavioural matrix, 10/10.
+- **The MCP SDK `Client`** driving the server over stdio — the same
+  client stack a host uses, 10/10, `resources/templates/list` issued
+  directly on the wire.
+- **`@modelcontextprotocol/inspector`** (2.5.0, the canonical
+  conformance tool) — every method answers correctly; `tools/list
+  --strict` reports zero schema-portability problems across all nine.
+
+- `docs/WIRING.md` gains one host-gotcha note: `@modelcontextprotocol/inspector`
+  2.x reports `prompts/list` as `{ "prompts": [] }` — the server declares
+  only `tools` + `resources` and returns `-32601` for `prompts/list` on
+  the wire; the current Inspector CLI masks that as an empty list.
+
 ## 0.6.2
 
 Tool-description quality and anti-drift. Nothing here changes what the
