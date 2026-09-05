@@ -11,9 +11,17 @@ rendered as one card you can read.
 |---|---|
 | ![the context card, light theme](./docs/img/card-light.png) | ![the context card, dark theme](./docs/img/card-dark.png) |
 
-- **context** — the project's `AGENTS.md`, served whole or one section at a time
-- **memory** — facts that persist across sessions, in a file
-- **identity** — what this server is, from its own agent card
+**context** — the project's `AGENTS.md`, served whole or one section at a time.
+
+![the card's context section — AGENTS.md, section nav, read_agents_md](./docs/img/card-context.png)
+
+**memory** — facts that persist across sessions, in a file.
+
+![the card's memory section — a real, tagged, verified fact](./docs/img/card-memory.png)
+
+**identity** — what this server is, from its own agent card.
+
+![the card's identity — name and pills](./docs/img/card-identity.png)
 
 Discovery goes through two surfaces already in the ecosystem: the Server Card
 `_meta` block and `ai-catalog.json` sibling entries.
