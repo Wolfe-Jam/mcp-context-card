@@ -8,18 +8,52 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ['20', '22', '24']
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 0 } # faf:nudge diffs the PR against its base
       - uses: actions/setup-node@v5
-        with: { node-version: '22', cache: 'npm' }
+        with: { node-version: '${{ matrix.node }}', cache: 'npm' }
       - run: npm ci
       - run: npm run version:check
+      - run: npm run engines:check
+        if: runner.os == 'Linux'
       - run: npm run faf:check
         if: runner.os == 'Linux'
       - run: npm run typecheck
       - run: npm run build
+      # The packaged `npx` / global-install entry — routes through the bin
+      # symlink, which the unit suite (spawning `node <path>`) never exercises.
+      # 1.0.0 silently no-op'd here.
+      - name: Packaged npx entry
+        shell: bash
+        run: |
+          npm pack --silent --pack-destination "$RUNNER_TEMP"
+          TGZ=$(ls "$RUNNER_TEMP"/mcp-context-card-*.tgz)
+          mkdir "$RUNNER_TEMP/npxtest" && cd "$RUNNER_TEMP/npxtest"
+          npm init -y >/dev/null 2>&1
+          npm install "$TGZ" --silent
+          V=$(npx mcp-context-card --version)
+          echo "npx mcp-context-card --version => '$V'"
+          case "$V" in
+            [0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "::error::npx entry produced no version — bin main-guard regression"; exit 1 ;;
+          esac
+          npx mcp-context-card card --stdout | head -c 15
+      # Full unit suite + coverage gate. Needs Node 22+ — the test-runner glob
+      # arg and the --test-coverage-* flags landed in 22.5 / 22.8. The shipped
+      # code itself runs on Node 20 (proven by the smoke + demo below).
       - run: npm run test:coverage
+        if: matrix.node != '20'
+      # Node 20 == the engines floor. Prove the published entry points run and
+      # the end-to-end demo passes here — the npx path is what users hit first.
+      - name: Node 20 runtime smoke (engines floor)
+        shell: bash
+        run: |
+          node dist/bin.js --version
+          node dist/bin.js --help
+          node dist/bin.js card --stdout > /dev/null
+        if: matrix.node == '20'
       - run: npm run demo
       - run: npm run catalog:check
         if: runner.os == 'Linux'
