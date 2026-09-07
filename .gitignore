@@ -3,3 +3,6 @@ dist/
 *.log
 project.html
 .mcpregistry_*
+
+# npm pack artifacts
+*.tgz

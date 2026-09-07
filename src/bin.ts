@@ -16,6 +16,7 @@
  * MCP_CONTEXT_CARD_ROOT=/path/to/project → read AGENTS.md / project.fafm /
  *   .well-known/ from there instead of the package's own bundled copies.
  */
+import { realpathSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -96,8 +97,20 @@ export function flagValue(argv: readonly string[], flag: string): string | undef
   return i >= 0 && i + 1 < argv.length ? argv[i + 1] : undefined;
 }
 
-/** Direct run only — importing this module (e.g. from a test) must not launch. */
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+/**
+ * Direct run only — importing this module (e.g. from a test) must not launch.
+ * `process.argv[1]` can be a bin symlink (`npx`, a global install, `.bin/…`)
+ * while `import.meta.url` is always the resolved file, so realpath argv[1]
+ * before comparing — otherwise the CLI silently no-ops when run via npx.
+ */
+const entryPath = (() => {
+  try {
+    return process.argv[1] ? realpathSync(process.argv[1]) : undefined;
+  } catch {
+    return process.argv[1];
+  }
+})();
+if (entryPath && import.meta.url === pathToFileURL(entryPath).href) {
   const argv = process.argv.slice(2);
   const { mode, port, root } = resolveLaunch(argv);
 

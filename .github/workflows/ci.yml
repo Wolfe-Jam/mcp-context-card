@@ -22,6 +22,24 @@ jobs:
         if: runner.os == 'Linux'
       - run: npm run typecheck
       - run: npm run build
+      # The packaged `npx` / global-install entry — routes through the bin
+      # symlink, which the unit suite (spawning `node <path>`) never exercises.
+      # 1.0.0 silently no-op'd here.
+      - name: Packaged npx entry
+        shell: bash
+        run: |
+          npm pack --silent --pack-destination "$RUNNER_TEMP"
+          TGZ=$(ls "$RUNNER_TEMP"/mcp-context-card-*.tgz)
+          mkdir "$RUNNER_TEMP/npxtest" && cd "$RUNNER_TEMP/npxtest"
+          npm init -y >/dev/null 2>&1
+          npm install "$TGZ" --silent
+          V=$(npx mcp-context-card --version)
+          echo "npx mcp-context-card --version => '$V'"
+          case "$V" in
+            [0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "::error::npx entry produced no version — bin main-guard regression"; exit 1 ;;
+          esac
+          npx mcp-context-card card --stdout | head -c 15
       # Full unit suite + coverage gate. Needs Node 22+ — the test-runner glob
       # arg and the --test-coverage-* flags landed in 22.5 / 22.8. The shipped
       # code itself runs on Node 20 (proven by the smoke + demo below).
