@@ -6,3 +6,6 @@ project.html
 
 # npm pack artifacts
 *.tgz
+
+# card output (npx mcp-context-card card writes this in cwd)
+context-card.html
