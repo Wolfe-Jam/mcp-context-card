@@ -74,9 +74,10 @@ memory, and how a machine fetches it. The view for people: screenshot it,
 drop it in a PR, put it on a status page.
 
 ```
-GET /card                      # live, on the HTTP transport
+npx mcp-context-card card       # at a terminal: writes context-card.html and opens it
+npx mcp-context-card card > x.html   # piped/redirected: raw HTML to stdout
+GET /card                       # live, on the HTTP transport
 GET /card?theme=light&accent=%230066cc
-npx mcp-context-card card       # or:  npm run card  →  docs/card.html
 ```
 
 Light, dark, or auto; the accent defaults to the AAIF palette and takes any hex.
@@ -106,11 +107,15 @@ npx agents-md-facts --check  # fail if missing or stale (CI, pre-commit)
 
 ### See the card
 
-One command, no host, no config:
+One command, no host, no config — from your project directory:
 
 ```bash
-npx mcp-context-card card > card.html
+npx mcp-context-card card
 ```
+
+At a terminal it writes `context-card.html` and opens it in your browser. Piped
+or redirected (`> card.html`, a script, CI) it writes raw HTML to stdout instead;
+`--stdout` forces that from a terminal too.
 
 ### Wire it into a host
 
@@ -130,7 +135,7 @@ Claude Desktop, Cursor, or any stdio host:
 
 `MCP_CONTEXT_CARD_ROOT` points at the directory with your `AGENTS.md`. The
 memory tools work with or without it; identity is optional. Over HTTP instead:
-`PORT=8080 npx mcp-context-card`. Requires Node ≥22.
+`PORT=8080 npx mcp-context-card`. Requires Node ≥20.
 
 If `command: "npx"` fails to spawn (`spawn npx ENOENT` — seen on Cursor, whose
 host process doesn't inherit a shell `PATH`), point `command` at `node` and

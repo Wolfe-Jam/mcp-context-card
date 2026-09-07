@@ -6,8 +6,10 @@
  *   mcp-context-card --http       → stateless Streamable HTTP on PORT (default 3000)
  *   PORT=8080 mcp-context-card    → HTTP too (a hosted deploy sets PORT)
  *   mcp-context-card --stdio      → force stdio even when PORT is set
- *   mcp-context-card card         → render THIS directory's context card to stdout
- *                                   ( > card.html · --theme light|dark · --accent #hex )
+ *   mcp-context-card card         → this directory's context card. At a terminal:
+ *                                   writes context-card.html and opens it. Piped
+ *                                   or redirected: HTML to stdout ( > card.html ).
+ *                                   --theme light|dark · --accent #hex · --stdout
  *   mcp-context-card --help       → usage
  *   mcp-context-card --version    → version
  *
@@ -38,8 +40,9 @@ USAGE
   mcp-context-card                  stdio MCP server — what an MCP host spawns (default)
   mcp-context-card --http           stateless Streamable HTTP on PORT (default 3000)
   mcp-context-card --stdio          force stdio even when PORT is set
-  mcp-context-card card [> f.html]  render this directory's context card to stdout
-                                      --theme light|dark    --accent #hex
+  mcp-context-card card             this dir's context card — opens it in your browser
+                                    at a terminal; HTML to stdout when piped ( > f.html )
+                                      --theme light|dark   --accent #hex   --stdout
   mcp-context-card --help           this text
   mcp-context-card --version        print version
 
@@ -48,7 +51,7 @@ ENV
   PORT                    if set, run HTTP instead of stdio
 
 A bare run is an stdio server: it waits for a host to speak JSON-RPC on stdin,
-so it looks idle at a terminal. Try \`card\` or \`--http\` to see output directly.
+so it looks idle at a terminal. Try \`card\` (opens your context in a browser) or \`--http\`.
 https://github.com/Wolfe-Jam/mcp-context-card
 `;
 
@@ -105,12 +108,31 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   } else if (mode === "card") {
     const { renderCard, safeAccent } = await import("./render-card.js");
     const theme = flagValue(argv, "--theme");
-    process.stdout.write(
-      renderCard(root, {
-        theme: theme === "light" || theme === "dark" ? theme : "auto",
-        accent: safeAccent(flagValue(argv, "--accent")),
-      }),
-    );
+    const html = renderCard(root, {
+      theme: theme === "light" || theme === "dark" ? theme : "auto",
+      accent: safeAccent(flagValue(argv, "--accent")),
+    });
+    // Piped / redirected (or --stdout) → raw HTML on stdout, unchanged.
+    // A bare run at a terminal → the HTML is noise; write a file and open it.
+    if (!process.stdout.isTTY || argv.includes("--stdout")) {
+      process.stdout.write(html);
+    } else {
+      const { writeFileSync } = await import("node:fs");
+      const { join } = await import("node:path");
+      const { spawn } = await import("node:child_process");
+      const out = join(process.cwd(), "context-card.html");
+      writeFileSync(out, html);
+      const opener: [string, string[]] =
+        process.platform === "darwin"
+          ? ["open", [out]]
+          : process.platform === "win32"
+            ? ["cmd", ["/c", "start", "", out]]
+            : ["xdg-open", [out]];
+      spawn(opener[0], opener[1], { stdio: "ignore", detached: true })
+        .on("error", () => {})
+        .unref();
+      process.stderr.write(`${NAME} · wrote ${out} — opening in your browser  (--stdout for raw HTML)\n`);
+    }
   } else if (mode === "http") {
     const { httpApp } = await import("./transport/http.js");
     const { serve: serveHttp } = await import("@hono/node-server");

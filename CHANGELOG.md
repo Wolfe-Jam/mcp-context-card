@@ -2,6 +2,28 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## 1.0.1
+
+`npx mcp-context-card card` now writes and opens your context card in one
+command — and Node 20 is supported.
+
+Run `npx mcp-context-card card` from a project directory: at a terminal it
+writes `context-card.html` and opens it in your browser. No MCP host, no
+redirect — the fastest way to see what an agent actually gets from your
+project. Piped or redirected output is unchanged (`> card.html`, scripts,
+CI); `--stdout` forces raw HTML from a terminal too.
+
+- **Node 20 supported.** `engines` was `>=22` with nothing in the code that
+  needed it — it runs identically on Node 20 (verified against the published
+  package). No more `npm warn EBADENGINE` on the current LTS. CI now runs the
+  full suite on Node 20, 22, and 24 across all three OSes.
+- **`card` at a terminal.** A bare `npx mcp-context-card card` used to dump
+  raw HTML at the prompt — noise for anyone who just wanted to look. Now it
+  writes a file and opens it; the pipe/redirect path is untouched.
+
+No API change. Nine tools, three concerns, two transports, two discovery
+mechanisms — all as 1.0.0.
+
 ## 1.0.0
 
 Stable surface. No functional change from 0.6.2 — this release declares
