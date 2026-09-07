@@ -22,7 +22,20 @@ jobs:
         if: runner.os == 'Linux'
       - run: npm run typecheck
       - run: npm run build
+      # Full unit suite + coverage gate. Needs Node 22+ — the test-runner glob
+      # arg and the --test-coverage-* flags landed in 22.5 / 22.8. The shipped
+      # code itself runs on Node 20 (proven by the smoke + demo below).
       - run: npm run test:coverage
+        if: matrix.node != '20'
+      # Node 20 == the engines floor. Prove the published entry points run and
+      # the end-to-end demo passes here — the npx path is what users hit first.
+      - name: Node 20 runtime smoke (engines floor)
+        shell: bash
+        run: |
+          node dist/bin.js --version
+          node dist/bin.js --help
+          node dist/bin.js card --stdout > /dev/null
+        if: matrix.node == '20'
       - run: npm run demo
       - run: npm run catalog:check
         if: runner.os == 'Linux'
