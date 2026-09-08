@@ -171,6 +171,12 @@ test("server: render_context_card returns a self-contained HTML card", async () 
     assert.match(html, /data-theme="dark"/);
     assert.match(html, /Context — AGENTS\.md/);
     assert.ok(!html.includes("<script"));
+    assert.equal((html.match(/<details class="ctx-section" open/g) ?? []).length, 0);
+
+    const full = say(
+      await client.callTool({ name: "render_context_card", arguments: { expanded: true } }),
+    );
+    assert.ok((full.match(/<details class="ctx-section" open/g) ?? []).length > 0);
     await client.close();
   } finally {
     cleanup();

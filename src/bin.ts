@@ -9,7 +9,8 @@
  *   mcp-context-card card         → this directory's context card. At a terminal:
  *                                   writes context-card.html and opens it. Piped
  *                                   or redirected: HTML to stdout ( > card.html ).
- *                                   --theme light|dark · --accent #hex · --stdout
+ *                                   --theme light|dark · --accent #hex
+ *                                   --expanded (all sections open) · --stdout
  *   mcp-context-card --help       → usage
  *   mcp-context-card --version    → version
  *
@@ -43,7 +44,8 @@ USAGE
   mcp-context-card --stdio          force stdio even when PORT is set
   mcp-context-card card             this dir's context card — opens it in your browser
                                     at a terminal; HTML to stdout when piped ( > f.html )
-                                      --theme light|dark   --accent #hex   --stdout
+                                      --theme light|dark   --accent #hex
+                                      --expanded (all sections open)   --stdout
   mcp-context-card --help           this text
   mcp-context-card --version        print version
 
@@ -124,6 +126,7 @@ if (entryPath && import.meta.url === pathToFileURL(entryPath).href) {
     const html = renderCard(root, {
       theme: theme === "light" || theme === "dark" ? theme : "auto",
       accent: safeAccent(flagValue(argv, "--accent")),
+      expanded: argv.includes("--expanded"),
     });
     // Piped / redirected (or --stdout) → raw HTML on stdout, unchanged.
     // A bare run at a terminal → the HTML is noise; write a file and open it.

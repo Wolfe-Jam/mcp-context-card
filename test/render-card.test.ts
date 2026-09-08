@@ -34,12 +34,46 @@ test("renderCard: renders all three concerns from the real sources", () => {
     const html = renderCard(root);
     assert.match(html, /Context — AGENTS\.md/);
     assert.match(html, /class="toc"/); // section index
-    assert.match(html, /<h2 id="setup">Setup<\/h2>/); // AGENTS.md rendered
+    // AGENTS.md sections render as collapsible <details>, one per heading
+    assert.match(html, /<details class="ctx-section" id="setup"><summary>Setup<\/summary>/);
     assert.match(html, /Memory — 4 facts/);
     assert.match(html, /class="tag">scope</); // a real fact tag
     assert.match(html, /Discovery/);
     assert.match(html, /text\/markdown/);
     assert.match(html, /mcp-context-card:\/\/server-card/);
+  } finally {
+    cleanup();
+  }
+});
+
+test("renderCard: sections collapse by default; expanded opens them all", () => {
+  const { root, cleanup } = fixture();
+  const count = (s: string, re: RegExp) => (s.match(re) ?? []).length;
+  try {
+    const collapsed = renderCard(root);
+    const expanded = renderCard(root, { expanded: true });
+
+    const sections = count(collapsed, /<details class="ctx-section"/g);
+    assert.ok(sections >= 3, "the fixture AGENTS.md has several sections");
+
+    // default: not one <details> carries `open`
+    assert.equal(count(collapsed, /<details class="ctx-section" open/g), 0);
+    // expanded: every one does
+    assert.equal(count(expanded, /<details class="ctx-section" open/g), sections);
+
+    // the pure-CSS expand-all control: a hidden checkbox + its label
+    assert.match(collapsed, /<input type="checkbox" class="ctx-xa" id="ctx-xa"/);
+    assert.match(collapsed, /<label for="ctx-xa" class="xall">/);
+    // expanded pre-checks it
+    assert.match(expanded, /class="ctx-xa" id="ctx-xa" checked/);
+
+    // still zero JS — the toggle is CSS (:checked ~) + native <details>
+    assert.ok(!collapsed.includes("<script"));
+
+    // toc anchors resolve to the section ids
+    const hrefs = [...collapsed.matchAll(/href="#([^"]+)"/g)].map((m) => m[1]);
+    const ids = [...collapsed.matchAll(/<details class="ctx-section"[^>]*id="([^"]+)"/g)].map((m) => m[1]);
+    assert.deepEqual(hrefs, ids);
   } finally {
     cleanup();
   }

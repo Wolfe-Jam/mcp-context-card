@@ -22,6 +22,12 @@ export interface CardOptions {
   theme?: Theme;
   /** CSS hex colour for the accent. Validated; invalid falls back to AAIF. */
   accent?: string;
+  /**
+   * Render every AGENTS.md section open. Default: sections collapse to their
+   * headings (`<details>`), click one to read it — the card scans in one screen.
+   * `expanded` is the whole-page render, for a screenshot or a PR.
+   */
+  expanded?: boolean;
 }
 
 /** AAIF brand orange (aaif.io). The default accent. */
@@ -59,7 +65,7 @@ body{margin:0;background:var(--bg);color:var(--fg);
   font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   padding:40px 18px}
 .card{max-width:760px;margin:0 auto;background:var(--card);border:1px solid var(--line);
-  border-radius:14px;overflow:hidden;box-shadow:var(--card-shadow)}
+  border-radius:14px;overflow:clip;box-shadow:var(--card-shadow)}
 .card>*{padding:26px 30px}
 .top{border-top:4px solid var(--accent);border-bottom:1px solid var(--line)}
 h1{margin:0 0 10px;font-size:1.7rem;letter-spacing:-.02em}
@@ -70,9 +76,39 @@ section{border-bottom:1px solid var(--line)}
 section:last-child{border-bottom:0}
 .label{font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
   color:var(--accent);margin:0 0 14px}
-.toc{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 0 20px;padding:0;list-style:none}
+.toc{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0;padding:0;list-style:none}
 .toc a{font-size:.82rem;color:var(--muted);text-decoration:none}
 .toc a:hover{color:var(--accent)}
+/* ── collapsible context ─────────────────────────────────────────── */
+.ctx-xa{position:absolute;width:1px;height:1px;margin:-1px;opacity:0;pointer-events:none}
+.ctx-nav{position:sticky;top:0;z-index:3;background:var(--card);
+  margin:0 -30px 16px;padding:11px 30px;border-bottom:1px solid var(--line);
+  display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px 16px}
+.xall{margin-left:auto;flex:none;font-size:.76rem;font-weight:600;white-space:nowrap;
+  padding:3px 11px;border-radius:20px;border:1px solid var(--line);
+  background:var(--chip);color:var(--muted);cursor:pointer;user-select:none}
+.xall:hover{color:var(--accent);border-color:var(--accent)}
+.xall .xc{display:none}
+.ctx-xa:checked~.ctx-nav .xall .xe{display:none}
+.ctx-xa:checked~.ctx-nav .xall .xc{display:inline}
+.ctx-preamble{padding-bottom:4px}
+details.ctx-section{border-top:1px solid var(--line)}
+details.ctx-section>summary{cursor:pointer;list-style:none;padding:11px 0;
+  font-weight:600;font-size:1rem;letter-spacing:-.01em;display:flex;gap:9px}
+details.ctx-section>summary::-webkit-details-marker{display:none}
+details.ctx-section>summary::before{content:"›";color:var(--accent);font-weight:700;
+  transition:transform .15s ease}
+details.ctx-section[open]>summary::before,
+details.ctx-section:target>summary::before,
+.ctx-xa:checked~.ctx-body details.ctx-section>summary::before{transform:rotate(90deg)}
+details.ctx-section>.md{padding:0 0 16px}
+details.ctx-section:target>.md,
+.ctx-xa:checked~.ctx-body details.ctx-section>.md{display:block}
+@media print{
+  .ctx-nav,.ctx-xa{display:none}
+  details.ctx-section>.md{display:block!important}
+  details.ctx-section>summary::before{content:""}
+}
 .md h1,.md h2,.md h3,.md h4{margin:22px 0 8px;font-size:1rem;letter-spacing:-.01em}
 .md h1{font-size:1.15rem}
 .md p{margin:8px 0}
@@ -126,23 +162,38 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
     .filter(Boolean)
     .join("");
 
-  // CONTEXT — drop the redundant top-level "# AGENTS.md" heading, keep its intro
+  // CONTEXT — one <details> per AGENTS.md section, collapsed by default (the card
+  // scans in one screen); `expanded` renders them all open. The "# AGENTS.md"
+  // top-level heading is dropped; its intro rides above the sections.
   const bodySections = agents?.sections.filter((s) => s.level > 1) ?? [];
   const toc = bodySections.length
     ? `<ul class="toc">${bodySections
         .map((s) => `<li><a href="#${slug(s.heading)}">${escapeHtml(s.heading)}</a></li>`)
         .join("")}</ul>`
     : "";
+  const preamble = [agents?.preamble, agents?.sections.find((s) => s.level === 1)?.body ?? ""]
+    .filter(Boolean)
+    .join("\n\n");
+  const openAttr = opts.expanded ? " open" : "";
+  const sections = bodySections
+    .map(
+      (s) =>
+        `<details class="ctx-section"${openAttr} id="${slug(s.heading)}"><summary>${escapeHtml(
+          s.heading,
+        )}</summary><div class="md">${renderMarkdown(s.body)}</div></details>`,
+    )
+    .join("");
   const contextBody = agents
-    ? `${toc}<div class="md">${renderMarkdown(
-        [
-          agents.preamble,
-          agents.sections.find((s) => s.level === 1)?.body ?? "",
-          ...bodySections.map((s) => `${"#".repeat(s.level)} ${s.heading}\n\n${s.body}`),
-        ]
-          .filter(Boolean)
-          .join("\n\n"),
-      )}</div>`
+    ? `<input type="checkbox" class="ctx-xa" id="ctx-xa"${
+        opts.expanded ? " checked" : ""
+      } aria-hidden="true" tabindex="-1">
+    <div class="ctx-nav">${toc}${
+      bodySections.length
+        ? `<label for="ctx-xa" class="xall"><span class="xe">Expand all</span><span class="xc">Collapse all</span></label>`
+        : ""
+    }</div>
+    ${preamble ? `<div class="ctx-preamble md">${renderMarkdown(preamble)}</div>` : ""}
+    <div class="ctx-body">${sections}</div>`
     : `<p class="none">No AGENTS.md in this project.</p>`;
 
   // MEMORY

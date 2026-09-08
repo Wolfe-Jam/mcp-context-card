@@ -2,6 +2,29 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## 1.1.0
+
+The card scans in one screen — AGENTS.md sections collapse by default.
+
+Every AGENTS.md section is now its own `<details>`, closed on load: the card
+opens as identity → the section list → memory count → discovery, one screen,
+scannable. Click a section to read it; the section index stays sticky at the
+top so it's always one click away, not a scroll back up.
+
+- **Expand all / Collapse all** — a control in the sticky nav. Pure CSS (a
+  hidden checkbox), no JavaScript; the card is still a single self-contained
+  file that renders as a `data:` URI.
+- **`--expanded` / `?expand=all` / `expanded: true`** — the full-page render,
+  for a screenshot or a PR. Available on the CLI (`npx mcp-context-card card
+  --expanded`), the HTTP transport (`GET /card?expand=all`), and the
+  `render_context_card` tool.
+- **A section index link opens its section** — `#section` in the URL (or a
+  click in the nav) reveals that `<details>`, no JS.
+- **Print / save-as-PDF** captures every section regardless of what's open.
+
+No API change to the nine tools. `render_context_card` gains an optional
+`expanded` boolean; everything else is unchanged.
+
 ## 1.0.1
 
 `npx mcp-context-card` now runs — it silently no-op'd when launched through

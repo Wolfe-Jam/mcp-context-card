@@ -62,7 +62,9 @@ export function httpApp(root: string = ROOT): Hono {
     const q = c.req.query();
     const theme = (["light", "dark", "auto"].includes(q.theme ?? "") ? q.theme : "auto") as Theme;
     c.header("content-type", "text/html; charset=utf-8");
-    return c.body(renderCard(root, { theme, accent: safeAccent(q.accent) }));
+    return c.body(
+      renderCard(root, { theme, accent: safeAccent(q.accent), expanded: q.expand === "all" }),
+    );
   });
 
   // ── Index ───────────────────────────────────────────────────────────
