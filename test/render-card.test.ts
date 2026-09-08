@@ -18,9 +18,11 @@ test("renderCard: a complete, self-contained HTML document", () => {
     const html = renderCard(root);
     assert.match(html, /^<!doctype html>/);
     assert.match(html, /<title>mcp-context-card — context card<\/title>/);
-    // self-contained: no external fetches
-    assert.ok(!/src=|href="http|@import/.test(html) || !/<script/.test(html));
-    assert.ok(!html.includes("<script"));
+    // self-contained: nothing loaded from the network — no external script,
+    // stylesheet, font or image. The one <script> is inline (the toggle helper).
+    assert.ok(!/<script[^>]+\bsrc=/.test(html), "no external script");
+    assert.ok(!/\bhref="https?:|@import|<link\b/.test(html), "no external stylesheet/link");
+    assert.ok(!/<img\b|\bsrc="https?:/.test(html), "no external image");
     // the AAIF accent by default
     assert.ok(html.includes(AAIF_ACCENT));
   } finally {
@@ -61,14 +63,13 @@ test("renderCard: sections collapse by default; expanded opens them all", () => 
     // expanded: every one does
     assert.equal(count(expanded, /<details class="ctx-section" open/g), sections);
 
-    // the pure-CSS expand-all control: a hidden checkbox + its label
-    assert.match(collapsed, /<input type="checkbox" class="ctx-xa" id="ctx-xa"/);
-    assert.match(collapsed, /<label for="ctx-xa" class="xall">/);
-    // expanded pre-checks it
-    assert.match(expanded, /class="ctx-xa" id="ctx-xa" checked/);
-
-    // still zero JS — the toggle is CSS (:checked ~) + native <details>
-    assert.ok(!collapsed.includes("<script"));
+    // the expand-all control: a button, hidden until the inline script un-hides
+    // it (progressive enhancement — native <details> works without JS)
+    assert.match(collapsed, /<button type="button" class="xall" hidden>Expand all<\/button>/);
+    assert.match(expanded, /<button type="button" class="xall" hidden>Collapse all<\/button>/);
+    // exactly one inline script, nothing external
+    assert.equal(count(collapsed, /<script>/g), 1);
+    assert.ok(!/<script[^>]+src=/.test(collapsed));
 
     // toc anchors resolve to the section ids
     const hrefs = [...collapsed.matchAll(/href="#([^"]+)"/g)].map((m) => m[1]);

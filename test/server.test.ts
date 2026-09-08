@@ -170,7 +170,7 @@ test("server: render_context_card returns a self-contained HTML card", async () 
     assert.match(html, /^<!doctype html>/);
     assert.match(html, /data-theme="dark"/);
     assert.match(html, /Context — AGENTS\.md/);
-    assert.ok(!html.includes("<script"));
+    assert.ok(!/<script[^>]+src=/.test(html), "no external script — the toggle helper is inline");
     assert.equal((html.match(/<details class="ctx-section" open/g) ?? []).length, 0);
 
     const full = say(

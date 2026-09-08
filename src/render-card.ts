@@ -6,8 +6,9 @@
  * or drop into a PR. Same three sources as the Server Card _meta block and
  * ai-catalog; this is the view for people.
  *
- * Self-contained: inline CSS, no JS, no external fonts. Renders anywhere,
- * including as a data: URI.
+ * Self-contained: inline CSS, no external fonts or resources. The only script
+ * is the expand-all / print helper (TOGGLE_SCRIPT) — a progressive enhancement;
+ * every section still opens on its own without it. Renders anywhere.
  */
 import { join } from "node:path";
 import { parseAgentsMd } from "./agents-md.js";
@@ -80,17 +81,13 @@ section:last-child{border-bottom:0}
 .toc a{font-size:.82rem;color:var(--muted);text-decoration:none}
 .toc a:hover{color:var(--accent)}
 /* ── collapsible context ─────────────────────────────────────────── */
-.ctx-xa{position:absolute;width:1px;height:1px;margin:-1px;opacity:0;pointer-events:none}
 .ctx-nav{position:sticky;top:0;z-index:3;background:var(--card);
   margin:0 -30px 16px;padding:11px 30px;border-bottom:1px solid var(--line);
   display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px 16px}
-.xall{margin-left:auto;flex:none;font-size:.76rem;font-weight:600;white-space:nowrap;
-  padding:3px 11px;border-radius:20px;border:1px solid var(--line);
-  background:var(--chip);color:var(--muted);cursor:pointer;user-select:none}
+.xall{margin-left:auto;flex:none;font:inherit;font-size:.76rem;font-weight:600;
+  white-space:nowrap;padding:3px 11px;border-radius:20px;border:1px solid var(--line);
+  background:var(--chip);color:var(--muted);cursor:pointer}
 .xall:hover{color:var(--accent);border-color:var(--accent)}
-.xall .xc{display:none}
-.ctx-xa:checked~.ctx-nav .xall .xe{display:none}
-.ctx-xa:checked~.ctx-nav .xall .xc{display:inline}
 .ctx-preamble{padding-bottom:4px}
 details.ctx-section{border-top:1px solid var(--line)}
 details.ctx-section>summary{cursor:pointer;list-style:none;padding:11px 0;
@@ -98,15 +95,11 @@ details.ctx-section>summary{cursor:pointer;list-style:none;padding:11px 0;
 details.ctx-section>summary::-webkit-details-marker{display:none}
 details.ctx-section>summary::before{content:"›";color:var(--accent);font-weight:700;
   transition:transform .15s ease}
-details.ctx-section[open]>summary::before,
-details.ctx-section:target>summary::before,
-.ctx-xa:checked~.ctx-body details.ctx-section>summary::before{transform:rotate(90deg)}
+details.ctx-section[open]>summary::before{transform:rotate(90deg)}
 details.ctx-section>.md{padding:0 0 16px}
-details.ctx-section:target>.md,
-.ctx-xa:checked~.ctx-body details.ctx-section>.md{display:block}
 @media print{
-  .ctx-nav,.ctx-xa{display:none}
-  details.ctx-section>.md{display:block!important}
+  .ctx-nav{display:none}
+  details.ctx-section:not([open])>.md{display:block!important}
   details.ctx-section>summary::before{content:""}
 }
 .md h1,.md h2,.md h3,.md h4{margin:22px 0 8px;font-size:1rem;letter-spacing:-.01em}
@@ -184,14 +177,13 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
     )
     .join("");
   const contextBody = agents
-    ? `<input type="checkbox" class="ctx-xa" id="ctx-xa"${
-        opts.expanded ? " checked" : ""
-      } aria-hidden="true" tabindex="-1">
-    <div class="ctx-nav">${toc}${
-      bodySections.length
-        ? `<label for="ctx-xa" class="xall"><span class="xe">Expand all</span><span class="xc">Collapse all</span></label>`
-        : ""
-    }</div>
+    ? `<div class="ctx-nav">${toc}${
+        bodySections.length
+          ? `<button type="button" class="xall" hidden>${
+              opts.expanded ? "Collapse all" : "Expand all"
+            }</button>`
+          : ""
+      }</div>
     ${preamble ? `<div class="ctx-preamble md">${renderMarkdown(preamble)}</div>` : ""}
     <div class="ctx-body">${sections}</div>`
     : `<p class="none">No AGENTS.md in this project.</p>`;
@@ -253,7 +245,36 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
   </section>
   <div class="foot">${escapeHtml(name)} · context card</div>
 </main>
+${bodySections.length ? TOGGLE_SCRIPT : ""}
 </body>
 </html>
 `;
 }
+
+/**
+ * Expand-all / Collapse-all. The only script in the card — a progressive
+ * enhancement: with it off, every section still opens and closes on its own
+ * (native `<details>`), just without the bulk button. It also opens every
+ * section for printing, since browsers don't agree on whether a closed
+ * `<details>` prints its content.
+ */
+const TOGGLE_SCRIPT = `<script>
+(function(){
+  var btn=document.querySelector(".xall");
+  var secs=[].slice.call(document.querySelectorAll("details.ctx-section"));
+  if(!btn||!secs.length)return;
+  var sync=function(){btn.textContent=secs.every(function(d){return d.open})?"Collapse all":"Expand all"};
+  btn.hidden=false;
+  btn.addEventListener("click",function(){
+    var open=!secs.every(function(d){return d.open});
+    secs.forEach(function(d){d.open=open});sync();
+  });
+  secs.forEach(function(d){d.addEventListener("toggle",sync)});
+  var openHash=function(){var d=document.getElementById(location.hash.slice(1));if(d&&d.tagName==="DETAILS")d.open=true};
+  addEventListener("hashchange",openHash);openHash();
+  var pre=[];
+  addEventListener("beforeprint",function(){pre=secs.map(function(d){return d.open});secs.forEach(function(d){d.open=true})});
+  addEventListener("afterprint",function(){secs.forEach(function(d,i){d.open=pre[i]});sync()});
+  sync();
+})();
+</script>`;
