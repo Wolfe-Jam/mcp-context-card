@@ -74,9 +74,10 @@ memory, and how a machine fetches it. The view for people: read it, screenshot
 it, drop it in a PR, put it on a status page.
 
 `AGENTS.md` sections are collapsed by default, so the card scans in one screen;
-a sticky index jumps to any section, **Expand all** opens everything (pure CSS,
-no JavaScript). `--expanded` / `?expand=all` renders it fully open for a
-screenshot.
+a sticky index jumps to any section, **Expand all** opens everything. Sections
+toggle natively — the one small inline script only adds the bulk button and the
+print handler. `--expanded` / `?expand=all` renders it fully open, script-free,
+for a screenshot.
 
 ```
 npx mcp-context-card card            # at a terminal: writes context-card.html and opens it

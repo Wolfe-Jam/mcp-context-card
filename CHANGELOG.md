@@ -11,16 +11,19 @@ opens as identity → the section list → memory count → discovery, one scree
 scannable. Click a section to read it; the section index stays sticky at the
 top so it's always one click away, not a scroll back up.
 
-- **Expand all / Collapse all** — a control in the sticky nav. Pure CSS (a
-  hidden checkbox), no JavaScript; the card is still a single self-contained
-  file that renders as a `data:` URI.
+- **Expand all / Collapse all** — a control in the sticky nav, from one
+  ~16-line inline script (no external resources; the card is still one
+  self-contained file). It's a progressive enhancement: the button ships
+  `hidden` and the script reveals it, so with JavaScript off every section
+  still opens and closes on its own.
 - **`--expanded` / `?expand=all` / `expanded: true`** — the full-page render,
   for a screenshot or a PR. Available on the CLI (`npx mcp-context-card card
   --expanded`), the HTTP transport (`GET /card?expand=all`), and the
-  `render_context_card` tool.
-- **A section index link opens its section** — `#section` in the URL (or a
-  click in the nav) reveals that `<details>`, no JS.
-- **Print / save-as-PDF** captures every section regardless of what's open.
+  `render_context_card` tool. This path renders `<details open>` server-side —
+  no script involved.
+- **A section index link opens its section** — `#section` in the URL, or a
+  click in the nav.
+- **Print / save-as-PDF** opens every section first, then restores.
 
 No API change to the nine tools. `render_context_card` gains an optional
 `expanded` boolean; everything else is unchanged.
