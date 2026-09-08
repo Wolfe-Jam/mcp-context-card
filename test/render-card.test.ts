@@ -18,9 +18,11 @@ test("renderCard: a complete, self-contained HTML document", () => {
     const html = renderCard(root);
     assert.match(html, /^<!doctype html>/);
     assert.match(html, /<title>mcp-context-card — context card<\/title>/);
-    // self-contained: no external fetches
-    assert.ok(!/src=|href="http|@import/.test(html) || !/<script/.test(html));
-    assert.ok(!html.includes("<script"));
+    // self-contained: nothing loaded from the network — no external script,
+    // stylesheet, font or image. The one <script> is inline (the toggle helper).
+    assert.ok(!/<script[^>]+\bsrc=/.test(html), "no external script");
+    assert.ok(!/\bhref="https?:|@import|<link\b/.test(html), "no external stylesheet/link");
+    assert.ok(!/<img\b|\bsrc="https?:/.test(html), "no external image");
     // the AAIF accent by default
     assert.ok(html.includes(AAIF_ACCENT));
   } finally {
@@ -34,12 +36,45 @@ test("renderCard: renders all three concerns from the real sources", () => {
     const html = renderCard(root);
     assert.match(html, /Context — AGENTS\.md/);
     assert.match(html, /class="toc"/); // section index
-    assert.match(html, /<h2 id="setup">Setup<\/h2>/); // AGENTS.md rendered
+    // AGENTS.md sections render as collapsible <details>, one per heading
+    assert.match(html, /<details class="ctx-section" id="setup"><summary>Setup<\/summary>/);
     assert.match(html, /Memory — 4 facts/);
     assert.match(html, /class="tag">scope</); // a real fact tag
     assert.match(html, /Discovery/);
     assert.match(html, /text\/markdown/);
     assert.match(html, /mcp-context-card:\/\/server-card/);
+  } finally {
+    cleanup();
+  }
+});
+
+test("renderCard: sections collapse by default; expanded opens them all", () => {
+  const { root, cleanup } = fixture();
+  const count = (s: string, re: RegExp) => (s.match(re) ?? []).length;
+  try {
+    const collapsed = renderCard(root);
+    const expanded = renderCard(root, { expanded: true });
+
+    const sections = count(collapsed, /<details class="ctx-section"/g);
+    assert.ok(sections >= 3, "the fixture AGENTS.md has several sections");
+
+    // default: not one <details> carries `open`
+    assert.equal(count(collapsed, /<details class="ctx-section" open/g), 0);
+    // expanded: every one does
+    assert.equal(count(expanded, /<details class="ctx-section" open/g), sections);
+
+    // the expand-all control: a button, hidden until the inline script un-hides
+    // it (progressive enhancement — native <details> works without JS)
+    assert.match(collapsed, /<button type="button" class="xall" hidden>Expand all<\/button>/);
+    assert.match(expanded, /<button type="button" class="xall" hidden>Collapse all<\/button>/);
+    // exactly one inline script, nothing external
+    assert.equal(count(collapsed, /<script>/g), 1);
+    assert.ok(!/<script[^>]+src=/.test(collapsed));
+
+    // toc anchors resolve to the section ids
+    const hrefs = [...collapsed.matchAll(/href="#([^"]+)"/g)].map((m) => m[1]);
+    const ids = [...collapsed.matchAll(/<details class="ctx-section"[^>]*id="([^"]+)"/g)].map((m) => m[1]);
+    assert.deepEqual(hrefs, ids);
   } finally {
     cleanup();
   }

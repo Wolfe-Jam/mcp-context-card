@@ -70,14 +70,21 @@ file access, no shell, no search.
 
 The screenshot at the top of this page is exactly this — the same three
 sources rendered as one self‑contained HTML page: identity, `AGENTS.md`,
-memory, and how a machine fetches it. The view for people: screenshot it,
-drop it in a PR, put it on a status page.
+memory, and how a machine fetches it. The view for people: read it, screenshot
+it, drop it in a PR, put it on a status page.
+
+`AGENTS.md` sections are collapsed by default, so the card scans in one screen;
+a sticky index jumps to any section, **Expand all** opens everything. Sections
+toggle natively — the one small inline script only adds the bulk button and the
+print handler. `--expanded` / `?expand=all` renders it fully open, script-free,
+for a screenshot.
 
 ```
-npx mcp-context-card card       # at a terminal: writes context-card.html and opens it
+npx mcp-context-card card            # at a terminal: writes context-card.html and opens it
+npx mcp-context-card card --expanded # every section open
 npx mcp-context-card card > x.html   # piped/redirected: raw HTML to stdout
-GET /card                       # live, on the HTTP transport
-GET /card?theme=light&accent=%230066cc
+GET /card                            # live, on the HTTP transport
+GET /card?expand=all&theme=light&accent=%230066cc
 ```
 
 Light, dark, or auto; the accent defaults to the AAIF palette and takes any hex.
@@ -115,7 +122,7 @@ npx mcp-context-card card
 
 At a terminal it writes `context-card.html` and opens it in your browser. Piped
 or redirected (`> card.html`, a script, CI) it writes raw HTML to stdout instead;
-`--stdout` forces that from a terminal too.
+`--stdout` forces that from a terminal too. `--expanded` opens every section.
 
 ### Wire it into a host
 

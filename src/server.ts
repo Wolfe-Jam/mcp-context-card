@@ -186,12 +186,13 @@ export function createServer(root: string = ROOT): Server {
       {
         name: "render_context_card",
         description:
-          "Render the whole card — identity, AGENTS.md, memory, discovery — as one self-contained HTML page a person can read or screenshot. Also served at GET /card over the HTTP transport.",
+          "Render the whole card — identity, AGENTS.md, memory, discovery — as one self-contained HTML page a person can read or screenshot. AGENTS.md sections collapse by default; pass expanded:true for the full render. Also served at GET /card (?expand=all) over the HTTP transport.",
         inputSchema: {
           type: "object",
           properties: {
             theme: { type: "string", enum: ["light", "dark", "auto"], description: "default: auto" },
             accent: { type: "string", description: "CSS hex colour, e.g. #FF702D (default: the AAIF palette)" },
+            expanded: { type: "boolean", description: "render every AGENTS.md section open (default: collapsed)" },
           },
         },
       },
@@ -246,7 +247,8 @@ export function createServer(root: string = ROOT): Server {
       }
       case "whoami":
         return text(whoami(root));
-      case "render_context_card":
+      case "render_context_card": {
+        const rawExpanded = (args as Record<string, unknown>).expanded;
         return {
           content: [
             {
@@ -254,10 +256,12 @@ export function createServer(root: string = ROOT): Server {
               text: renderCard(root, {
                 theme: (["light", "dark", "auto"].includes(args.theme) ? args.theme : "auto") as Theme,
                 accent: safeAccent(args.accent),
+                expanded: rawExpanded === true || rawExpanded === "true",
               }),
             },
           ],
         };
+      }
       case "list_context_sources": {
         const doc = parseAgentsMd(AGENTS);
         const mem = parseFafm(FAFM);

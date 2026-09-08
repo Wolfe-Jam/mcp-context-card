@@ -98,6 +98,12 @@ test("http: GET /card renders the card; ?theme + ?accent are honoured / sanitise
   const bad = await (await fetch(`${base}/card?accent=x%3B%7D%3C%2Fstyle%3E`)).text();
   assert.ok(!bad.includes("</style><"));
   assert.match(bad, /--accent:#FF702D/);
+
+  // ?expand=all opens every section
+  const collapsed = await (await fetch(`${base}/card`)).text();
+  const expanded = await (await fetch(`${base}/card?expand=all`)).text();
+  assert.equal((collapsed.match(/<details class="ctx-section" open/g) ?? []).length, 0);
+  assert.ok((expanded.match(/<details class="ctx-section" open/g) ?? []).length > 0);
 });
 
 test("http: memory tools round-trip over the wire", async () => {
