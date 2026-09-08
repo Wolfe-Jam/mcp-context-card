@@ -15,7 +15,7 @@ connection.
 npm ci
 ```
 
-Node 22 or newer. No other system dependencies.
+Node 20 or newer. No other system dependencies.
 
 ## Build
 
