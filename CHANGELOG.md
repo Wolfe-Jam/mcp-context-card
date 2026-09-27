@@ -2,7 +2,7 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 1.1.1
 
 Every tool now says what it is and what it does to your project.
 
@@ -20,7 +20,10 @@ before running it:
   and `openWorldHint: false` (they only touch the local project).
 
 A new test checks every tool's title and hints against what it actually does,
-so a tool added later can't ship without them.
+so a tool added later can't ship without them. 106 tests, all green on
+Linux, macOS, and Windows.
+
+No API change to the nine tools: same names, same inputs, same behaviour.
 
 ## 1.1.0
 

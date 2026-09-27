@@ -193,6 +193,10 @@ The wire‑level detail is in [docs/MECHANISMS.md](./docs/MECHANISMS.md).
 | `list_context_sources` | what this project publishes, in what media types, via which surface |
 | `render_context_card` | the whole card as one self‑contained HTML page (also `GET /card`) |
 
+Seven tools only read. `remember` and `forget` write the memory file, so they're
+marked destructive and a host can ask before running them. Every tool carries a
+title and MCP tool annotations.
+
 ## The demo
 
 `npm run demo` runs every tool over both transports:
@@ -205,10 +209,11 @@ The wire‑level detail is in [docs/MECHANISMS.md](./docs/MECHANISMS.md).
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-104 tests on Linux, macOS, and Windows, coverage‑gated in CI. Two spawn a real
+106 tests on Linux, macOS, and Windows, coverage‑gated in CI. Two spawn a real
 child process and check a remembered fact survives the restart — one against
 an existing `project.fafm`, one starting from a project that has never had
-one; another checks the stdio and HTTP tool surfaces match.
+one; another checks the stdio and HTTP tool surfaces match, and another checks
+every tool's title and behaviour hints against what it actually does.
 
 ## Layout
 
