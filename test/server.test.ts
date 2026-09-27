@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer, SERVER_CARD_URI } from "../src/server.js";
+import { CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION } from "../src/constants.js";
 import { fixture } from "./helpers.js";
 
 const TOOLS = [
@@ -256,6 +257,86 @@ test("server: an unknown tool or resource rejects, it doesn't hang", async () =>
     const { tools } = await client.listTools();
     assert.equal(tools.length, 9);
     await client.close();
+  } finally {
+    cleanup();
+  }
+});
+
+// ── MCP Apps: the card rendered inline by hosts that support it ─────────
+
+async function connectedWithApps(root: string): Promise<Client> {
+  const server = createServer(root);
+  const [a, b] = InMemoryTransport.createLinkedPair();
+  const client = new Client(
+    { name: "t", version: "0" },
+    { capabilities: { extensions: { [UI_EXTENSION]: { mimeTypes: [MCP_APP_MIME] } } } },
+  );
+  await Promise.all([server.connect(b), client.connect(a)]);
+  return client;
+}
+
+test("mcp app: render_context_card links its UI resource (both key forms)", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const client = await connected(root);
+    const { tools } = await client.listTools();
+    const t = tools.find((x) => x.name === "render_context_card")!;
+    const meta = t._meta as Record<string, any>;
+    assert.equal(meta.ui?.resourceUri, CARD_UI_URI);
+    assert.equal(meta["ui/resourceUri"], CARD_UI_URI);
+    await client.close();
+  } finally {
+    cleanup();
+  }
+});
+
+test("mcp app: the card is listed as a ui:// resource with the MCP Apps MIME type", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const client = await connected(root);
+    const { resources } = await client.listResources();
+    const r = resources.find((x) => x.uri === CARD_UI_URI);
+    assert.ok(r, "ui:// card resource not listed");
+    assert.equal(r!.mimeType, MCP_APP_MIME);
+    await client.close();
+  } finally {
+    cleanup();
+  }
+});
+
+test("mcp app: the card resource is self-contained HTML that loads nothing external", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const client = await connected(root);
+    const res = await client.readResource({ uri: CARD_UI_URI });
+    const c = res.contents[0] as { uri: string; mimeType?: string; text?: string };
+    assert.equal(c.mimeType, MCP_APP_MIME);
+    const html = c.text ?? "";
+    assert.match(html, /<html/i);
+    assert.match(html, /mcp-context-card|Context/);
+    // A sandboxed host blocks outside requests by default, so nothing may be fetched.
+    assert.doesNotMatch(html, /<(script|img|iframe)[^>]+src=["']https?:/i, "external src");
+    assert.doesNotMatch(html, /<link[^>]+href=["']https?:/i, "external stylesheet");
+    assert.doesNotMatch(html, /@import\s+url\(["']?https?:/i, "external CSS import");
+    await client.close();
+  } finally {
+    cleanup();
+  }
+});
+
+test("mcp app: a host that renders apps gets a short summary; others keep the full HTML", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const apps = await connectedWithApps(root);
+    const short = say(await apps.callTool({ name: "render_context_card", arguments: {} }));
+    assert.match(short, /^Showing the context card/);
+    assert.doesNotMatch(short, /<html/i);
+    await apps.close();
+
+    const plain = await connected(root);
+    const full = say(await plain.callTool({ name: "render_context_card", arguments: {} }));
+    assert.match(full, /<html/i, "non-Apps hosts must still get the whole card");
+    await plain.close();
   } finally {
     cleanup();
   }

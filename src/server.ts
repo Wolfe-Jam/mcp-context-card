@@ -33,7 +33,7 @@ import { identity, serverCardMeta, whoami } from "./identity.js";
 import { renderCard, safeAccent, type Theme } from "./render-card.js";
 
 export { NAME, VERSION, SERVER_CARD_URI } from "./constants.js";
-import { NAME, VERSION, SERVER_CARD_URI } from "./constants.js";
+import { NAME, VERSION, SERVER_CARD_URI, CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION } from "./constants.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 /** Default package root — `dist/` at runtime, `src/` under tsx. Both are one up. */
@@ -56,6 +56,13 @@ const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] });
  *              Defaults to the package root; a deploy points `MCP_CONTEXT_CARD_ROOT`
  *              at a real project, a test points it at a fixture.
  */
+/** True when the connected client declared MCP Apps support
+ *  (capabilities.extensions["io.modelcontextprotocol/ui"].mimeTypes). */
+function hostRendersApps(server: Server): boolean {
+  const ext = server.getClientCapabilities()?.extensions?.[UI_EXTENSION] as { mimeTypes?: unknown } | undefined;
+  return Array.isArray(ext?.mimeTypes) && ext.mimeTypes.includes(MCP_APP_MIME);
+}
+
 export function createServer(root: string = ROOT): Server {
   const AGENTS = join(root, "AGENTS.md");
   const FAFM = join(root, "project.fafm");
@@ -75,9 +82,23 @@ export function createServer(root: string = ROOT): Server {
         description: "This server's identity + the _meta context block.",
         mimeType: "application/json",
       },
+      {
+        uri: CARD_UI_URI,
+        name: "Context Card",
+        description: "The context card as an MCP App: identity, AGENTS.md, memory and discovery, rendered inline by hosts that support MCP Apps.",
+        mimeType: MCP_APP_MIME,
+      },
     ],
   }));
   server.setRequestHandler(ReadResourceRequestSchema, async (req) => {
+    if (req.params.uri === CARD_UI_URI) {
+      // Rendered at read time from the project's own files. The card is
+      // self-contained (inline CSS, no external requests), and its one script
+      // is progressive enhancement, so it still works in a strict sandbox.
+      return {
+        contents: [{ uri: CARD_UI_URI, mimeType: MCP_APP_MIME, text: renderCard(root, { theme: "auto" }) }],
+      };
+    }
     if (req.params.uri !== SERVER_CARD_URI) {
       throw new Error(`unknown resource: ${req.params.uri}`);
     }
@@ -202,6 +223,9 @@ export function createServer(root: string = ROOT): Server {
       {
         name: "render_context_card",
         title: "Render Context Card",
+        // MCP Apps: hosts that support it render the card inline from this
+        // resource. Both key forms, as the official ext-apps helper writes them.
+        _meta: { ui: { resourceUri: CARD_UI_URI }, "ui/resourceUri": CARD_UI_URI },
         annotations: { title: "Render Context Card", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
         description:
           "Render the whole card — identity, AGENTS.md, memory, discovery — as one self-contained HTML page a person can read or screenshot. AGENTS.md sections collapse by default; pass expanded:true for the full render. Also served at GET /card (?expand=all) over the HTTP transport.",
@@ -267,6 +291,19 @@ export function createServer(root: string = ROOT): Server {
         return text(whoami(root));
       case "render_context_card": {
         const rawExpanded = (args as Record<string, unknown>).expanded;
+        if (hostRendersApps(server)) {
+          // The host renders the card itself from CARD_UI_URI, so the model
+          // gets a short summary instead of a whole HTML page.
+          const doc = parseAgentsMd(AGENTS);
+          const mem = parseFafm(FAFM);
+          const sections = doc?.sections.length ?? 0;
+          const facts = mem.facts.length;
+          return text(
+            `Showing the context card for ${NAME}: AGENTS.md with ${sections} section${sections === 1 ? "" : "s"}, ` +
+              `${facts} remembered fact${facts === 1 ? "" : "s"}, and this server's identity. ` +
+              "The card is displayed to the user; call read_agents_md or recall for the text itself.",
+          );
+        }
         return {
           content: [
             {
