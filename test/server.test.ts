@@ -39,6 +39,33 @@ test("server: advertises its name + the nine tools", async () => {
   }
 });
 
+// The tools that change the memory file. Everything else only reads the project.
+const WRITES = ["forget", "remember"];
+
+test("server: every tool carries a title and behaviour hints that match what it does", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const client = await connected(root);
+    const { tools } = await client.listTools();
+    for (const t of tools) {
+      assert.ok((t.title ?? "").length > 3, `${t.name}: no title`);
+      const a = t.annotations;
+      assert.ok(a, `${t.name}: no annotations`);
+      assert.equal(a.title, t.title, `${t.name}: annotations.title differs from title`);
+      assert.equal(a.openWorldHint, false, `${t.name}: reads only local project files, so openWorldHint must be false`);
+      if (WRITES.includes(t.name)) {
+        assert.equal(a.readOnlyHint, false, `${t.name}: writes the memory file, so it is not read-only`);
+        assert.equal(a.destructiveHint, true, `${t.name}: replaces or removes a stored fact, so it is destructive`);
+      } else {
+        assert.equal(a.readOnlyHint, true, `${t.name}: only reads, so readOnlyHint must be true`);
+      }
+    }
+    await client.close();
+  } finally {
+    cleanup();
+  }
+});
+
 test("server: every tool, and every tool parameter, carries a real description", async () => {
   const { root, cleanup } = fixture();
   try {
