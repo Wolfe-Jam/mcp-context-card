@@ -2,6 +2,26 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+Every tool now says what it is and what it does to your project.
+
+Each of the nine tools carries a human-readable `title` and MCP tool
+annotations, so a host can label it properly and decide whether to ask
+before running it:
+
+- **Read-only (7):** `read_agents_md`, `list_agents_md_sections`,
+  `author_agents_md` (returns a draft, writes nothing), `recall`, `whoami`,
+  `list_context_sources`, `render_context_card`.
+- **Writes the memory file (2):** `remember` and `forget` are marked
+  `destructiveHint: true`. `remember` replaces a fact when an id is reused;
+  `forget` removes one.
+- All nine are `idempotentHint: true` (repeating a call changes nothing more)
+  and `openWorldHint: false` (they only touch the local project).
+
+A new test checks every tool's title and hints against what it actually does,
+so a tool added later can't ship without them.
+
 ## 1.1.0
 
 The card scans in one screen — AGENTS.md sections collapse by default.

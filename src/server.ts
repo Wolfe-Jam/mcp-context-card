@@ -100,6 +100,8 @@ export function createServer(root: string = ROOT): Server {
     tools: [
       {
         name: "read_agents_md",
+        title: "Read AGENTS.md",
+        annotations: { title: "Read AGENTS.md", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
         description:
           "Return this project's AGENTS.md — the whole file, or one section by heading. The instructions a client would otherwise have to know to look for and read wholesale.",
         inputSchema: {
@@ -114,18 +116,24 @@ export function createServer(root: string = ROOT): Server {
       },
       {
         name: "author_agents_md",
+        title: "Draft an AGENTS.md",
+        annotations: { title: "Draft an AGENTS.md", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
         description:
           "Author an AGENTS.md for this project and return the draft — BETTER from repo facts alone (via agents-md-facts: real build/test commands, entry points, toolchain conventions, nothing invented), or BEST when a project.faf exists (facts plus its structured goal/who/why as a second managed block ahead of them). Does not write a file.",
         inputSchema: { type: "object", properties: {} },
       },
       {
         name: "list_agents_md_sections",
+        title: "List AGENTS.md Sections",
+        annotations: { title: "List AGENTS.md Sections", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
         description:
           "List the headings in this project's AGENTS.md, so a client can pull one section instead of spending context on the whole file.",
         inputSchema: { type: "object", properties: {} },
       },
       {
         name: "remember",
+        title: "Remember a Fact",
+        annotations: { title: "Remember a Fact", readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
         description:
           "Persist a fact past the session boundary — written to a .fafm file, not held in memory. Reusing an existing id replaces that fact's text in place (no duplicate); a new id appends. Facts are written verification_status: unverified.",
         inputSchema: {
@@ -146,6 +154,8 @@ export function createServer(root: string = ROOT): Server {
       },
       {
         name: "recall",
+        title: "Recall a Fact",
+        annotations: { title: "Recall a Fact", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
         description: "Retrieve a fact stored in a previous session by id. Exact lookup — not fuzzy or substring.",
         inputSchema: {
           type: "object",
@@ -160,6 +170,8 @@ export function createServer(root: string = ROOT): Server {
       },
       {
         name: "forget",
+        title: "Forget a Fact",
+        annotations: { title: "Forget a Fact", readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
         description: "Remove a fact by id — to correct or drop something stale. A missing id is reported, not an error.",
         inputSchema: {
           type: "object",
@@ -174,17 +186,23 @@ export function createServer(root: string = ROOT): Server {
       },
       {
         name: "whoami",
+        title: "Who Am I",
+        annotations: { title: "Who Am I", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
         description: "This server's own identity — name, vendor, version, status, license — from its .fafa card.",
         inputSchema: { type: "object", properties: {} },
       },
       {
         name: "list_context_sources",
+        title: "List Context Sources",
+        annotations: { title: "List Context Sources", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
         description:
           "What context does this project publish (AGENTS.md, memory, identity), in what media types, and through which discovery surface. For a client connecting cold.",
         inputSchema: { type: "object", properties: {} },
       },
       {
         name: "render_context_card",
+        title: "Render Context Card",
+        annotations: { title: "Render Context Card", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
         description:
           "Render the whole card — identity, AGENTS.md, memory, discovery — as one self-contained HTML page a person can read or screenshot. AGENTS.md sections collapse by default; pass expanded:true for the full render. Also served at GET /card (?expand=all) over the HTTP transport.",
         inputSchema: {
