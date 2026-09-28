@@ -45,7 +45,7 @@ code's shape moved without `project.faf`) on Linux.
 
 | Path | What |
 |---|---|
-| `src/server.ts` | the MCP server — the nine tools + the Server Card resource |
+| `src/server.ts` | the MCP server — the ten tools + the Server Card and card resources |
 | `src/agents-md.ts` | reads and section-splits this file |
 | `src/author.ts` | `author_agents_md` — BETTER via `agents-md-facts`, BEST when `project.faf` exists |
 | `src/md.ts` | a minimal dependency-free Markdown → HTML renderer |

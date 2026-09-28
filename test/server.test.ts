@@ -5,6 +5,9 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer, SERVER_CARD_URI } from "../src/server.js";
 import { CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION } from "../src/constants.js";
 import { fixture } from "./helpers.js";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const TOOLS = [
   "author_agents_md",
@@ -15,6 +18,7 @@ const TOOLS = [
   "recall",
   "remember",
   "render_context_card",
+  "save_context_card",
   "whoami",
 ];
 
@@ -27,7 +31,7 @@ async function connected(root: string): Promise<Client> {
 }
 const say = (r: unknown) => (r as any).content[0].text as string;
 
-test("server: advertises its name + the nine tools", async () => {
+test("server: advertises its name + the ten tools", async () => {
   const { root, cleanup } = fixture();
   try {
     const client = await connected(root);
@@ -40,8 +44,8 @@ test("server: advertises its name + the nine tools", async () => {
   }
 });
 
-// The tools that change the memory file. Everything else only reads the project.
-const WRITES = ["forget", "remember"];
+// The tools that write a file: the memory file, or the saved card. Everything else only reads the project.
+const WRITES = ["forget", "remember", "save_context_card"];
 
 test("server: every tool carries a title and behaviour hints that match what it does", async () => {
   const { root, cleanup } = fixture();
@@ -55,8 +59,8 @@ test("server: every tool carries a title and behaviour hints that match what it 
       assert.equal(a.title, t.title, `${t.name}: annotations.title differs from title`);
       assert.equal(a.openWorldHint, false, `${t.name}: reads only local project files, so openWorldHint must be false`);
       if (WRITES.includes(t.name)) {
-        assert.equal(a.readOnlyHint, false, `${t.name}: writes the memory file, so it is not read-only`);
-        assert.equal(a.destructiveHint, true, `${t.name}: replaces or removes a stored fact, so it is destructive`);
+        assert.equal(a.readOnlyHint, false, `${t.name}: writes a file, so it is not read-only`);
+        assert.equal(a.destructiveHint, true, `${t.name}: replaces or removes what was there, so it is destructive`);
       } else {
         assert.equal(a.readOnlyHint, true, `${t.name}: only reads, so readOnlyHint must be true`);
       }
@@ -211,6 +215,44 @@ test("server: render_context_card returns a self-contained HTML card", async () 
   }
 });
 
+test("server: instructions tell the model to save the card rather than paste its HTML", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const client = await connected(root);
+    const ins = client.getInstructions() ?? "";
+    assert.match(ins, /save_context_card/);
+    assert.match(ins, /render_context_card/);
+    await client.close();
+  } finally {
+    cleanup();
+  }
+});
+
+test("server: save_context_card writes context-card.html into the project and returns its path", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const client = await connected(root);
+    const out = join(root, "context-card.html");
+    const reply = say(await client.callTool({ name: "save_context_card", arguments: { theme: "dark" } }));
+    assert.ok(existsSync(out), "context-card.html was not written");
+    assert.ok(reply.includes(out), `reply does not name the path: ${reply}`);
+    assert.ok(reply.includes(pathToFileURL(out).href), `reply does not carry a file:// URL: ${reply}`);
+    const html = readFileSync(out, "utf8");
+    assert.match(html, /^<!doctype html>/);
+    assert.match(html, /data-theme="dark"/);
+    assert.ok(!reply.includes("<html"), "the reply is a path, not the page");
+
+    // Saving again replaces the file with the new render.
+    await client.callTool({ name: "save_context_card", arguments: { theme: "light", expanded: true } });
+    const again = readFileSync(out, "utf8");
+    assert.match(again, /data-theme="light"/);
+    assert.ok((again.match(/<details class="ctx-section" open/g) ?? []).length > 0);
+    await client.close();
+  } finally {
+    cleanup();
+  }
+});
+
 test("server: author_agents_md — the fixture ships a project.faf, so this is BEST", async () => {
   const { root, cleanup } = fixture();
   try {
@@ -255,7 +297,7 @@ test("server: an unknown tool or resource rejects, it doesn't hang", async () =>
     await assert.rejects(client.callTool({ name: "no_such_tool", arguments: {} }));
     await assert.rejects(client.readResource({ uri: "mcp-context-card://nope" }));
     const { tools } = await client.listTools();
-    assert.equal(tools.length, 9);
+    assert.equal(tools.length, TOOLS.length);
     await client.close();
   } finally {
     cleanup();

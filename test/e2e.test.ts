@@ -86,7 +86,7 @@ describe("e2e — real child process", () => {
     }
   });
 
-  test("stdio child: the nine tools + the Server Card resource + _meta", async () => {
+  test("stdio child: the ten tools + the Server Card resource + _meta", async () => {
     const fx = fixture();
     try {
       const c = await stdioChild(fx.root);
@@ -101,6 +101,7 @@ describe("e2e — real child process", () => {
         "recall",
         "remember",
         "render_context_card",
+        "save_context_card",
         "whoami",
       ]);
 
@@ -185,8 +186,11 @@ describe("e2e — real child process", () => {
     const fx = fixture();
     try {
       const c = await stdioChild(fx.root);
-      assert.ok((await c.listTools()).tools.length === 9);
-      await c.close();
+      try {
+        assert.equal((await c.listTools()).tools.length, 10);
+      } finally {
+        await c.close(); // a failed assertion must not leave the child holding the runner open
+      }
 
       // --stdio with PORT set → still stdio, nothing listening on PORT
       const port = await freePort();

@@ -44,7 +44,7 @@ test("http: MCP works over stateless Streamable HTTP", async () => {
   assert.equal(client.getServerVersion()?.name, "mcp-context-card");
 
   const { tools } = await client.listTools();
-  assert.equal(tools.length, 9);
+  assert.equal(tools.length, 10);
 
   const r = say(await client.callTool({ name: "read_agents_md", arguments: { section: "Setup" } }));
   assert.match(r, /^## Setup/);
@@ -177,5 +177,5 @@ test("stdio and http expose the identical tool surface", async () => {
   await httpC.close();
 
   assert.deepEqual(stdioTools, httpTools);
-  assert.equal(stdioTools.length, 9);
+  assert.equal(stdioTools.length, 10);
 });

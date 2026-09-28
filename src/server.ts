@@ -5,7 +5,7 @@
  *   context   — read_agents_md · list_agents_md_sections · author_agents_md   (this project's AGENTS.md)
  *   memory    — remember · recall · forget                                    (a .fafm file)
  *   identity  — whoami                                                        (this server's .fafa)
- *   discovery — list_context_sources · render_context_card                    (what's published, and how)
+ *   discovery — list_context_sources · render_context_card · save_context_card (what's published, and how)
  *
  * ...exposed through the two mechanisms already in the ecosystem:
  *
@@ -24,6 +24,7 @@ import {
   ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
+import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { findSection, parseAgentsMd } from "./agents-md.js";
@@ -51,6 +52,32 @@ export function serverCard() {
 
 const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] });
 
+/** Sent to every client at initialize. Hosts that support MCP Apps show the
+ *  card inline; for the rest, this steers the model to save the card as a
+ *  file instead of pasting a whole HTML page into the chat. */
+export const INSTRUCTIONS =
+  "This server publishes a project's context (AGENTS.md), memory (project.fafm) and identity (.well-known/fafa). " +
+  "Read them with read_agents_md, recall and whoami; list_context_sources says what is published and where. " +
+  "When the user wants to see the context card: hosts that support MCP Apps display it inline from render_context_card. " +
+  "Otherwise, don't paste the card's HTML into the conversation. Call save_context_card, which writes context-card.html " +
+  "into the project, and give the user the file path to open in a browser.";
+
+/** Theme / accent / expanded from tool arguments, shared by render and save. */
+function cardOptions(args: Record<string, unknown>) {
+  const theme = args.theme as string;
+  return {
+    theme: (["light", "dark", "auto"].includes(theme) ? theme : "auto") as Theme,
+    accent: safeAccent(args.accent as string | undefined),
+    expanded: args.expanded === true || args.expanded === "true",
+  };
+}
+
+const CARD_ARGS = {
+  theme: { type: "string", enum: ["light", "dark", "auto"], description: "default: auto" },
+  accent: { type: "string", description: "CSS hex colour, e.g. #FF702D (default: the AAIF palette)" },
+  expanded: { type: "boolean", description: "render every AGENTS.md section open (default: collapsed)" },
+};
+
 /**
  * @param root  directory holding `AGENTS.md`, `project.fafm`, `.well-known/`.
  *              Defaults to the package root; a deploy points `MCP_CONTEXT_CARD_ROOT`
@@ -70,7 +97,7 @@ export function createServer(root: string = ROOT): Server {
 
   const server = new Server(
     { name: NAME, version: VERSION },
-    { capabilities: { tools: {}, resources: {} } },
+    { capabilities: { tools: {}, resources: {} }, instructions: INSTRUCTIONS },
   );
 
   // ── Mechanism 1: the Server Card resource + its _meta context block ───
@@ -229,14 +256,15 @@ export function createServer(root: string = ROOT): Server {
         annotations: { title: "Render Context Card", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
         description:
           "Render the whole card — identity, AGENTS.md, memory, discovery — as one self-contained HTML page a person can read or screenshot. AGENTS.md sections collapse by default; pass expanded:true for the full render. Also served at GET /card (?expand=all) over the HTTP transport.",
-        inputSchema: {
-          type: "object",
-          properties: {
-            theme: { type: "string", enum: ["light", "dark", "auto"], description: "default: auto" },
-            accent: { type: "string", description: "CSS hex colour, e.g. #FF702D (default: the AAIF palette)" },
-            expanded: { type: "boolean", description: "render every AGENTS.md section open (default: collapsed)" },
-          },
-        },
+        inputSchema: { type: "object", properties: CARD_ARGS },
+      },
+      {
+        name: "save_context_card",
+        title: "Save Context Card",
+        annotations: { title: "Save Context Card", readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+        description:
+          "Write the context card to context-card.html in the project and return its path, for a person to open in a browser. Use this instead of pasting render_context_card's HTML into a chat that can't display it. Replaces any earlier context-card.html.",
+        inputSchema: { type: "object", properties: CARD_ARGS },
       },
     ],
   }));
@@ -290,7 +318,6 @@ export function createServer(root: string = ROOT): Server {
       case "whoami":
         return text(whoami(root));
       case "render_context_card": {
-        const rawExpanded = (args as Record<string, unknown>).expanded;
         if (hostRendersApps(server)) {
           // The host renders the card itself from CARD_UI_URI, so the model
           // gets a short summary instead of a whole HTML page.
@@ -304,18 +331,12 @@ export function createServer(root: string = ROOT): Server {
               "The card is displayed to the user; call read_agents_md or recall for the text itself.",
           );
         }
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: renderCard(root, {
-                theme: (["light", "dark", "auto"].includes(args.theme) ? args.theme : "auto") as Theme,
-                accent: safeAccent(args.accent),
-                expanded: rawExpanded === true || rawExpanded === "true",
-              }),
-            },
-          ],
-        };
+        return text(renderCard(root, cardOptions(args)));
+      }
+      case "save_context_card": {
+        const out = join(root, "context-card.html");
+        writeFileSync(out, renderCard(root, cardOptions(args)));
+        return text(`Saved the context card to ${out}\nOpen it in a browser: ${pathToFileURL(out).href}`);
       }
       case "list_context_sources": {
         const doc = parseAgentsMd(AGENTS);

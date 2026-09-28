@@ -2,6 +2,25 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+The card shows up in the chat, or gets saved where you can open it.
+
+- **MCP App.** `render_context_card` links a `ui://mcp-context-card/card.html`
+  resource (`text/html;profile=mcp-app`). Hosts that support MCP Apps render
+  the card inline, and the model gets a one-line summary instead of the
+  whole HTML page. Hosts without MCP Apps get the full HTML, as before.
+- **New tool: `save_context_card`.** Writes the card to `context-card.html`
+  in the project and returns the path and a `file://` link. Same `theme`,
+  `accent` and `expanded` inputs as `render_context_card`. Marked
+  `destructiveHint: true`, because it replaces an earlier `context-card.html`.
+- **Server instructions.** Sent at initialize: they tell the model that when
+  the host can't display the card, it should save it and give the user the
+  path, not paste HTML into the chat.
+
+Ten tools now. The nine existing tools keep their names, inputs and
+behaviour. 112 tests, all green.
+
 ## 1.1.1
 
 Every tool now says what it is and what it does to your project.
