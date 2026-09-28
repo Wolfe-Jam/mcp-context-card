@@ -19,7 +19,9 @@ The card shows up in the chat, or gets saved where you can open it.
   every fact whole. About 1.4k characters for this repo, instead of about
   17k of HTML. When the server runs locally (stdio), it also opens the
   saved card in the browser, because many hosts won't follow a `file://`
-  link; `open: false` skips that. Over HTTP it never opens anything. Same `theme`,
+  link; `open: false` skips that. Over HTTP it never opens anything.
+  The reply also carries the `file://` address in a code block of its
+  own, so any host gives it a copy button to paste into a browser. Same `theme`,
   `accent` and `expanded` inputs as `render_context_card`. Marked
   `destructiveHint: true`, because it replaces an earlier `context-card.html`.
 - **`list_context_sources`** now lists the card resource under `surfaces.mcp`.

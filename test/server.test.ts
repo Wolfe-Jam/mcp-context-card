@@ -225,6 +225,9 @@ test("server: save_context_card writes context-card.html into the project and re
     assert.ok(reply.includes(out), `reply does not name the path: ${reply}`);
     // a clickable Markdown link to the saved file, plus the card itself as text
     assert.ok(reply.includes(`](${pathToFileURL(out).href})`), `reply has no clickable file:// link: ${reply}`);
+    // and the address alone in a code block, so hosts that won't follow a
+    // file:// link still give it a copy button to paste into a browser
+    assert.ok(reply.includes("```\n" + pathToFileURL(out).href + "\n```"), `no copyable address block: ${reply}`);
     assert.match(reply, /^### mcp-context-card — context card/);
     assert.match(reply, /\*\*Memory\*\* · 4 facts/);
     assert.ok(!reply.includes("one instantiation each"), "tl;dr by default");
