@@ -278,3 +278,49 @@ const TOGGLE_SCRIPT = `<script>
   sync();
 })();
 </script>`;
+
+/**
+ * The same card as Markdown, for chats that can't display HTML: identity,
+ * the AGENTS.md section headings (bodies stay in the full card), every
+ * remembered fact, and the discovery table. Same sources as renderCard.
+ */
+export function renderCardText(root: string): string {
+  const agents = parseAgentsMd(join(root, "AGENTS.md"));
+  const mem = parseFafm(join(root, "project.fafm"));
+  const id = resolveIdentity(root);
+  const meta = serverCardMeta() as Record<string, { source: string; mediaType: string }>;
+  const name = id?.displayName ?? id?.name ?? NAME;
+  const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
+
+  const out = [`### ${name} — context card`];
+  const pills = [
+    id?.vendor && id.vendor !== id.status ? id.vendor : null,
+    id?.agentVersion ? `v${id.agentVersion}` : null,
+    id?.status,
+    id?.license,
+  ].filter(Boolean);
+  if (pills.length) out.push(pills.join(" · "));
+  if (id?.description) out.push(id.description);
+
+  const sections = agents?.sections.filter((s) => s.level > 1) ?? [];
+  out.push(
+    agents
+      ? `**Context — AGENTS.md** · ${plural(sections.length, "section")}\n${sections.map((s) => s.heading).join(" · ")}`
+      : "**Context — AGENTS.md** · none in this project",
+  );
+
+  out.push(
+    mem.facts.length
+      ? `**Memory** · ${plural(mem.facts.length, "fact")}\n${mem.facts
+          .map((f) => `- ${f.text}${f.verification_status === "verified" ? " ✓" : ""}`)
+          .join("\n")}`
+      : "**Memory** · no facts yet",
+  );
+
+  const rows = Object.entries(meta).map(
+    ([k, v]) => `| ${k.slice(META_NS.length + 1)} | \`${v.source}\` | \`${v.mediaType}\` |`,
+  );
+  out.push(["**Discovery**", "| concern | source | media type |", "|---|---|---|", ...rows].join("\n"));
+
+  return out.join("\n\n");
+}

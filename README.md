@@ -91,9 +91,10 @@ GET /card?expand=all&theme=light&accent=%230066cc
 In a chat, hosts that support [MCP Apps](https://modelcontextprotocol.io/extensions/apps)
 show the card inline when `render_context_card` runs; the model gets a short
 summary instead of the page. Everywhere else, `save_context_card` writes
-`context-card.html` into the project and returns its path to open in a
-browser. The server's instructions tell the model to do that rather than
-paste the HTML into the chat.
+`context-card.html` into the project and returns the card as Markdown —
+identity, the `AGENTS.md` sections, every remembered fact, discovery — with
+a link that opens the full card in your browser. The server's instructions
+tell the model to show that rather than paste the HTML into the chat.
 
 Light, dark, or auto; the accent defaults to the AAIF palette and takes any hex.
 This repo's own card, live: [auto](https://wolfe-jam.github.io/mcp-context-card/) ·
@@ -200,7 +201,7 @@ The wire‑level detail is in [docs/MECHANISMS.md](./docs/MECHANISMS.md).
 | `whoami` | this server's name, vendor, version, status, license |
 | `list_context_sources` | what this project publishes, in what media types, via which surface |
 | `render_context_card` | the whole card as one self‑contained HTML page (also `GET /card`); hosts that support MCP Apps show it inline |
-| `save_context_card` | write the card to `context-card.html` in the project and return the path, for chats that can't display HTML |
+| `save_context_card` | write the card to `context-card.html` in the project; returns the card as Markdown plus a clickable link to the full version |
 
 Seven tools only read. `remember` and `forget` write the memory file, and
 `save_context_card` writes `context-card.html`, so those three are marked
@@ -219,7 +220,7 @@ title and MCP tool annotations.
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-112 tests on Linux, macOS, and Windows, coverage‑gated in CI. Two spawn a real
+113 tests on Linux, macOS, and Windows, coverage‑gated in CI. Two spawn a real
 child process and check a remembered fact survives the restart — one against
 an existing `project.fafm`, one starting from a project that has never had
 one; another checks the stdio and HTTP tool surfaces match, and another checks

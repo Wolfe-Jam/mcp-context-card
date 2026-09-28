@@ -11,16 +11,19 @@ The card shows up in the chat, or gets saved where you can open it.
   the card inline, and the model gets a one-line summary instead of the
   whole HTML page. Hosts without MCP Apps get the full HTML, as before.
 - **New tool: `save_context_card`.** Writes the card to `context-card.html`
-  in the project and returns the path and a `file://` link. Same `theme`,
+  in the project and returns the card as Markdown (identity, `AGENTS.md`
+  section headings, every remembered fact, discovery) with a clickable
+  link to the full card in the browser: about 2k characters instead of
+  about 17k of HTML. Same `theme`,
   `accent` and `expanded` inputs as `render_context_card`. Marked
   `destructiveHint: true`, because it replaces an earlier `context-card.html`.
 - **`list_context_sources`** now lists the card resource under `surfaces.mcp`.
 - **Server instructions.** Sent at initialize: they tell the model that when
-  the host can't display the card, it should save it and give the user the
-  path, not paste HTML into the chat.
+  the host can't display the card, it should save it and show the user the
+  Markdown card and its link, not paste HTML into the chat.
 
 Ten tools now. The nine existing tools keep their names, inputs and
-behaviour. 112 tests, all green.
+behaviour. 113 tests, all green.
 
 ## 1.1.1
 

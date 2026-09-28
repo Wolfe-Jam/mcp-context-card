@@ -31,7 +31,7 @@ import { findSection, parseAgentsMd } from "./agents-md.js";
 import { authorAgentsMd } from "./author.js";
 import { forget, parseFafm, recall, remember } from "./memory.js";
 import { identity, serverCardMeta, whoami } from "./identity.js";
-import { renderCard, safeAccent, type Theme } from "./render-card.js";
+import { renderCard, renderCardText, safeAccent, type Theme } from "./render-card.js";
 
 export { NAME, VERSION, SERVER_CARD_URI } from "./constants.js";
 import { NAME, VERSION, SERVER_CARD_URI, CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION } from "./constants.js";
@@ -59,8 +59,9 @@ export const INSTRUCTIONS =
   "This server publishes a project's context (AGENTS.md), memory (project.fafm) and identity (.well-known/fafa). " +
   "Read them with read_agents_md, recall and whoami; list_context_sources says what is published and where. " +
   "When the user wants to see the context card: hosts that support MCP Apps display it inline from render_context_card. " +
-  "Otherwise, don't paste the card's HTML into the conversation. Call save_context_card, which writes context-card.html " +
-  "into the project, and give the user the file path to open in a browser.";
+  "Otherwise, don't paste the card's HTML into the conversation. Call save_context_card: it writes context-card.html " +
+  "into the project and returns the card as Markdown with a link to the saved file. Show the user that Markdown " +
+  "as returned, including the link, so they see the card in the chat and can open the full version in a browser.";
 
 /** Theme / accent / expanded from tool arguments, shared by render and save. */
 function cardOptions(args: Record<string, unknown>) {
@@ -263,7 +264,7 @@ export function createServer(root: string = ROOT): Server {
         title: "Save Context Card",
         annotations: { title: "Save Context Card", readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
         description:
-          "Write the context card to context-card.html in the project and return its path, for a person to open in a browser. Use this instead of pasting render_context_card's HTML into a chat that can't display it. Replaces any earlier context-card.html.",
+          "Write the context card to context-card.html in the project. Returns the card as Markdown (identity, AGENTS.md sections, memory, discovery) plus a clickable link to the saved file. Use this instead of pasting render_context_card's HTML into a chat that can't display it. Replaces any earlier context-card.html.",
         inputSchema: { type: "object", properties: CARD_ARGS },
       },
     ],
@@ -336,7 +337,10 @@ export function createServer(root: string = ROOT): Server {
       case "save_context_card": {
         const out = join(root, "context-card.html");
         writeFileSync(out, renderCard(root, cardOptions(args)));
-        return text(`Saved the context card to ${out}\nOpen it in a browser: ${pathToFileURL(out).href}`);
+        return text(
+          `${renderCardText(root)}\n\n---\n\n` +
+            `**[Open the full card in your browser](${pathToFileURL(out).href})**\n\nSaved to ${out}`,
+        );
       }
       case "list_context_sources": {
         const doc = parseAgentsMd(AGENTS);

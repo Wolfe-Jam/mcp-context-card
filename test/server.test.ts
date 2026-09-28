@@ -223,7 +223,10 @@ test("server: save_context_card writes context-card.html into the project and re
     const reply = say(await client.callTool({ name: "save_context_card", arguments: { theme: "dark" } }));
     assert.ok(existsSync(out), "context-card.html was not written");
     assert.ok(reply.includes(out), `reply does not name the path: ${reply}`);
-    assert.ok(reply.includes(pathToFileURL(out).href), `reply does not carry a file:// URL: ${reply}`);
+    // a clickable Markdown link to the saved file, plus the card itself as text
+    assert.ok(reply.includes(`](${pathToFileURL(out).href})`), `reply has no clickable file:// link: ${reply}`);
+    assert.match(reply, /^### mcp-context-card — context card/);
+    assert.match(reply, /\*\*Memory\*\* · 4 facts/);
     const html = readFileSync(out, "utf8");
     assert.match(html, /^<!doctype html>/);
     assert.match(html, /data-theme="dark"/);

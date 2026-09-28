@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { AAIF_ACCENT, renderCard, safeAccent } from "../src/render-card.js";
+import { AAIF_ACCENT, renderCard, renderCardText, safeAccent } from "../src/render-card.js";
 import { fixture } from "./helpers.js";
 
 test("safeAccent: valid hex passes, anything else falls back to AAIF", () => {
@@ -111,6 +111,31 @@ test("renderCard: handles a project with no AGENTS.md / no facts", () => {
     assert.match(html, /No AGENTS\.md in this project/);
     assert.match(html, /Memory — 0 facts/);
     assert.match(html, /No facts yet/);
+  } finally {
+    cleanup();
+  }
+});
+
+test("renderCardText: the card as Markdown — identity, AGENTS.md headings, memory, discovery", () => {
+  const { root, cleanup } = fixture();
+  try {
+    const md = renderCardText(root);
+    assert.match(md, /^### mcp-context-card — context card/);
+    assert.match(md, /io\.github\.Wolfe-Jam · v\d+\.\d+\.\d+ · published · MIT/);
+    // every AGENTS.md section heading, and none of their bodies
+    for (const h of ["Setup", "Build", "Test", "Layout", "Safety", "Definition of done"]) {
+      assert.ok(md.includes(h), `missing section: ${h}`);
+    }
+    assert.match(md, /\*\*Context — AGENTS\.md\*\* · 9 sections/);
+    assert.ok(!md.includes("npm install"), "section bodies stay in the full card");
+    // every remembered fact, whole
+    assert.match(md, /\*\*Memory\*\* · 4 facts/);
+    assert.ok(md.includes("The context concern points at AGENTS.md"));
+    // discovery: the three concerns and their media types
+    for (const t of ["text/markdown", "application/vnd.fafm+yaml", "application/vnd.fafa+yaml"]) {
+      assert.ok(md.includes(t), `missing media type: ${t}`);
+    }
+    assert.ok(!/<[a-z]/i.test(md.replace(/`[^`]*`/g, "")), "plain Markdown, no HTML");
   } finally {
     cleanup();
   }
