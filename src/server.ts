@@ -5,7 +5,7 @@
  *   context   — read_agents_md · list_agents_md_sections · author_agents_md   (this project's AGENTS.md)
  *   memory    — remember · recall · forget                                    (a .fafm file)
  *   identity  — whoami                                                        (this server's .fafa)
- *   discovery — list_context_sources · render_context_card                    (what's published, and how)
+ *   discovery — list_context_sources · render_context_card · save_context_card (what's published, and how)
  *
  * ...exposed through the two mechanisms already in the ecosystem:
  *
@@ -24,16 +24,17 @@ import {
   ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
+import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { findSection, parseAgentsMd } from "./agents-md.js";
 import { authorAgentsMd } from "./author.js";
 import { forget, parseFafm, recall, remember } from "./memory.js";
 import { identity, serverCardMeta, whoami } from "./identity.js";
-import { renderCard, safeAccent, type Theme } from "./render-card.js";
+import { renderCard, renderCardText, safeAccent, type Theme } from "./render-card.js";
 
 export { NAME, VERSION, SERVER_CARD_URI } from "./constants.js";
-import { NAME, VERSION, SERVER_CARD_URI } from "./constants.js";
+import { NAME, VERSION, SERVER_CARD_URI, CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION } from "./constants.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 /** Default package root — `dist/` at runtime, `src/` under tsx. Both are one up. */
@@ -51,19 +52,60 @@ export function serverCard() {
 
 const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] });
 
+/** Sent to every client at initialize. Hosts that support MCP Apps show the
+ *  card inline; for the rest, this steers the model to save the card as a
+ *  file instead of pasting a whole HTML page into the chat. */
+export const INSTRUCTIONS =
+  "This server publishes a project's context (AGENTS.md), memory (project.fafm) and identity (.well-known/fafa). " +
+  "Read them with read_agents_md, recall and whoami; list_context_sources says what is published and where. " +
+  "When the user wants to see the context card: hosts that support MCP Apps display it inline from render_context_card. " +
+  "Otherwise, don't paste the card's HTML into the conversation. Call save_context_card: it writes context-card.html " +
+  "into the project, opens it in the user's browser when this server runs locally, and returns the card as Markdown " +
+  "with a link to the saved file. Show the user that Markdown as returned, including the link, so they see the card " +
+  "in the chat and can open the full version in a browser.";
+
+/** Theme / accent / expanded from tool arguments, shared by render and save. */
+function cardOptions(args: Record<string, unknown>) {
+  const theme = args.theme as string;
+  return {
+    theme: (["light", "dark", "auto"].includes(theme) ? theme : "auto") as Theme,
+    accent: safeAccent(args.accent as string | undefined),
+    expanded: args.expanded === true || args.expanded === "true",
+  };
+}
+
+const CARD_ARGS = {
+  theme: { type: "string", enum: ["light", "dark", "auto"], description: "default: auto" },
+  accent: { type: "string", description: "CSS hex colour, e.g. #FF702D (default: the AAIF palette)" },
+  expanded: { type: "boolean", description: "render every AGENTS.md section open (default: collapsed)" },
+};
+
 /**
  * @param root  directory holding `AGENTS.md`, `project.fafm`, `.well-known/`.
  *              Defaults to the package root; a deploy points `MCP_CONTEXT_CARD_ROOT`
  *              at a real project, a test points it at a fixture.
  */
-export function createServer(root: string = ROOT): Server {
+/** True when the connected client declared MCP Apps support
+ *  (capabilities.extensions["io.modelcontextprotocol/ui"].mimeTypes). */
+function hostRendersApps(server: Server): boolean {
+  const ext = server.getClientCapabilities()?.extensions?.[UI_EXTENSION] as { mimeTypes?: unknown } | undefined;
+  return Array.isArray(ext?.mimeTypes) && ext.mimeTypes.includes(MCP_APP_MIME);
+}
+
+export interface ServerOptions {
+  /** Open a saved file for the person. Set only for a local (stdio) server;
+   *  over HTTP the browser would open on the server, so it stays unset. */
+  openFile?: (path: string) => void;
+}
+
+export function createServer(root: string = ROOT, opts: ServerOptions = {}): Server {
   const AGENTS = join(root, "AGENTS.md");
   const FAFM = join(root, "project.fafm");
   const FAFA = join(root, ".well-known/fafa");
 
   const server = new Server(
     { name: NAME, version: VERSION },
-    { capabilities: { tools: {}, resources: {} } },
+    { capabilities: { tools: {}, resources: {} }, instructions: INSTRUCTIONS },
   );
 
   // ── Mechanism 1: the Server Card resource + its _meta context block ───
@@ -75,9 +117,23 @@ export function createServer(root: string = ROOT): Server {
         description: "This server's identity + the _meta context block.",
         mimeType: "application/json",
       },
+      {
+        uri: CARD_UI_URI,
+        name: "Context Card",
+        description: "The context card as an MCP App: identity, AGENTS.md, memory and discovery, rendered inline by hosts that support MCP Apps.",
+        mimeType: MCP_APP_MIME,
+      },
     ],
   }));
   server.setRequestHandler(ReadResourceRequestSchema, async (req) => {
+    if (req.params.uri === CARD_UI_URI) {
+      // Rendered at read time from the project's own files. The card is
+      // self-contained (inline CSS, no external requests), and its one script
+      // is progressive enhancement, so it still works in a strict sandbox.
+      return {
+        contents: [{ uri: CARD_UI_URI, mimeType: MCP_APP_MIME, text: renderCard(root, { theme: "auto" }) }],
+      };
+    }
     if (req.params.uri !== SERVER_CARD_URI) {
       throw new Error(`unknown resource: ${req.params.uri}`);
     }
@@ -202,15 +258,33 @@ export function createServer(root: string = ROOT): Server {
       {
         name: "render_context_card",
         title: "Render Context Card",
+        // MCP Apps: hosts that support it render the card inline from this
+        // resource. Both key forms, as the official ext-apps helper writes them.
+        _meta: { ui: { resourceUri: CARD_UI_URI }, "ui/resourceUri": CARD_UI_URI },
         annotations: { title: "Render Context Card", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
         description:
           "Render the whole card — identity, AGENTS.md, memory, discovery — as one self-contained HTML page a person can read or screenshot. AGENTS.md sections collapse by default; pass expanded:true for the full render. Also served at GET /card (?expand=all) over the HTTP transport.",
+        inputSchema: { type: "object", properties: CARD_ARGS },
+      },
+      {
+        name: "save_context_card",
+        title: "Save Context Card",
+        annotations: { title: "Save Context Card", readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+        description:
+          "Write the context card to context-card.html in the project and, when this server runs locally, open it in the person's browser. Returns the card as Markdown (identity, AGENTS.md sections, memory, discovery) plus a clickable link to the saved file. Use this instead of pasting render_context_card's HTML into a chat that can't display it. Replaces any earlier context-card.html.",
         inputSchema: {
           type: "object",
           properties: {
-            theme: { type: "string", enum: ["light", "dark", "auto"], description: "default: auto" },
-            accent: { type: "string", description: "CSS hex colour, e.g. #FF702D (default: the AAIF palette)" },
-            expanded: { type: "boolean", description: "render every AGENTS.md section open (default: collapsed)" },
+            ...CARD_ARGS,
+            open: {
+              type: "boolean",
+              description: "open the saved card in the person's browser when the server runs locally (default: true)",
+            },
+            detail: {
+              type: "string",
+              enum: ["tldr", "full"],
+              description: "the Markdown reply: tldr (default) shows five facts, each cut short; full shows every fact whole. The saved file always has everything.",
+            },
           },
         },
       },
@@ -266,19 +340,36 @@ export function createServer(root: string = ROOT): Server {
       case "whoami":
         return text(whoami(root));
       case "render_context_card": {
-        const rawExpanded = (args as Record<string, unknown>).expanded;
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: renderCard(root, {
-                theme: (["light", "dark", "auto"].includes(args.theme) ? args.theme : "auto") as Theme,
-                accent: safeAccent(args.accent),
-                expanded: rawExpanded === true || rawExpanded === "true",
-              }),
-            },
-          ],
-        };
+        if (hostRendersApps(server)) {
+          // The host renders the card itself from CARD_UI_URI, so the model
+          // gets a short summary instead of a whole HTML page.
+          const doc = parseAgentsMd(AGENTS);
+          const mem = parseFafm(FAFM);
+          const sections = doc?.sections.length ?? 0;
+          const facts = mem.facts.length;
+          return text(
+            `Showing the context card for ${NAME}: AGENTS.md with ${sections} section${sections === 1 ? "" : "s"}, ` +
+              `${facts} remembered fact${facts === 1 ? "" : "s"}, and this server's identity. ` +
+              "The card is displayed to the user; call read_agents_md or recall for the text itself.",
+          );
+        }
+        return text(renderCard(root, cardOptions(args)));
+      }
+      case "save_context_card": {
+        const out = join(root, "context-card.html");
+        writeFileSync(out, renderCard(root, cardOptions(args)));
+        // Many hosts won't follow a file:// link, so a local server opens it.
+        const raw = (args as Record<string, unknown>).open;
+        const opened = !!opts.openFile && raw !== false && raw !== "false";
+        if (opened) opts.openFile!(out);
+        return text(
+          `${renderCardText(root, { detail: args.detail === "full" ? "full" : "tldr" })}\n\n` +
+            "_In a host that supports MCP Apps, this card shows inline._\n\n---\n\n" +
+            (opened ? "Opened the full card in your browser.\n\n" : "") +
+            `**[Open the full card in your browser](${pathToFileURL(out).href})**\n\n` +
+            // Some hosts won't follow a file:// link; a code block gets a copy button.
+            `Or copy this into your browser's address bar:\n\n\`\`\`\n${pathToFileURL(out).href}\n\`\`\`\n\nSaved to ${out}`,
+        );
       }
       case "list_context_sources": {
         const doc = parseAgentsMd(AGENTS);
@@ -304,7 +395,10 @@ export function createServer(root: string = ROOT): Server {
                 present: identity(root) !== null,
               },
               surfaces: {
-                mcp: { serverCard: `resource ${SERVER_CARD_URI}` },
+                mcp: {
+                  serverCard: `resource ${SERVER_CARD_URI}`,
+                  card: `resource ${CARD_UI_URI} (MCP App, ${MCP_APP_MIME})`,
+                },
                 http: {
                   serverCard: "GET /.well-known/mcp/server-card",
                   aiCatalog: "GET /.well-known/ai-catalog.json",
@@ -326,8 +420,8 @@ export function createServer(root: string = ROOT): Server {
 }
 
 /** Connect a server instance to a transport (stdio or http). */
-export async function serve(transport: Transport, root: string = ROOT): Promise<Server> {
-  const server = createServer(root);
+export async function serve(transport: Transport, root: string = ROOT, opts: ServerOptions = {}): Promise<Server> {
+  const server = createServer(root, opts);
   await server.connect(transport);
   return server;
 }
@@ -335,5 +429,6 @@ export async function serve(transport: Transport, root: string = ROOT): Promise<
 // Direct run (incl. the demo's spawned child) → stdio. pathToFileURL keeps
 // this correct on Windows, where argv[1] is a `C:\...` path.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  await serve(new StdioServerTransport());
+  const { openInBrowser } = await import("./open.js");
+  await serve(new StdioServerTransport(), ROOT, { openFile: openInBrowser });
 }

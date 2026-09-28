@@ -1,7 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { AAIF_ACCENT, renderCard, safeAccent } from "../src/render-card.js";
+import { AAIF_ACCENT, clip, renderCard, renderCardText, safeAccent } from "../src/render-card.js";
 import { fixture } from "./helpers.js";
+import { join } from "node:path";
+import { remember } from "../src/memory.js";
 
 test("safeAccent: valid hex passes, anything else falls back to AAIF", () => {
   assert.equal(safeAccent("#0A7"), "#0A7");
@@ -111,6 +113,79 @@ test("renderCard: handles a project with no AGENTS.md / no facts", () => {
     assert.match(html, /No AGENTS\.md in this project/);
     assert.match(html, /Memory — 0 facts/);
     assert.match(html, /No facts yet/);
+  } finally {
+    cleanup();
+  }
+});
+
+test("renderCardText: the card as Markdown — identity, AGENTS.md headings, memory, discovery", () => {
+  const { root, cleanup } = fixture();
+  try {
+    const md = renderCardText(root);
+    assert.match(md, /^### mcp-context-card — context card/);
+    assert.match(md, /io\.github\.Wolfe-Jam · v\d+\.\d+\.\d+ · published · MIT/);
+    // every AGENTS.md section heading, and none of their bodies
+    for (const h of ["Setup", "Build", "Test", "Layout", "Safety", "Definition of done"]) {
+      assert.ok(md.includes(h), `missing section: ${h}`);
+    }
+    assert.match(md, /\*\*Context — AGENTS\.md\*\* · 9 sections/);
+    assert.ok(!md.includes("npm install"), "section bodies stay in the full card");
+    // tl;dr by default: each fact cut short, the full text stays in the card
+    assert.match(md, /\*\*Memory\*\* · 4 facts/);
+    assert.ok(md.includes("The context concern points at AGENTS.md"));
+    assert.ok(!md.includes("one instantiation each"), "the default cuts long facts short");
+    // detail: "full" — every fact whole
+    const full = renderCardText(root, { detail: "full" });
+    assert.ok(full.includes("so this server uses .fafm and .fafa as one instantiation each."));
+    // discovery: the three concerns and their media types
+    for (const t of ["text/markdown", "application/vnd.fafm+yaml", "application/vnd.fafa+yaml"]) {
+      assert.ok(md.includes(t), `missing media type: ${t}`);
+    }
+    assert.ok(!/<[a-z]/i.test(md.replace(/`[^`]*`/g, "")), "plain Markdown, no HTML");
+  } finally {
+    cleanup();
+  }
+});
+
+test("renderCardText: the tl;dr stays small however much memory a project has", () => {
+  const { root, cleanup } = fixture();
+  try {
+    for (let i = 0; i < 60; i++) {
+      remember(join(root, "project.fafm"), `bulk-${i}`, `Fact number ${i}: ${"a long remembered detail ".repeat(15)}`);
+    }
+    const md = renderCardText(root);
+    assert.match(md, /\*\*Memory\*\* · 64 facts/);
+    assert.equal((md.match(/^- /gm) ?? []).length, 5, "the tl;dr lists five facts");
+    assert.match(md, /…and 59 more facts, in the full card/);
+    assert.ok(md.length < 3000, `tl;dr grew to ${md.length} chars`);
+
+    const full = renderCardText(root, { detail: "full" });
+    assert.equal((full.match(/^- /gm) ?? []).length, 64, "full lists every fact");
+  } finally {
+    cleanup();
+  }
+});
+
+test("clip: whole first sentence when it fits, else a word-boundary cut with …", () => {
+  // short enough → untouched
+  assert.equal(clip("Short fact.", 160), "Short fact.");
+  // first sentence fits → exactly that sentence, no ellipsis, nothing reworded
+  const two = "The first sentence is the point. " + "The second one adds detail ".repeat(10);
+  assert.equal(clip(two, 160), "The first sentence is the point.");
+  // a dot inside a name or version isn't a sentence end
+  assert.equal(clip("Ships AGENTS.md and project.fafm v1.2 today. " + "x ".repeat(100), 160), "Ships AGENTS.md and project.fafm v1.2 today.");
+  // first sentence too long → cut at a word boundary, marked with …
+  const long = "word ".repeat(60);
+  const c = clip(long, 160);
+  assert.ok(c.endsWith("…") && c.length <= 161 && !c.includes("wor…"), c);
+});
+
+test("renderCardText: tl;dr facts are whole stored sentences", () => {
+  const { root, cleanup } = fixture();
+  try {
+    const md = renderCardText(root);
+    // this repo's first fact: its first sentence, verbatim, no ellipsis
+    assert.ok(md.includes("- The context concern points at AGENTS.md — the de-facto standard for agent instructions. ✓"), md);
   } finally {
     cleanup();
   }

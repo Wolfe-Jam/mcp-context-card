@@ -1,5 +1,5 @@
 /**
- * demo — every tool, run live, over both transports.
+ * demo — context, memory, identity and discovery, run live, over both transports.
  *
  *   1. CONTEXT    — list the AGENTS.md sections, then pull just one.
  *   2. MEMORY     — remember() a fact, stop the server process, start a new

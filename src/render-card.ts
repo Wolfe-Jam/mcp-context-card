@@ -278,3 +278,76 @@ const TOGGLE_SCRIPT = `<script>
   sync();
 })();
 </script>`;
+
+/** tl;dr: the first few facts, each cut to about a line. `full`: every fact, whole. */
+export type Detail = "tldr" | "full";
+const TLDR_FACTS = 5;
+const TLDR_CHARS = 160;
+
+/**
+ * Shorten a fact for the tl;dr without rewording it. The whole first sentence
+ * when it fits in `max` (a stored sentence, verbatim, so a model has no ragged
+ * end to "tidy"); otherwise a word-boundary cut marked with …. A dot inside a
+ * word (AGENTS.md, v1.2) is not a sentence end: it must be followed by space.
+ */
+export function clip(s: string, max: number): string {
+  if (s.length <= max) return s;
+  const first = /^(.+?[.!?])(?=\s)/.exec(s)?.[1];
+  if (first && first.length <= max) return first;
+  const cut = s.slice(0, max);
+  const space = cut.lastIndexOf(" ");
+  return `${(space > max / 2 ? cut.slice(0, space) : cut).replace(/[\s,;:.—-]+$/, "")}…`;
+}
+
+/**
+ * The same card as Markdown, for chats that can't display HTML: identity,
+ * the AGENTS.md section headings (bodies stay in the full card), memory,
+ * and the discovery table. Same sources as renderCard.
+ *
+ * The default tl;dr stays small however much memory a project holds: five
+ * facts, each cut short, and a count of the rest. `detail: "full"` lists
+ * every fact whole. The saved HTML card always has everything.
+ */
+export function renderCardText(root: string, opts: { detail?: Detail } = {}): string {
+  const agents = parseAgentsMd(join(root, "AGENTS.md"));
+  const mem = parseFafm(join(root, "project.fafm"));
+  const id = resolveIdentity(root);
+  const meta = serverCardMeta() as Record<string, { source: string; mediaType: string }>;
+  const name = id?.displayName ?? id?.name ?? NAME;
+  const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
+
+  const out = [`### ${name} — context card`];
+  const pills = [
+    id?.vendor && id.vendor !== id.status ? id.vendor : null,
+    id?.agentVersion ? `v${id.agentVersion}` : null,
+    id?.status,
+    id?.license,
+  ].filter(Boolean);
+  if (pills.length) out.push(pills.join(" · "));
+  if (id?.description) out.push(id.description);
+
+  const sections = agents?.sections.filter((s) => s.level > 1) ?? [];
+  out.push(
+    agents
+      ? `**Context — AGENTS.md** · ${plural(sections.length, "section")}\n${sections.map((s) => s.heading).join(" · ")}`
+      : "**Context — AGENTS.md** · none in this project",
+  );
+
+  const full = opts.detail === "full";
+  const shown = full ? mem.facts : mem.facts.slice(0, TLDR_FACTS);
+  const rest = mem.facts.length - shown.length;
+  out.push(
+    mem.facts.length
+      ? `**Memory** · ${plural(mem.facts.length, "fact")}\n${shown
+          .map((f) => `- ${full ? f.text : clip(f.text, TLDR_CHARS)}${f.verification_status === "verified" ? " ✓" : ""}`)
+          .join("\n")}${rest ? `\n\n…and ${plural(rest, "more fact")}, in the full card` : ""}`
+      : "**Memory** · no facts yet",
+  );
+
+  const rows = Object.entries(meta).map(
+    ([k, v]) => `| ${k.slice(META_NS.length + 1)} | \`${v.source}\` | \`${v.mediaType}\` |`,
+  );
+  out.push(["**Discovery**", "| concern | source | media type |", "|---|---|---|", ...rows].join("\n"));
+
+  return out.join("\n\n");
+}

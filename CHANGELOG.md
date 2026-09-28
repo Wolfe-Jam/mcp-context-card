@@ -2,6 +2,43 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+The card reaches people in any host: inline where the host supports MCP
+Apps, and as text in the chat plus the full card in the browser everywhere
+else.
+
+- **MCP App.** `render_context_card` links a `ui://mcp-context-card/card.html`
+  resource (`text/html;profile=mcp-app`). Hosts that support MCP Apps render
+  the card inline, and the model gets a one-line summary instead of the
+  whole HTML page. Hosts without MCP Apps get the full HTML, as before.
+- **New tool: `save_context_card`.** Writes the card to `context-card.html`
+  in the project and replies with:
+  - the card as Markdown: identity, `AGENTS.md` section headings, memory,
+    discovery. About 1.2k characters for this repo, instead of about 17k of
+    HTML;
+  - a link to the full card, plus its `file://` address in a code block,
+    which hosts give a copy button (many won't follow a `file://` link).
+
+  When the server runs locally (stdio), it also opens the saved card in the
+  browser; `open: false` skips that, and over HTTP it never opens anything.
+  Same `theme`, `accent` and `expanded` inputs as `render_context_card`.
+  Marked `destructiveHint: true`, because it replaces an earlier
+  `context-card.html`.
+- **A tl;dr by default.** The Markdown shows five facts, each cut to its
+  first sentence exactly as stored (or a word-boundary cut marked … when
+  that sentence is long), and counts the rest. It stays under about 3k
+  characters however much a project remembers. `detail: "full"` lists
+  every fact whole. The saved file always has everything.
+- **Server instructions.** Sent at initialize: when the host can't display
+  the card, save it and show the user the Markdown card and its link,
+  not paste HTML into the chat.
+- **`list_context_sources`** now lists the card resource under
+  `surfaces.mcp`.
+
+Ten tools now. The nine existing tools keep their names, inputs and
+behaviour. 117 tests, all green.
+
 ## 1.1.1
 
 Every tool now says what it is and what it does to your project.

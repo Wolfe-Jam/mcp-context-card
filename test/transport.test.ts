@@ -7,7 +7,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { httpApp } from "../src/transport/http.js";
 import { createServer, SERVER_CARD_URI } from "../src/server.js";
-import { fixture } from "./helpers.js";
+import { TOOLS, fixture } from "./helpers.js";
 
 const META_KEYS = [
   "io.github.Wolfe-Jam.mcp-context-card/context",
@@ -44,7 +44,7 @@ test("http: MCP works over stateless Streamable HTTP", async () => {
   assert.equal(client.getServerVersion()?.name, "mcp-context-card");
 
   const { tools } = await client.listTools();
-  assert.equal(tools.length, 9);
+  assert.deepEqual(tools.map((t) => t.name).sort(), TOOLS);
 
   const r = say(await client.callTool({ name: "read_agents_md", arguments: { section: "Setup" } }));
   assert.match(r, /^## Setup/);
@@ -177,5 +177,5 @@ test("stdio and http expose the identical tool surface", async () => {
   await httpC.close();
 
   assert.deepEqual(stdioTools, httpTools);
-  assert.equal(stdioTools.length, 9);
+  assert.deepEqual(stdioTools, TOOLS);
 });

@@ -118,7 +118,9 @@ GET /.well-known/ai-catalog.json
 
 The same three sources also render as **the card** — `GET /card` /
 `render_context_card` / `docs/card.html` — the human view of exactly what a
-machine reads below.
+machine reads below. Hosts that support MCP Apps show it inline from the
+`ui://mcp-context-card/card.html` resource; elsewhere `save_context_card`
+writes it to `context-card.html` and returns it as Markdown.
 
 The same three sources back **both** discovery mechanisms:
 

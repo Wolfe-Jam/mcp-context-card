@@ -13,6 +13,13 @@ rendered as one card you can read.
 |---|---|
 | ![the context card, light theme](./docs/img/card-light.png) | ![the context card, dark theme](./docs/img/card-dark.png) |
 
+**See your own project's card** — run this in its folder. It writes
+`context-card.html` and opens it in your browser:
+
+```
+npx mcp-context-card card
+```
+
 **context** — the project's `AGENTS.md`, served whole or one section at a time.
 
 ![the card's context section — AGENTS.md, section nav, read_agents_md](./docs/img/card-context.png)
@@ -52,7 +59,7 @@ say what it is. `mcp-context-card` is those three, done once:
   gains context, memory, and identity discovery it didn't have. Nothing to
   migrate; it composes.
 
-Nine tools, two discovery surfaces already in the ecosystem (Server Card
+Ten tools, two discovery surfaces already in the ecosystem (Server Card
 `_meta`, `ai-catalog.json`), and a rendered [card](#the-card). MIT, on npm.
 
 It composes:
@@ -63,8 +70,9 @@ It composes:
 
 Vendor-free — context is plain Markdown (`AGENTS.md`); the memory and
 identity formats are swappable examples. It reads and writes only its own
-three files (`AGENTS.md`, `project.fafm`, `.well-known/fafa`) — no general
-file access, no shell, no search.
+three files (`AGENTS.md`, `project.fafm`, `.well-known/fafa`), plus the
+`context-card.html` it saves on request — no general file access, no shell,
+no search.
 
 ## The card
 
@@ -86,6 +94,18 @@ npx mcp-context-card card > x.html   # piped/redirected: raw HTML to stdout
 GET /card                            # live, on the HTTP transport
 GET /card?expand=all&theme=light&accent=%230066cc
 ```
+
+In a chat, hosts that support [MCP Apps](https://modelcontextprotocol.io/extensions/apps)
+show the card inline when `render_context_card` runs; the model gets a short
+summary instead of the page. Everywhere else, `save_context_card` writes
+`context-card.html` into the project, opens it in your browser when the
+server runs locally, and replies with the card as Markdown (identity, the
+`AGENTS.md` sections, memory, discovery), a link to the full card, and its
+address to copy. The Markdown is a tl;dr by default: five facts, each cut to
+its first sentence as stored, so it stays small however much a project
+remembers. `detail: "full"` lists every fact whole. The server's
+instructions tell the model to show that rather than paste the HTML into
+the chat.
 
 Light, dark, or auto; the accent defaults to the AAIF palette and takes any hex.
 This repo's own card, live: [auto](https://wolfe-jam.github.io/mcp-context-card/) ·
@@ -191,15 +211,18 @@ The wire‑level detail is in [docs/MECHANISMS.md](./docs/MECHANISMS.md).
 | `forget` | drop or correct a stale fact |
 | `whoami` | this server's name, vendor, version, status, license |
 | `list_context_sources` | what this project publishes, in what media types, via which surface |
-| `render_context_card` | the whole card as one self‑contained HTML page (also `GET /card`) |
+| `render_context_card` | the whole card as one self‑contained HTML page (also `GET /card`); hosts that support MCP Apps show it inline |
+| `save_context_card` | write the card to `context-card.html` in the project and open it in your browser; returns the card as Markdown plus a link to the full version |
 
-Seven tools only read. `remember` and `forget` write the memory file, so they're
-marked destructive and a host can ask before running them. Every tool carries a
+Seven tools only read. `remember` and `forget` write the memory file, and
+`save_context_card` writes `context-card.html`, so those three are marked
+destructive and a host can ask before running them. Every tool carries a
 title and MCP tool annotations.
 
 ## The demo
 
-`npm run demo` runs every tool over both transports:
+`npm run demo` walks through context, memory, identity and discovery, live,
+over both transports:
 
 1. **Context** — list the `AGENTS.md` sections, then pull just `## Test`.
 2. **Memory** — `remember()` a fact, stop the server process, start a new one,
@@ -209,7 +232,7 @@ title and MCP tool annotations.
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-106 tests on Linux, macOS, and Windows, coverage‑gated in CI. Two spawn a real
+117 tests on Linux, macOS, and Windows, coverage‑gated in CI. Two spawn a real
 child process and check a remembered fact survives the restart — one against
 an existing `project.fafm`, one starting from a project that has never had
 one; another checks the stdio and HTTP tool surfaces match, and another checks
@@ -219,7 +242,7 @@ every tool's title and behaviour hints against what it actually does.
 
 | Path | What |
 |---|---|
-| `src/server.ts` | the nine tools + the Server Card resource |
+| `src/server.ts` | the ten tools + the Server Card and card resources |
 | `src/agents-md.ts` | reads and section‑splits `AGENTS.md` |
 | `src/author.ts` | `author_agents_md` — BETTER via [`agents-md-facts`](https://github.com/Wolfe-Jam/agents-md-facts), BEST when `project.faf` exists |
 | `src/md.ts` | a minimal dependency‑free Markdown → HTML renderer |
