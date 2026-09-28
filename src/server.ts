@@ -363,7 +363,8 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
         const opened = !!opts.openFile && raw !== false && raw !== "false";
         if (opened) opts.openFile!(out);
         return text(
-          `${renderCardText(root, { detail: args.detail === "full" ? "full" : "tldr" })}\n\n---\n\n` +
+          `${renderCardText(root, { detail: args.detail === "full" ? "full" : "tldr" })}\n\n` +
+            "_In a host that supports MCP Apps, this card shows inline._\n\n---\n\n" +
             (opened ? "Opened the full card in your browser.\n\n" : "") +
             `**[Open the full card in your browser](${pathToFileURL(out).href})**\n\n` +
             // Some hosts won't follow a file:// link; a code block gets a copy button.

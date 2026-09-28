@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { AAIF_ACCENT, renderCard, renderCardText, safeAccent } from "../src/render-card.js";
+import { AAIF_ACCENT, clip, renderCard, renderCardText, safeAccent } from "../src/render-card.js";
 import { fixture } from "./helpers.js";
 import { join } from "node:path";
 import { remember } from "../src/memory.js";
@@ -161,6 +161,31 @@ test("renderCardText: the tl;dr stays small however much memory a project has", 
 
     const full = renderCardText(root, { detail: "full" });
     assert.equal((full.match(/^- /gm) ?? []).length, 64, "full lists every fact");
+  } finally {
+    cleanup();
+  }
+});
+
+test("clip: whole first sentence when it fits, else a word-boundary cut with …", () => {
+  // short enough → untouched
+  assert.equal(clip("Short fact.", 160), "Short fact.");
+  // first sentence fits → exactly that sentence, no ellipsis, nothing reworded
+  const two = "The first sentence is the point. " + "The second one adds detail ".repeat(10);
+  assert.equal(clip(two, 160), "The first sentence is the point.");
+  // a dot inside a name or version isn't a sentence end
+  assert.equal(clip("Ships AGENTS.md and project.fafm v1.2 today. " + "x ".repeat(100), 160), "Ships AGENTS.md and project.fafm v1.2 today.");
+  // first sentence too long → cut at a word boundary, marked with …
+  const long = "word ".repeat(60);
+  const c = clip(long, 160);
+  assert.ok(c.endsWith("…") && c.length <= 161 && !c.includes("wor…"), c);
+});
+
+test("renderCardText: tl;dr facts are whole stored sentences", () => {
+  const { root, cleanup } = fixture();
+  try {
+    const md = renderCardText(root);
+    // this repo's first fact: its first sentence, verbatim, no ellipsis
+    assert.ok(md.includes("- The context concern points at AGENTS.md — the de-facto standard for agent instructions. ✓"), md);
   } finally {
     cleanup();
   }

@@ -13,6 +13,13 @@ rendered as one card you can read.
 |---|---|
 | ![the context card, light theme](./docs/img/card-light.png) | ![the context card, dark theme](./docs/img/card-dark.png) |
 
+**See your own project's card** — run this in its folder. It writes
+`context-card.html` and opens it in your browser:
+
+```
+npx mcp-context-card card
+```
+
 **context** — the project's `AGENTS.md`, served whole or one section at a time.
 
 ![the card's context section — AGENTS.md, section nav, read_agents_md](./docs/img/card-context.png)
@@ -92,11 +99,13 @@ In a chat, hosts that support [MCP Apps](https://modelcontextprotocol.io/extensi
 show the card inline when `render_context_card` runs; the model gets a short
 summary instead of the page. Everywhere else, `save_context_card` writes
 `context-card.html` into the project, opens it in your browser when the
-server runs locally, and returns the card as Markdown — identity, the
-`AGENTS.md` sections, memory, discovery — with a link to the full card. The Markdown is a tl;dr by default
-(five facts, each cut short, so it stays small however much a project
-remembers); `detail: "full"` lists every fact whole. The server's instructions
-tell the model to show that rather than paste the HTML into the chat.
+server runs locally, and replies with the card as Markdown (identity, the
+`AGENTS.md` sections, memory, discovery), a link to the full card, and its
+address to copy. The Markdown is a tl;dr by default: five facts, each cut to
+its first sentence as stored, so it stays small however much a project
+remembers. `detail: "full"` lists every fact whole. The server's
+instructions tell the model to show that rather than paste the HTML into
+the chat.
 
 Light, dark, or auto; the accent defaults to the AAIF palette and takes any hex.
 This repo's own card, live: [auto](https://wolfe-jam.github.io/mcp-context-card/) ·
@@ -212,7 +221,8 @@ title and MCP tool annotations.
 
 ## The demo
 
-`npm run demo` runs every tool over both transports:
+`npm run demo` walks through context, memory, identity and discovery, live,
+over both transports:
 
 1. **Context** — list the `AGENTS.md` sections, then pull just `## Test`.
 2. **Memory** — `remember()` a fact, stop the server process, start a new one,
@@ -222,7 +232,7 @@ title and MCP tool annotations.
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-115 tests on Linux, macOS, and Windows, coverage‑gated in CI. Two spawn a real
+117 tests on Linux, macOS, and Windows, coverage‑gated in CI. Two spawn a real
 child process and check a remembered fact survives the restart — one against
 an existing `project.fafm`, one starting from a project that has never had
 one; another checks the stdio and HTTP tool surfaces match, and another checks

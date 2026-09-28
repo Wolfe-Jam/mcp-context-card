@@ -284,11 +284,19 @@ export type Detail = "tldr" | "full";
 const TLDR_FACTS = 5;
 const TLDR_CHARS = 160;
 
-/** Cut at a word boundary near `max` characters. */
-function clip(s: string, max: number): string {
+/**
+ * Shorten a fact for the tl;dr without rewording it. The whole first sentence
+ * when it fits in `max` (a stored sentence, verbatim, so a model has no ragged
+ * end to "tidy"); otherwise a word-boundary cut marked with …. A dot inside a
+ * word (AGENTS.md, v1.2) is not a sentence end: it must be followed by space.
+ */
+export function clip(s: string, max: number): string {
   if (s.length <= max) return s;
+  const first = /^(.+?[.!?])(?=\s)/.exec(s)?.[1];
+  if (first && first.length <= max) return first;
   const cut = s.slice(0, max);
-  return `${cut.slice(0, cut.lastIndexOf(" ") > max / 2 ? cut.lastIndexOf(" ") : max).replace(/[\s,;:.—-]+$/, "")}…`;
+  const space = cut.lastIndexOf(" ");
+  return `${(space > max / 2 ? cut.slice(0, space) : cut).replace(/[\s,;:.—-]+$/, "")}…`;
 }
 
 /**

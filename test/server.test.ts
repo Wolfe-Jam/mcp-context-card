@@ -231,6 +231,7 @@ test("server: save_context_card writes context-card.html into the project and re
     assert.match(reply, /^### mcp-context-card — context card/);
     assert.match(reply, /\*\*Memory\*\* · 4 facts/);
     assert.ok(!reply.includes("one instantiation each"), "tl;dr by default");
+    assert.match(reply, /In a host that supports MCP Apps, this card shows inline\./);
     const full = say(await client.callTool({ name: "save_context_card", arguments: { detail: "full" } }));
     assert.ok(full.includes("one instantiation each"), "detail: full returns every fact whole");
     const html = readFileSync(out, "utf8");
