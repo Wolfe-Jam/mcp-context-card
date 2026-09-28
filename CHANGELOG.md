@@ -2,7 +2,7 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 1.2.0
 
 The card reaches people in any host: inline where the host supports MCP
 Apps, and as text in the chat plus the full card in the browser everywhere
