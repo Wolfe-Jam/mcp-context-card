@@ -60,8 +60,9 @@ export const INSTRUCTIONS =
   "Read them with read_agents_md, recall and whoami; list_context_sources says what is published and where. " +
   "When the user wants to see the context card: hosts that support MCP Apps display it inline from render_context_card. " +
   "Otherwise, don't paste the card's HTML into the conversation. Call save_context_card: it writes context-card.html " +
-  "into the project and returns the card as Markdown with a link to the saved file. Show the user that Markdown " +
-  "as returned, including the link, so they see the card in the chat and can open the full version in a browser.";
+  "into the project, opens it in the user's browser when this server runs locally, and returns the card as Markdown " +
+  "with a link to the saved file. Show the user that Markdown as returned, including the link, so they see the card " +
+  "in the chat and can open the full version in a browser.";
 
 /** Theme / accent / expanded from tool arguments, shared by render and save. */
 function cardOptions(args: Record<string, unknown>) {
@@ -91,7 +92,13 @@ function hostRendersApps(server: Server): boolean {
   return Array.isArray(ext?.mimeTypes) && ext.mimeTypes.includes(MCP_APP_MIME);
 }
 
-export function createServer(root: string = ROOT): Server {
+export interface ServerOptions {
+  /** Open a saved file for the person. Set only for a local (stdio) server;
+   *  over HTTP the browser would open on the server, so it stays unset. */
+  openFile?: (path: string) => void;
+}
+
+export function createServer(root: string = ROOT, opts: ServerOptions = {}): Server {
   const AGENTS = join(root, "AGENTS.md");
   const FAFM = join(root, "project.fafm");
   const FAFA = join(root, ".well-known/fafa");
@@ -264,11 +271,15 @@ export function createServer(root: string = ROOT): Server {
         title: "Save Context Card",
         annotations: { title: "Save Context Card", readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
         description:
-          "Write the context card to context-card.html in the project. Returns the card as Markdown (identity, AGENTS.md sections, memory, discovery) plus a clickable link to the saved file. Use this instead of pasting render_context_card's HTML into a chat that can't display it. Replaces any earlier context-card.html.",
+          "Write the context card to context-card.html in the project and, when this server runs locally, open it in the person's browser. Returns the card as Markdown (identity, AGENTS.md sections, memory, discovery) plus a clickable link to the saved file. Use this instead of pasting render_context_card's HTML into a chat that can't display it. Replaces any earlier context-card.html.",
         inputSchema: {
           type: "object",
           properties: {
             ...CARD_ARGS,
+            open: {
+              type: "boolean",
+              description: "open the saved card in the person's browser when the server runs locally (default: true)",
+            },
             detail: {
               type: "string",
               enum: ["tldr", "full"],
@@ -347,8 +358,13 @@ export function createServer(root: string = ROOT): Server {
       case "save_context_card": {
         const out = join(root, "context-card.html");
         writeFileSync(out, renderCard(root, cardOptions(args)));
+        // Many hosts won't follow a file:// link, so a local server opens it.
+        const raw = (args as Record<string, unknown>).open;
+        const opened = !!opts.openFile && raw !== false && raw !== "false";
+        if (opened) opts.openFile!(out);
         return text(
           `${renderCardText(root, { detail: args.detail === "full" ? "full" : "tldr" })}\n\n---\n\n` +
+            (opened ? "Opened the full card in your browser.\n\n" : "") +
             `**[Open the full card in your browser](${pathToFileURL(out).href})**\n\nSaved to ${out}`,
         );
       }
@@ -401,8 +417,8 @@ export function createServer(root: string = ROOT): Server {
 }
 
 /** Connect a server instance to a transport (stdio or http). */
-export async function serve(transport: Transport, root: string = ROOT): Promise<Server> {
-  const server = createServer(root);
+export async function serve(transport: Transport, root: string = ROOT, opts: ServerOptions = {}): Promise<Server> {
+  const server = createServer(root, opts);
   await server.connect(transport);
   return server;
 }
@@ -410,5 +426,6 @@ export async function serve(transport: Transport, root: string = ROOT): Promise<
 // Direct run (incl. the demo's spawned child) → stdio. pathToFileURL keeps
 // this correct on Windows, where argv[1] is a `C:\...` path.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  await serve(new StdioServerTransport());
+  const { openInBrowser } = await import("./open.js");
+  await serve(new StdioServerTransport(), ROOT, { openFile: openInBrowser });
 }

@@ -246,6 +246,34 @@ test("server: save_context_card writes context-card.html into the project and re
   }
 });
 
+test("server: save_context_card opens the saved card when the server is local, and says so", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const opened: string[] = [];
+    const server = createServer(root, { openFile: (p) => opened.push(p) });
+    const [a, b] = InMemoryTransport.createLinkedPair();
+    const client = new Client({ name: "t", version: "0" }, { capabilities: {} });
+    await Promise.all([server.connect(b), client.connect(a)]);
+
+    const reply = say(await client.callTool({ name: "save_context_card", arguments: {} }));
+    assert.deepEqual(opened, [join(root, "context-card.html")]);
+    assert.match(reply, /Opened the full card in your browser/);
+
+    // open: false saves without opening
+    const quiet = say(await client.callTool({ name: "save_context_card", arguments: { open: false } }));
+    assert.equal(opened.length, 1, "open:false must not open the browser");
+    assert.ok(!/Opened the full card/.test(quiet));
+    await client.close();
+
+    // no opener (the HTTP transport, or a host-side test) → never claims it opened
+    const plain = await connected(root);
+    assert.ok(!/Opened the full card/.test(say(await plain.callTool({ name: "save_context_card", arguments: {} }))));
+    await plain.close();
+  } finally {
+    cleanup();
+  }
+});
+
 test("server: author_agents_md — the fixture ships a project.faf, so this is BEST", async () => {
   const { root, cleanup } = fixture();
   try {

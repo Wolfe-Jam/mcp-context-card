@@ -91,9 +91,9 @@ GET /card?expand=all&theme=light&accent=%230066cc
 In a chat, hosts that support [MCP Apps](https://modelcontextprotocol.io/extensions/apps)
 show the card inline when `render_context_card` runs; the model gets a short
 summary instead of the page. Everywhere else, `save_context_card` writes
-`context-card.html` into the project and returns the card as Markdown —
-identity, the `AGENTS.md` sections, memory, discovery — with a link that
-opens the full card in your browser. The Markdown is a tl;dr by default
+`context-card.html` into the project, opens it in your browser when the
+server runs locally, and returns the card as Markdown — identity, the
+`AGENTS.md` sections, memory, discovery — with a link to the full card. The Markdown is a tl;dr by default
 (five facts, each cut short, so it stays small however much a project
 remembers); `detail: "full"` lists every fact whole. The server's instructions
 tell the model to show that rather than paste the HTML into the chat.
@@ -203,7 +203,7 @@ The wire‑level detail is in [docs/MECHANISMS.md](./docs/MECHANISMS.md).
 | `whoami` | this server's name, vendor, version, status, license |
 | `list_context_sources` | what this project publishes, in what media types, via which surface |
 | `render_context_card` | the whole card as one self‑contained HTML page (also `GET /card`); hosts that support MCP Apps show it inline |
-| `save_context_card` | write the card to `context-card.html` in the project; returns the card as Markdown plus a clickable link to the full version |
+| `save_context_card` | write the card to `context-card.html` in the project and open it in your browser; returns the card as Markdown plus a link to the full version |
 
 Seven tools only read. `remember` and `forget` write the memory file, and
 `save_context_card` writes `context-card.html`, so those three are marked
@@ -222,7 +222,7 @@ title and MCP tool annotations.
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-114 tests on Linux, macOS, and Windows, coverage‑gated in CI. Two spawn a real
+115 tests on Linux, macOS, and Windows, coverage‑gated in CI. Two spawn a real
 child process and check a remembered fact survives the restart — one against
 an existing `project.fafm`, one starting from a project that has never had
 one; another checks the stdio and HTTP tool surfaces match, and another checks

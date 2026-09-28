@@ -17,7 +17,9 @@ The card shows up in the chat, or gets saved where you can open it.
   each cut short, and a count of the rest, so it stays under about 3k
   characters however much a project remembers. `detail: "full"` lists
   every fact whole. About 1.4k characters for this repo, instead of about
-  17k of HTML. Same `theme`,
+  17k of HTML. When the server runs locally (stdio), it also opens the
+  saved card in the browser, because many hosts won't follow a `file://`
+  link; `open: false` skips that. Over HTTP it never opens anything. Same `theme`,
   `accent` and `expanded` inputs as `render_context_card`. Marked
   `destructiveHint: true`, because it replaces an earlier `context-card.html`.
 - **`list_context_sources`** now lists the card resource under `surfaces.mcp`.
@@ -26,7 +28,7 @@ The card shows up in the chat, or gets saved where you can open it.
   Markdown card and its link, not paste HTML into the chat.
 
 Ten tools now. The nine existing tools keep their names, inputs and
-behaviour. 114 tests, all green.
+behaviour. 115 tests, all green.
 
 ## 1.1.1
 

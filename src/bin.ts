@@ -135,18 +135,10 @@ if (entryPath && import.meta.url === pathToFileURL(entryPath).href) {
     } else {
       const { writeFileSync } = await import("node:fs");
       const { join } = await import("node:path");
-      const { spawn } = await import("node:child_process");
+      const { openInBrowser } = await import("./open.js");
       const out = join(process.cwd(), "context-card.html");
       writeFileSync(out, html);
-      const opener: [string, string[]] =
-        process.platform === "darwin"
-          ? ["open", [out]]
-          : process.platform === "win32"
-            ? ["cmd", ["/c", "start", "", out]]
-            : ["xdg-open", [out]];
-      spawn(opener[0], opener[1], { stdio: "ignore", detached: true })
-        .on("error", () => {})
-        .unref();
+      openInBrowser(out);
       process.stderr.write(`${NAME} · wrote ${out} — opening in your browser  (--stdout for raw HTML)\n`);
     }
   } else if (mode === "http") {
@@ -159,6 +151,8 @@ if (entryPath && import.meta.url === pathToFileURL(entryPath).href) {
     // stderr so it never touches the JSON-RPC wire on stdout; a bare run at a
     // terminal otherwise looks hung.
     console.error(`${NAME} · stdio · waiting for an MCP host on stdin  (--help for usage · Ctrl-C to exit)`);
-    await serve(new StdioServerTransport(), root);
+    // stdio = a host on this machine, so save_context_card can open the card.
+    const { openInBrowser } = await import("./open.js");
+    await serve(new StdioServerTransport(), root, { openFile: openInBrowser });
   }
 }
