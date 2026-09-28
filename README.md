@@ -92,8 +92,10 @@ In a chat, hosts that support [MCP Apps](https://modelcontextprotocol.io/extensi
 show the card inline when `render_context_card` runs; the model gets a short
 summary instead of the page. Everywhere else, `save_context_card` writes
 `context-card.html` into the project and returns the card as Markdown —
-identity, the `AGENTS.md` sections, every remembered fact, discovery — with
-a link that opens the full card in your browser. The server's instructions
+identity, the `AGENTS.md` sections, memory, discovery — with a link that
+opens the full card in your browser. The Markdown is a tl;dr by default
+(five facts, each cut short, so it stays small however much a project
+remembers); `detail: "full"` lists every fact whole. The server's instructions
 tell the model to show that rather than paste the HTML into the chat.
 
 Light, dark, or auto; the accent defaults to the AAIF palette and takes any hex.
@@ -220,7 +222,7 @@ title and MCP tool annotations.
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-113 tests on Linux, macOS, and Windows, coverage‑gated in CI. Two spawn a real
+114 tests on Linux, macOS, and Windows, coverage‑gated in CI. Two spawn a real
 child process and check a remembered fact survives the restart — one against
 an existing `project.fafm`, one starting from a project that has never had
 one; another checks the stdio and HTTP tool surfaces match, and another checks

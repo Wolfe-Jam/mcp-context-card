@@ -12,9 +12,12 @@ The card shows up in the chat, or gets saved where you can open it.
   whole HTML page. Hosts without MCP Apps get the full HTML, as before.
 - **New tool: `save_context_card`.** Writes the card to `context-card.html`
   in the project and returns the card as Markdown (identity, `AGENTS.md`
-  section headings, every remembered fact, discovery) with a clickable
-  link to the full card in the browser: about 2k characters instead of
-  about 17k of HTML. Same `theme`,
+  section headings, memory, discovery) with a clickable link to the full
+  card in the browser. By default the Markdown is a tl;dr: five facts,
+  each cut short, and a count of the rest, so it stays under about 3k
+  characters however much a project remembers. `detail: "full"` lists
+  every fact whole. About 1.4k characters for this repo, instead of about
+  17k of HTML. Same `theme`,
   `accent` and `expanded` inputs as `render_context_card`. Marked
   `destructiveHint: true`, because it replaces an earlier `context-card.html`.
 - **`list_context_sources`** now lists the card resource under `surfaces.mcp`.
@@ -23,7 +26,7 @@ The card shows up in the chat, or gets saved where you can open it.
   Markdown card and its link, not paste HTML into the chat.
 
 Ten tools now. The nine existing tools keep their names, inputs and
-behaviour. 113 tests, all green.
+behaviour. 114 tests, all green.
 
 ## 1.1.1
 

@@ -2,6 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { AAIF_ACCENT, renderCard, renderCardText, safeAccent } from "../src/render-card.js";
 import { fixture } from "./helpers.js";
+import { join } from "node:path";
+import { remember } from "../src/memory.js";
 
 test("safeAccent: valid hex passes, anything else falls back to AAIF", () => {
   assert.equal(safeAccent("#0A7"), "#0A7");
@@ -128,14 +130,37 @@ test("renderCardText: the card as Markdown — identity, AGENTS.md headings, mem
     }
     assert.match(md, /\*\*Context — AGENTS\.md\*\* · 9 sections/);
     assert.ok(!md.includes("npm install"), "section bodies stay in the full card");
-    // every remembered fact, whole
+    // tl;dr by default: each fact cut short, the full text stays in the card
     assert.match(md, /\*\*Memory\*\* · 4 facts/);
     assert.ok(md.includes("The context concern points at AGENTS.md"));
+    assert.ok(!md.includes("one instantiation each"), "the default cuts long facts short");
+    // detail: "full" — every fact whole
+    const full = renderCardText(root, { detail: "full" });
+    assert.ok(full.includes("so this server uses .fafm and .fafa as one instantiation each."));
     // discovery: the three concerns and their media types
     for (const t of ["text/markdown", "application/vnd.fafm+yaml", "application/vnd.fafa+yaml"]) {
       assert.ok(md.includes(t), `missing media type: ${t}`);
     }
     assert.ok(!/<[a-z]/i.test(md.replace(/`[^`]*`/g, "")), "plain Markdown, no HTML");
+  } finally {
+    cleanup();
+  }
+});
+
+test("renderCardText: the tl;dr stays small however much memory a project has", () => {
+  const { root, cleanup } = fixture();
+  try {
+    for (let i = 0; i < 60; i++) {
+      remember(join(root, "project.fafm"), `bulk-${i}`, `Fact number ${i}: ${"a long remembered detail ".repeat(15)}`);
+    }
+    const md = renderCardText(root);
+    assert.match(md, /\*\*Memory\*\* · 64 facts/);
+    assert.equal((md.match(/^- /gm) ?? []).length, 5, "the tl;dr lists five facts");
+    assert.match(md, /…and 59 more facts, in the full card/);
+    assert.ok(md.length < 3000, `tl;dr grew to ${md.length} chars`);
+
+    const full = renderCardText(root, { detail: "full" });
+    assert.equal((full.match(/^- /gm) ?? []).length, 64, "full lists every fact");
   } finally {
     cleanup();
   }

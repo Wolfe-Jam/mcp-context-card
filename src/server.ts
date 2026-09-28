@@ -265,7 +265,17 @@ export function createServer(root: string = ROOT): Server {
         annotations: { title: "Save Context Card", readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
         description:
           "Write the context card to context-card.html in the project. Returns the card as Markdown (identity, AGENTS.md sections, memory, discovery) plus a clickable link to the saved file. Use this instead of pasting render_context_card's HTML into a chat that can't display it. Replaces any earlier context-card.html.",
-        inputSchema: { type: "object", properties: CARD_ARGS },
+        inputSchema: {
+          type: "object",
+          properties: {
+            ...CARD_ARGS,
+            detail: {
+              type: "string",
+              enum: ["tldr", "full"],
+              description: "the Markdown reply: tldr (default) shows five facts, each cut short; full shows every fact whole. The saved file always has everything.",
+            },
+          },
+        },
       },
     ],
   }));
@@ -338,7 +348,7 @@ export function createServer(root: string = ROOT): Server {
         const out = join(root, "context-card.html");
         writeFileSync(out, renderCard(root, cardOptions(args)));
         return text(
-          `${renderCardText(root)}\n\n---\n\n` +
+          `${renderCardText(root, { detail: args.detail === "full" ? "full" : "tldr" })}\n\n---\n\n` +
             `**[Open the full card in your browser](${pathToFileURL(out).href})**\n\nSaved to ${out}`,
         );
       }

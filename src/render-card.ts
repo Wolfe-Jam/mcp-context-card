@@ -279,12 +279,28 @@ const TOGGLE_SCRIPT = `<script>
 })();
 </script>`;
 
+/** tl;dr: the first few facts, each cut to about a line. `full`: every fact, whole. */
+export type Detail = "tldr" | "full";
+const TLDR_FACTS = 5;
+const TLDR_CHARS = 160;
+
+/** Cut at a word boundary near `max` characters. */
+function clip(s: string, max: number): string {
+  if (s.length <= max) return s;
+  const cut = s.slice(0, max);
+  return `${cut.slice(0, cut.lastIndexOf(" ") > max / 2 ? cut.lastIndexOf(" ") : max).replace(/[\s,;:.—-]+$/, "")}…`;
+}
+
 /**
  * The same card as Markdown, for chats that can't display HTML: identity,
- * the AGENTS.md section headings (bodies stay in the full card), every
- * remembered fact, and the discovery table. Same sources as renderCard.
+ * the AGENTS.md section headings (bodies stay in the full card), memory,
+ * and the discovery table. Same sources as renderCard.
+ *
+ * The default tl;dr stays small however much memory a project holds: five
+ * facts, each cut short, and a count of the rest. `detail: "full"` lists
+ * every fact whole. The saved HTML card always has everything.
  */
-export function renderCardText(root: string): string {
+export function renderCardText(root: string, opts: { detail?: Detail } = {}): string {
   const agents = parseAgentsMd(join(root, "AGENTS.md"));
   const mem = parseFafm(join(root, "project.fafm"));
   const id = resolveIdentity(root);
@@ -309,11 +325,14 @@ export function renderCardText(root: string): string {
       : "**Context — AGENTS.md** · none in this project",
   );
 
+  const full = opts.detail === "full";
+  const shown = full ? mem.facts : mem.facts.slice(0, TLDR_FACTS);
+  const rest = mem.facts.length - shown.length;
   out.push(
     mem.facts.length
-      ? `**Memory** · ${plural(mem.facts.length, "fact")}\n${mem.facts
-          .map((f) => `- ${f.text}${f.verification_status === "verified" ? " ✓" : ""}`)
-          .join("\n")}`
+      ? `**Memory** · ${plural(mem.facts.length, "fact")}\n${shown
+          .map((f) => `- ${full ? f.text : clip(f.text, TLDR_CHARS)}${f.verification_status === "verified" ? " ✓" : ""}`)
+          .join("\n")}${rest ? `\n\n…and ${plural(rest, "more fact")}, in the full card` : ""}`
       : "**Memory** · no facts yet",
   );
 
