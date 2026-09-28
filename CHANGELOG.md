@@ -14,6 +14,7 @@ The card shows up in the chat, or gets saved where you can open it.
   in the project and returns the path and a `file://` link. Same `theme`,
   `accent` and `expanded` inputs as `render_context_card`. Marked
   `destructiveHint: true`, because it replaces an earlier `context-card.html`.
+- **`list_context_sources`** now lists the card resource under `surfaces.mcp`.
 - **Server instructions.** Sent at initialize: they tell the model that when
   the host can't display the card, it should save it and give the user the
   path, not paste HTML into the chat.

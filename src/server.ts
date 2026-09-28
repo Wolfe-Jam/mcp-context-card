@@ -362,7 +362,10 @@ export function createServer(root: string = ROOT): Server {
                 present: identity(root) !== null,
               },
               surfaces: {
-                mcp: { serverCard: `resource ${SERVER_CARD_URI}` },
+                mcp: {
+                  serverCard: `resource ${SERVER_CARD_URI}`,
+                  card: `resource ${CARD_UI_URI} (MCP App, ${MCP_APP_MIME})`,
+                },
                 http: {
                   serverCard: "GET /.well-known/mcp/server-card",
                   aiCatalog: "GET /.well-known/ai-catalog.json",

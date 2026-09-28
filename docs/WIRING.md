@@ -83,7 +83,8 @@ And to discover what a server offers before committing to it:
 await client.callTool({ name: "list_context_sources", arguments: {} });
 // → { context: { source: "AGENTS.md", mediaType: "text/markdown", present: true, sections: 10 },
 //     memory:  { … }, identity: { … },
-//     surfaces: { mcp: { serverCard: "resource mcp-context-card://server-card" },
+//     surfaces: { mcp: { serverCard: "resource mcp-context-card://server-card",
+//                        card: "resource ui://mcp-context-card/card.html (MCP App, text/html;profile=mcp-app)" },
 //                 http: { serverCard: "GET /.well-known/mcp/server-card",
 //                         aiCatalog: "GET /.well-known/ai-catalog.json",
 //                         card: "GET /card" } } }

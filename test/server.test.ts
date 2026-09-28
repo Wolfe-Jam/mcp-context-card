@@ -4,23 +4,10 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer, SERVER_CARD_URI } from "../src/server.js";
 import { CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION } from "../src/constants.js";
-import { fixture } from "./helpers.js";
+import { TOOLS, fixture } from "./helpers.js";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-
-const TOOLS = [
-  "author_agents_md",
-  "forget",
-  "list_agents_md_sections",
-  "list_context_sources",
-  "read_agents_md",
-  "recall",
-  "remember",
-  "render_context_card",
-  "save_context_card",
-  "whoami",
-];
 
 async function connected(root: string): Promise<Client> {
   const server = createServer(root);
@@ -31,7 +18,7 @@ async function connected(root: string): Promise<Client> {
 }
 const say = (r: unknown) => (r as any).content[0].text as string;
 
-test("server: advertises its name + the ten tools", async () => {
+test("server: advertises its name + every tool", async () => {
   const { root, cleanup } = fixture();
   try {
     const client = await connected(root);
@@ -282,6 +269,7 @@ test("server: list_context_sources — three concerns, surfaces split by transpo
     assert.equal(s.memory.mediaType, "application/vnd.fafm+yaml");
     assert.equal(s.identity.present, true); // the fixture ships a .fafa
     assert.match(s.surfaces.mcp.serverCard, /mcp-context-card:\/\/server-card/);
+    assert.ok(s.surfaces.mcp.card.includes(CARD_UI_URI), `card surface missing: ${s.surfaces.mcp.card}`);
     assert.match(s.surfaces.http.serverCard, /GET \/\.well-known\/mcp\/server-card/);
     assert.match(s.surfaces.http.card, /GET \/card/);
     await client.close();

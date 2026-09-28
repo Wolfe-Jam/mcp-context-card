@@ -16,7 +16,7 @@ import { join } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { REPO_ROOT, fixture } from "./helpers.js";
+import { REPO_ROOT, TOOLS, fixture } from "./helpers.js";
 
 const BIN = join(REPO_ROOT, "src/bin.ts");
 const runner = { command: process.execPath, base: ["--import", "tsx", BIN] };
@@ -86,24 +86,13 @@ describe("e2e — real child process", () => {
     }
   });
 
-  test("stdio child: the ten tools + the Server Card resource + _meta", async () => {
+  test("stdio child: every tool + the Server Card resource + _meta", async () => {
     const fx = fixture();
     try {
       const c = await stdioChild(fx.root);
       assert.equal(c.getServerVersion()?.name, "mcp-context-card");
       const tools = (await c.listTools()).tools.map((t) => t.name).sort();
-      assert.deepEqual(tools, [
-        "author_agents_md",
-        "forget",
-        "list_agents_md_sections",
-        "list_context_sources",
-        "read_agents_md",
-        "recall",
-        "remember",
-        "render_context_card",
-        "save_context_card",
-        "whoami",
-      ]);
+      assert.deepEqual(tools, TOOLS);
 
       const res = await c.readResource({ uri: "mcp-context-card://server-card" });
       const card = JSON.parse((res.contents[0] as { text: string }).text);
@@ -187,7 +176,7 @@ describe("e2e — real child process", () => {
     try {
       const c = await stdioChild(fx.root);
       try {
-        assert.equal((await c.listTools()).tools.length, 10);
+        assert.equal((await c.listTools()).tools.length, TOOLS.length);
       } finally {
         await c.close(); // a failed assertion must not leave the child holding the runner open
       }

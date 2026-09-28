@@ -9,6 +9,24 @@ import { fileURLToPath } from "node:url";
 
 export const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
+/**
+ * The tools this server must expose, sorted — the one place a new tool gets
+ * added on the test side. Written out by hand on purpose: a list read back
+ * from the server couldn't catch a tool that went missing.
+ */
+export const TOOLS = [
+  "author_agents_md",
+  "forget",
+  "list_agents_md_sections",
+  "list_context_sources",
+  "read_agents_md",
+  "recall",
+  "remember",
+  "render_context_card",
+  "save_context_card",
+  "whoami",
+];
+
 /** A temp dir with copies of AGENTS.md, project.faf, project.fafm, .well-known/. */
 export function fixture(): { root: string; cleanup: () => void } {
   const root = mkdtempSync(join(tmpdir(), "mcp-context-card-"));
