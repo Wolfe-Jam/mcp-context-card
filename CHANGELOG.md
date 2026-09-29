@@ -20,8 +20,11 @@ Your project, with nothing to configure.
 - **A project with no `AGENTS.md`** gets a next step on the card:
   `author_agents_md` drafts one from the repo's real build and test
   commands.
+- **A project with no identity file** (no `.well-known/fafa`, no
+  `package.json`) is named after its folder on the card, not after this
+  server.
 
-No API change. 124 tests, all green.
+No API change. 125 tests, all green.
 
 ## 1.2.0
 

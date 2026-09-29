@@ -10,11 +10,11 @@
  * is the expand-all / print helper (TOGGLE_SCRIPT) — a progressive enhancement;
  * every section still opens on its own without it. Renders anywhere.
  */
-import { join } from "node:path";
+import { basename, join, resolve } from "node:path";
 import { parseAgentsMd } from "./agents-md.js";
 import { parseFafm } from "./memory.js";
 import { resolveIdentity, serverCardMeta, META_NS } from "./identity.js";
-import { NAME, SERVER_CARD_URI } from "./constants.js";
+import { SERVER_CARD_URI } from "./constants.js";
 import { escapeHtml, renderInline, renderMarkdown, slug } from "./md.js";
 
 export type Theme = "light" | "dark" | "auto";
@@ -144,7 +144,7 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
   const id = resolveIdentity(root);
   const meta = serverCardMeta() as Record<string, { source: string; mediaType: string; note?: string }>;
 
-  const name = id?.displayName ?? id?.name ?? NAME;
+  const name = id?.displayName ?? id?.name ?? basename(resolve(root));
 
   const pills = [
     id?.vendor && id.vendor !== id.status && `<span class="pill">${escapeHtml(id.vendor)}</span>`,
@@ -313,7 +313,7 @@ export function renderCardText(root: string, opts: { detail?: Detail } = {}): st
   const mem = parseFafm(join(root, "project.fafm"));
   const id = resolveIdentity(root);
   const meta = serverCardMeta() as Record<string, { source: string; mediaType: string }>;
-  const name = id?.displayName ?? id?.name ?? NAME;
+  const name = id?.displayName ?? id?.name ?? basename(resolve(root));
   const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
 
   const out = [`### ${name} — context card`];

@@ -203,3 +203,20 @@ test("renderCardText: a project with no AGENTS.md points at the next step, not a
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("card: a project with no identity file or package.json is named after its folder, not this server", async () => {
+  const { mkdtempSync, mkdirSync, rmSync, writeFileSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const base = mkdtempSync(join(tmpdir(), "mcp-cc-name-"));
+  const dir = join(base, "my-app");
+  mkdirSync(dir);
+  writeFileSync(join(dir, "AGENTS.md"), "# AGENTS.md\n\n## Build\n\nnpm run build\n");
+  try {
+    assert.match(renderCardText(dir), /^### my-app — context card/);
+    const html = renderCard(dir);
+    assert.match(html, /<title>my-app — context card<\/title>/);
+    assert.ok(!html.includes("<h1>mcp-context-card"), "the server's name must not stand in for the project's");
+  } finally {
+    rmSync(base, { recursive: true, force: true });
+  }
+});
