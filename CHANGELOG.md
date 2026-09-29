@@ -2,6 +2,27 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+Your project, with nothing to configure.
+
+- **Finds your project from the host.** With no `MCP_CONTEXT_CARD_ROOT`, a
+  local (stdio) server asks the host which project you're in, through MCP
+  roots (goose sends its session's working directory), and follows it when
+  it changes. It falls back to the directory it was started in if that has
+  an `AGENTS.md`, then to its own folder, as before. An explicit
+  `MCP_CONTEXT_CARD_ROOT` always wins; HTTP is unchanged.
+- **`list_context_sources`** reports `project: { path, from }`: which
+  project the server is reading, and how it found it.
+- **`save_context_card`** opens its reply with what it did, as a plain fact:
+  `New file:` (with one line on what the file is) or `Updated:`, and the
+  path.
+- **A project with no `AGENTS.md`** gets a next step on the card:
+  `author_agents_md` drafts one from the repo's real build and test
+  commands.
+
+No API change. 124 tests, all green.
+
 ## 1.2.0
 
 The card reaches people in any host: inline where the host supports MCP
