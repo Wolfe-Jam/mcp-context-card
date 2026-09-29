@@ -26,7 +26,11 @@ Your project, with nothing to configure.
   `package.json`) is named after its folder on the card, not after this
   server.
 
-No API change. 132 tests, all green.
+- **HTML comments in `AGENTS.md` are hidden** on the card, as GitHub hides
+  them. `agents-md-facts` marks its managed block with comments, and the
+  card showed them as text. Comments inside code stay, as content.
+
+No API change. 134 tests, all green.
 
 ## 1.2.0
 

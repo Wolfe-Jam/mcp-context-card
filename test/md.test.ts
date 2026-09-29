@@ -60,3 +60,33 @@ test("renderMarkdown: blockquote, hr, paragraph", () => {
 test("renderMarkdown: raw HTML in prose is escaped, never passed through", () => {
   assert.ok(!renderMarkdown("hi <img src=x onerror=y>\n").includes("<img"));
 });
+
+test("renderMarkdown: HTML comments are hidden, as GitHub hides them", () => {
+  // agents-md-facts writes these markers at the top of every AGENTS.md it authors
+  const src = [
+    "<!-- agents:from-facts:start --> <!-- authored by agents-md-facts · re-run to refresh -->",
+    "TypeScript · CLI · Node.js",
+    "",
+    "<!--",
+    "a comment across",
+    "several lines",
+    "-->",
+    "Visible after.",
+    "",
+    "Inline <!-- gone --> kept.",
+  ].join("\n");
+  const html = renderMarkdown(src);
+  assert.ok(!html.includes("agents:from-facts"), html);
+  assert.ok(!html.includes("several lines"), html);
+  assert.ok(!html.includes("gone"), html);
+  assert.ok(!html.includes("&lt;!--"), "no escaped comment markers left behind");
+  assert.match(html, /TypeScript · CLI · Node\.js/);
+  assert.match(html, /Visible after\./);
+  assert.match(html, /Inline\s+kept\./);
+});
+
+test("renderMarkdown: a comment inside code is content, not hidden", () => {
+  const html = renderMarkdown("Use `<!-- marker -->` here.\n\n```html\n<!-- keep me -->\n```");
+  assert.match(html, /&lt;!-- marker --&gt;/);
+  assert.match(html, /&lt;!-- keep me --&gt;/);
+});

@@ -67,8 +67,66 @@ function tableRow(line: string): string[] {
   return line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim());
 }
 
+/**
+ * Drop HTML comments, as GitHub does when it renders Markdown: tools such as
+ * agents-md-facts mark their managed blocks with them. A comment may span
+ * lines. Inside a fenced block or an inline `code` span it's content, so kept.
+ */
+function stripComments(src: string): string {
+  const out: string[] = [];
+  let inFence: RegExp | null = null;
+  let inComment = false;
+  for (const line of src.split("\n")) {
+    if (inFence) {
+      out.push(line);
+      if (inFence.test(line)) inFence = null;
+      continue;
+    }
+    const fence = !inComment && line.match(FENCE);
+    if (fence) {
+      inFence = fence[2][0] === "`" ? /^\s*```+\s*$/ : /^\s*~~~+\s*$/;
+      out.push(line);
+      continue;
+    }
+    // outside code: split on inline code spans, strip comments only between them
+    let kept = "";
+    const parts = line.split(/(`+[^`]*`+)/);
+    for (let k = 0; k < parts.length; k++) {
+      let part = parts[k];
+      if (k % 2 === 1 && !inComment) {
+        kept += part;
+        continue;
+      }
+      while (part.length) {
+        if (inComment) {
+          const end = part.indexOf("-->");
+          if (end < 0) {
+            part = "";
+          } else {
+            part = part.slice(end + 3);
+            inComment = false;
+          }
+        } else {
+          const start = part.indexOf("<!--");
+          if (start < 0) {
+            kept += part;
+            part = "";
+          } else {
+            kept += part.slice(0, start);
+            part = part.slice(start + 4);
+            inComment = true;
+          }
+        }
+      }
+    }
+    // a line that held only a comment disappears, rather than leaving a blank gap
+    if (kept.trim() || !line.includes("<!--") && !line.includes("-->")) out.push(kept);
+  }
+  return out.join("\n");
+}
+
 export function renderMarkdown(src: string): string {
-  const lines = src.replace(/\r\n/g, "\n").split("\n");
+  const lines = stripComments(src.replace(/\r\n/g, "\n")).split("\n");
   const out: string[] = [];
   let i = 0;
 
