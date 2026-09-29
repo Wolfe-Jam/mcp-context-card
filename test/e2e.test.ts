@@ -8,14 +8,16 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { spawn, execFileSync } from "node:child_process";
 import { once } from "node:events";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import type { AddressInfo } from "node:net";
 import { createServer as createNetServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { ListRootsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { REPO_ROOT, TOOLS, fixture } from "./helpers.js";
 
 const BIN = join(REPO_ROOT, "src/bin.ts");
@@ -169,6 +171,33 @@ describe("e2e — real child process", () => {
     }
   });
 
+
+  test("stdio child, no MCP_CONTEXT_CARD_ROOT: reads the project the host's roots point at", async () => {
+    const proj = mkdtempSync(join(tmpdir(), "mcp-cc-e2e-roots-"));
+    writeFileSync(join(proj, "AGENTS.md"), "# AGENTS.md\n\n## E2E Roots Marker\n\nfrom a real child process\n");
+    const env = { ...process.env, PORT: "" } as Record<string, string>;
+    delete env.MCP_CONTEXT_CARD_ROOT;
+    const c = new Client({ name: "e2e-roots", version: "0" }, { capabilities: { roots: { listChanged: true } } });
+    c.setRequestHandler(ListRootsRequestSchema, async () => ({
+      roots: [{ uri: pathToFileURL(proj).href, name: "working_directory" }],
+    }));
+    try {
+      // started in the repo, which has its own AGENTS.md: the host's root must still win
+      await c.connect(new StdioClientTransport({ command: runner.command, args: runner.base, env, cwd: REPO_ROOT }));
+      try {
+        const src = JSON.parse(
+          ((await c.callTool({ name: "list_context_sources", arguments: {} })) as any).content[0].text,
+        );
+        assert.deepEqual(src.project, { path: proj, from: "client roots" });
+        const heads = ((await c.callTool({ name: "list_agents_md_sections", arguments: {} })) as any).content[0].text;
+        assert.match(heads, /E2E Roots Marker/);
+      } finally {
+        await c.close();
+      }
+    } finally {
+      rmSync(proj, { recursive: true, force: true });
+    }
+  });
 
   test("bin mode selection: default → stdio, --http → http, --stdio wins over PORT", async () => {
     // default (no PORT, no flag) → speaks stdio (a client can connect)

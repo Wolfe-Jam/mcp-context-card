@@ -14,6 +14,7 @@ import { pathToFileURL } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { ListRootsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { CARD_UI_URI } from "../src/constants.js";
 import { createServer, ROOT, type ServerOptions } from "../src/server.js";
 
 const say = (r: unknown) => (r as any).content[0].text as string;
@@ -30,6 +31,7 @@ async function connect(
   root: string | undefined,
   opts: ServerOptions,
   roots?: () => string[],
+  answer?: () => Promise<{ roots: { uri: string; name?: string }[] }>,
 ): Promise<Client> {
   const server = createServer(root, opts);
   const [a, b] = InMemoryTransport.createLinkedPair();
@@ -37,7 +39,9 @@ async function connect(
     { name: "t", version: "0" },
     { capabilities: roots ? { roots: { listChanged: true } } : {} },
   );
-  if (roots) {
+  if (answer) {
+    client.setRequestHandler(ListRootsRequestSchema, answer);
+  } else if (roots) {
     client.setRequestHandler(ListRootsRequestSchema, async () => ({
       roots: roots().map((d) => ({ uri: pathToFileURL(d).href, name: "working_directory" })),
     }));
@@ -122,5 +126,79 @@ test("roots: an explicit root (MCP_CONTEXT_CARD_ROOT) always wins over the host'
   } finally {
     pinned.cleanup();
     other.cleanup();
+  }
+});
+
+test("roots: a host that declares roots but fails to answer → falls back, doesn't break", async () => {
+  const p = project("Fallback Marker");
+  try {
+    const c = await connect(undefined, { detectRoot: true, cwd: p.dir }, () => [], async () => {
+      throw new Error("roots unavailable");
+    });
+    assert.match(await headings(c), /Fallback Marker/);
+    const src = JSON.parse(say(await c.callTool({ name: "list_context_sources", arguments: {} })));
+    assert.equal(src.project.from, "start directory");
+    await c.close();
+  } finally {
+    p.cleanup();
+  }
+});
+
+test("roots: a host that never answers roots/list → gives up after 5s and falls back", { timeout: 15000 }, async () => {
+  const p = project("Silent Host Marker");
+  try {
+    const c = await connect(undefined, { detectRoot: true, cwd: p.dir }, () => [], () => new Promise(() => {}));
+    const t0 = Date.now();
+    assert.match(await headings(c), /Silent Host Marker/);
+    assert.ok(Date.now() - t0 < 8000, "the fallback must not hang");
+    await c.close();
+  } finally {
+    p.cleanup();
+  }
+});
+
+test("roots: a file:// root that isn't a folder is skipped for the next one", async () => {
+  const p = project("File Root Marker");
+  try {
+    const c = await connect(undefined, { detectRoot: true }, () => [], async () => ({
+      roots: [
+        { uri: pathToFileURL(join(p.dir, "no-such-dir")).href },
+        { uri: pathToFileURL(join(p.dir, "AGENTS.md")).href },
+        { uri: pathToFileURL(p.dir).href },
+      ],
+    }));
+    assert.match(await headings(c), /File Root Marker/);
+    await c.close();
+  } finally {
+    p.cleanup();
+  }
+});
+
+test("roots: a host that sends a non-file:// root (against the spec) → graceful fallback", async () => {
+  // The MCP spec says roots are file:// URIs, and the SDK rejects the whole
+  // roots/list response if one isn't. Detection must fall back, not break.
+  const p = project("Spec Fallback Marker");
+  try {
+    const c = await connect(undefined, { detectRoot: true, cwd: p.dir }, () => [], async () => ({
+      roots: [{ uri: "https://example.com/repo" }],
+    }));
+    assert.match(await headings(c), /Spec Fallback Marker/);
+    const src = JSON.parse(say(await c.callTool({ name: "list_context_sources", arguments: {} })));
+    assert.equal(src.project.from, "start directory");
+    await c.close();
+  } finally {
+    p.cleanup();
+  }
+});
+
+test("roots: the MCP App card (ui:// resource) shows the detected project too", async () => {
+  const p = project("App Card Marker");
+  try {
+    const c = await connect(undefined, { detectRoot: true }, () => [p.dir]);
+    const res = await c.readResource({ uri: CARD_UI_URI });
+    assert.match((res.contents[0] as { text: string }).text, /App Card Marker/);
+    await c.close();
+  } finally {
+    p.cleanup();
   }
 });

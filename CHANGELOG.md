@@ -26,7 +26,7 @@ Your project, with nothing to configure.
   `package.json`) is named after its folder on the card, not after this
   server.
 
-No API change. 126 tests, all green.
+No API change. 132 tests, all green.
 
 ## 1.2.0
 
