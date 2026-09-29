@@ -190,3 +190,16 @@ test("renderCardText: tl;dr facts are whole stored sentences", () => {
     cleanup();
   }
 });
+
+test("renderCardText: a project with no AGENTS.md points at the next step, not a dead end", async () => {
+  const { mkdtempSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const dir = mkdtempSync(join(tmpdir(), "mcp-cc-noagents-"));
+  try {
+    const md = renderCardText(dir);
+    assert.match(md, /\*\*Context — AGENTS\.md\*\* · none yet/);
+    assert.match(md, /author_agents_md/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

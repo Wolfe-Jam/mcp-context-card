@@ -330,7 +330,7 @@ export function renderCardText(root: string, opts: { detail?: Detail } = {}): st
   out.push(
     agents
       ? `**Context — AGENTS.md** · ${plural(sections.length, "section")}\n${sections.map((s) => s.heading).join(" · ")}`
-      : "**Context — AGENTS.md** · none in this project",
+      : "**Context — AGENTS.md** · none yet. `author_agents_md` drafts one from this repo's real build and test commands, nothing invented.",
   );
 
   const full = opts.detail === "full";

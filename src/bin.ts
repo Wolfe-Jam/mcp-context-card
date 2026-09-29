@@ -152,7 +152,12 @@ if (entryPath && import.meta.url === pathToFileURL(entryPath).href) {
     // terminal otherwise looks hung.
     console.error(`${NAME} · stdio · waiting for an MCP host on stdin  (--help for usage · Ctrl-C to exit)`);
     // stdio = a host on this machine, so save_context_card can open the card.
+    // With no MCP_CONTEXT_CARD_ROOT, find the user's project: the host's MCP
+    // roots, then the start directory. So a host needs no config to show yours.
     const { openInBrowser } = await import("./open.js");
-    await serve(new StdioServerTransport(), root, { openFile: openInBrowser });
+    await serve(new StdioServerTransport(), root, {
+      openFile: openInBrowser,
+      detectRoot: !process.env.MCP_CONTEXT_CARD_ROOT,
+    });
   }
 }

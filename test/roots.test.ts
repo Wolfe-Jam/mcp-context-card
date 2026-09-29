@@ -1,0 +1,126 @@
+/**
+ * Which project is "this project"? With no MCP_CONTEXT_CARD_ROOT, a local
+ * server asks the host: the client's MCP roots first (goose sends its session
+ * working directory), then the directory it was started in if that holds an
+ * AGENTS.md, then its own package folder. So "Show me my context card" in a
+ * host shows the user's project, with nothing to configure.
+ */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { ListRootsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { createServer, ROOT, type ServerOptions } from "../src/server.js";
+
+const say = (r: unknown) => (r as any).content[0].text as string;
+
+/** A bare project whose AGENTS.md has one heading nobody else has. */
+function project(marker: string): { dir: string; cleanup: () => void } {
+  const dir = mkdtempSync(join(tmpdir(), "mcp-cc-roots-"));
+  writeFileSync(join(dir, "AGENTS.md"), `# AGENTS.md\n\n## ${marker}\n\nonly in this project\n`);
+  return { dir, cleanup: () => rmSync(dir, { recursive: true, force: true }) };
+}
+
+/** Connect a client that may advertise roots; `roots()` answers roots/list live. */
+async function connect(
+  root: string | undefined,
+  opts: ServerOptions,
+  roots?: () => string[],
+): Promise<Client> {
+  const server = createServer(root, opts);
+  const [a, b] = InMemoryTransport.createLinkedPair();
+  const client = new Client(
+    { name: "t", version: "0" },
+    { capabilities: roots ? { roots: { listChanged: true } } : {} },
+  );
+  if (roots) {
+    client.setRequestHandler(ListRootsRequestSchema, async () => ({
+      roots: roots().map((d) => ({ uri: pathToFileURL(d).href, name: "working_directory" })),
+    }));
+  }
+  await Promise.all([server.connect(b), client.connect(a)]);
+  return client;
+}
+
+const headings = async (c: Client) =>
+  say(await c.callTool({ name: "list_agents_md_sections", arguments: {} }));
+
+test("roots: a host's first root is the project, with nothing configured", async () => {
+  const p = project("Rooted Marker");
+  try {
+    const c = await connect(undefined, { detectRoot: true }, () => [p.dir]);
+    assert.match(await headings(c), /Rooted Marker/);
+    // and the card, memory and sources all follow the same project
+    await c.callTool({ name: "remember", arguments: { id: "r1", text: "remembered in the rooted project" } });
+    assert.equal(say(await c.callTool({ name: "recall", arguments: { id: "r1" } })), "remembered in the rooted project");
+    const src = JSON.parse(say(await c.callTool({ name: "list_context_sources", arguments: {} })));
+    assert.equal(src.project.path, p.dir);
+    assert.equal(src.project.from, "client roots");
+    await c.close();
+  } finally {
+    p.cleanup();
+  }
+});
+
+test("roots: when the host's roots change, the next call follows them", async () => {
+  const one = project("First Project");
+  const two = project("Second Project");
+  try {
+    let current = [one.dir];
+    const c = await connect(undefined, { detectRoot: true }, () => current);
+    assert.match(await headings(c), /First Project/);
+    current = [two.dir];
+    await c.sendRootsListChanged();
+    await new Promise((r) => setTimeout(r, 50));
+    assert.match(await headings(c), /Second Project/);
+    await c.close();
+  } finally {
+    one.cleanup();
+    two.cleanup();
+  }
+});
+
+test("roots: no roots from the host → the start directory, if it has an AGENTS.md", async () => {
+  const p = project("Cwd Marker");
+  try {
+    const c = await connect(undefined, { detectRoot: true, cwd: p.dir });
+    assert.match(await headings(c), /Cwd Marker/);
+    const src = JSON.parse(say(await c.callTool({ name: "list_context_sources", arguments: {} })));
+    assert.equal(src.project.from, "start directory");
+    await c.close();
+  } finally {
+    p.cleanup();
+  }
+});
+
+test("roots: nothing to go on → the package's own folder, as before", async () => {
+  const empty = mkdtempSync(join(tmpdir(), "mcp-cc-empty-"));
+  try {
+    const c = await connect(undefined, { detectRoot: true, cwd: empty });
+    const src = JSON.parse(say(await c.callTool({ name: "list_context_sources", arguments: {} })));
+    assert.equal(src.project.path, ROOT);
+    assert.equal(src.project.from, "package");
+    await c.close();
+  } finally {
+    rmSync(empty, { recursive: true, force: true });
+  }
+});
+
+test("roots: an explicit root (MCP_CONTEXT_CARD_ROOT) always wins over the host's roots", async () => {
+  const pinned = project("Pinned Marker");
+  const other = project("Host Root Marker");
+  try {
+    const c = await connect(pinned.dir, {}, () => [other.dir]);
+    assert.match(await headings(c), /Pinned Marker/);
+    const src = JSON.parse(say(await c.callTool({ name: "list_context_sources", arguments: {} })));
+    assert.equal(src.project.from, "configured");
+    await c.close();
+  } finally {
+    pinned.cleanup();
+    other.cleanup();
+  }
+});
