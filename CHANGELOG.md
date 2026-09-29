@@ -17,14 +17,16 @@ Your project, with nothing to configure.
 - **`save_context_card`** opens its reply with what it did, as a plain fact:
   `New file:` (with one line on what the file is) or `Updated:`, and the
   path.
-- **A project with no `AGENTS.md`** gets a next step on the card:
-  `author_agents_md` drafts one from the repo's real build and test
-  commands.
+- **An empty project gets next steps, not dead ends,** on both the HTML and
+  the text card: no `AGENTS.md` yet → ask your agent to draft one
+  (`author_agents_md`, from the repo's real build and test commands); no
+  facts yet → ask it to remember something. The placeholder "MCP context
+  card" pill is gone.
 - **A project with no identity file** (no `.well-known/fafa`, no
   `package.json`) is named after its folder on the card, not after this
   server.
 
-No API change. 125 tests, all green.
+No API change. 126 tests, all green.
 
 ## 1.2.0
 

@@ -110,7 +110,7 @@ test("renderCard: handles a project with no AGENTS.md / no facts", () => {
   try {
     // point at an empty subdir via a fresh fixture that we strip
     const html = renderCard(root + "/does-not-exist");
-    assert.match(html, /No AGENTS\.md in this project/);
+    assert.match(html, /No AGENTS\.md yet/);
     assert.match(html, /Memory — 0 facts/);
     assert.match(html, /No facts yet/);
   } finally {
@@ -216,6 +216,24 @@ test("card: a project with no identity file or package.json is named after its f
     const html = renderCard(dir);
     assert.match(html, /<title>my-app — context card<\/title>/);
     assert.ok(!html.includes("<h1>mcp-context-card"), "the server's name must not stand in for the project's");
+  } finally {
+    rmSync(base, { recursive: true, force: true });
+  }
+});
+
+test("card: an empty project shows the next step in each section, in both the HTML and the text card", async () => {
+  const { mkdtempSync, mkdirSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const base = mkdtempSync(join(tmpdir(), "mcp-cc-empty-"));
+  const dir = join(base, "fresh-app");
+  mkdirSync(dir);
+  try {
+    const html = renderCard(dir);
+    assert.match(html, /No AGENTS\.md yet\. Ask your agent to draft one/);
+    assert.match(html, /No facts yet\. Ask your agent to remember something/);
+    assert.ok(!html.includes("MCP context card"), "no placeholder pill standing in for an identity");
+    const md = renderCardText(dir);
+    assert.match(md, /\*\*Memory\*\* · no facts yet\. Ask your agent to remember something/);
   } finally {
     rmSync(base, { recursive: true, force: true });
   }

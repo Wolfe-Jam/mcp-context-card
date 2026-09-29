@@ -186,7 +186,7 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
       }</div>
     ${preamble ? `<div class="ctx-preamble md">${renderMarkdown(preamble)}</div>` : ""}
     <div class="ctx-body">${sections}</div>`
-    : `<p class="none">No AGENTS.md in this project.</p>`;
+    : `<p class="none">No AGENTS.md yet. Ask your agent to draft one: <code>author_agents_md</code> builds it from this repo's real build and test commands, nothing invented.</p>`;
 
   // MEMORY
   const memoryBody = mem.facts.length
@@ -201,7 +201,7 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
           }" title="${verified ? "verified" : f.verification_status ?? "unverified"}"></span></div></div>`;
         })
         .join("")
-    : `<p class="none">No facts yet.</p>`;
+    : `<p class="none">No facts yet. Ask your agent to remember something, and it lands here.</p>`;
 
   // DISCOVERY
   const rows = Object.entries(meta)
@@ -225,7 +225,7 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
 <main class="card">
   <div class="top">
     <h1>${escapeHtml(name)}</h1>
-    <div class="pills">${pills || '<span class="pill">MCP context card</span>'}</div>
+    ${pills ? `<div class="pills">${pills}</div>` : ""}
   </div>
   <section>
     <p class="label">Context — AGENTS.md</p>
@@ -341,7 +341,7 @@ export function renderCardText(root: string, opts: { detail?: Detail } = {}): st
       ? `**Memory** · ${plural(mem.facts.length, "fact")}\n${shown
           .map((f) => `- ${full ? f.text : clip(f.text, TLDR_CHARS)}${f.verification_status === "verified" ? " ✓" : ""}`)
           .join("\n")}${rest ? `\n\n…and ${plural(rest, "more fact")}, in the full card` : ""}`
-      : "**Memory** · no facts yet",
+      : "**Memory** · no facts yet. Ask your agent to remember something, and it lands here.",
   );
 
   const rows = Object.entries(meta).map(
