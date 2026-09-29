@@ -228,7 +228,7 @@ test("server: save_context_card writes context-card.html into the project and re
     // and the address alone in a code block, so hosts that won't follow a
     // file:// link still give it a copy button to paste into a browser
     assert.ok(reply.includes("```\n" + pathToFileURL(out).href + "\n```"), `no copyable address block: ${reply}`);
-    assert.match(reply, /^### mcp-context-card — context card/);
+    assert.match(reply, /^### mcp-context-card — context card/m);
     assert.match(reply, /\*\*Memory\*\* · 4 facts/);
     assert.ok(!reply.includes("one instantiation each"), "tl;dr by default");
     assert.match(reply, /In a host that supports MCP Apps, this card shows inline\./);
@@ -244,6 +244,24 @@ test("server: save_context_card writes context-card.html into the project and re
     const again = readFileSync(out, "utf8");
     assert.match(again, /data-theme="light"/);
     assert.ok((again.match(/<details class="ctx-section" open/g) ?? []).length > 0);
+    await client.close();
+  } finally {
+    cleanup();
+  }
+});
+
+test("server: save_context_card says first thing whether it made a new file or updated one, and where", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const client = await connected(root);
+    const out = join(root, "context-card.html");
+    const first = say(await client.callTool({ name: "save_context_card", arguments: {} }));
+    assert.ok(
+      first.startsWith(`**New file:** \`context-card.html\` in your project, at ${out}. A snapshot of the context your agent reads.`),
+      first.split("\n")[0],
+    );
+    const again = say(await client.callTool({ name: "save_context_card", arguments: {} }));
+    assert.ok(again.startsWith(`**Updated:** \`context-card.html\` in your project, at ${out}.`), again.split("\n")[0]);
     await client.close();
   } finally {
     cleanup();

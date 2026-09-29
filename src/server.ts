@@ -410,18 +410,24 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
       }
       case "save_context_card": {
         const out = join(root, "context-card.html");
+        const existed = existsSync(out);
         writeFileSync(out, renderCard(root, cardOptions(args)));
+        // First line, plain fact: models tend to rewrite the end of a reply, not the start.
+        const saved = existed
+          ? `**Updated:** \`context-card.html\` in your project, at ${out}.`
+          : `**New file:** \`context-card.html\` in your project, at ${out}. A snapshot of the context your agent reads.`;
         // Many hosts won't follow a file:// link, so a local server opens it.
         const raw = (args as Record<string, unknown>).open;
         const opened = !!opts.openFile && raw !== false && raw !== "false";
         if (opened) opts.openFile!(out);
         return text(
-          `${renderCardText(root, { detail: args.detail === "full" ? "full" : "tldr" })}\n\n` +
+          `${saved}\n\n` +
+            `${renderCardText(root, { detail: args.detail === "full" ? "full" : "tldr" })}\n\n` +
             "_In a host that supports MCP Apps, this card shows inline._\n\n---\n\n" +
             (opened ? "Opened the full card in your browser.\n\n" : "") +
             `**[Open the full card in your browser](${pathToFileURL(out).href})**\n\n` +
             // Some hosts won't follow a file:// link; a code block gets a copy button.
-            `Or copy this into your browser's address bar:\n\n\`\`\`\n${pathToFileURL(out).href}\n\`\`\`\n\nSaved to ${out}`,
+            `Or copy this into your browser's address bar:\n\n\`\`\`\n${pathToFileURL(out).href}\n\`\`\``,
         );
       }
       case "list_context_sources": {
