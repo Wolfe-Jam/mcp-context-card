@@ -2,7 +2,7 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 1.3.0
 
 Your project, with nothing to configure.
 
