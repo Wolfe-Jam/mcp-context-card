@@ -16,15 +16,20 @@
   "mcpServers": {
     "context-card": {
       "command": "npx",
-      "args": ["-y", "mcp-context-card"],
-      "env": { "MCP_CONTEXT_CARD_ROOT": "/abs/path/to/your/project" }
+      "args": ["-y", "mcp-context-card"]
     }
   }
 }
 ```
 
-- **`MCP_CONTEXT_CARD_ROOT`** — directory holding `AGENTS.md`, `project.fafm`, and
-  `.well-known/fafa`. Omit it and the server uses its own bundled copies.
+- **Which project.** Unset, a stdio server finds it per call: the host's first
+  MCP root (a `file://` directory), then the start directory if it holds an
+  `AGENTS.md`, then the server's own bundled copies. A `roots/list_changed`
+  notification makes the next call look again. `list_context_sources` reports
+  `project: { path, from }`.
+- **`MCP_CONTEXT_CARD_ROOT`** — pins the project: a directory holding
+  `AGENTS.md`, `project.fafm`, and `.well-known/fafa`. Always wins over roots.
+  Over HTTP there are no roots, so it's the only way to pick a project there.
 - `stdout` is the JSON‑RPC wire; logging is on `stderr`.
 - **`command: "npx"` fails to spawn on some hosts** (`spawn npx ENOENT`) — the
   host's process spawn doesn't inherit a shell `PATH` that has `npx` on it,

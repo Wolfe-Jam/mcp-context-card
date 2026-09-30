@@ -10,11 +10,11 @@
  * is the expand-all / print helper (TOGGLE_SCRIPT) — a progressive enhancement;
  * every section still opens on its own without it. Renders anywhere.
  */
-import { join } from "node:path";
+import { basename, join, resolve } from "node:path";
 import { parseAgentsMd } from "./agents-md.js";
 import { parseFafm } from "./memory.js";
 import { resolveIdentity, serverCardMeta, META_NS } from "./identity.js";
-import { NAME, SERVER_CARD_URI } from "./constants.js";
+import { SERVER_CARD_URI } from "./constants.js";
 import { escapeHtml, renderInline, renderMarkdown, slug } from "./md.js";
 
 export type Theme = "light" | "dark" | "auto";
@@ -144,7 +144,7 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
   const id = resolveIdentity(root);
   const meta = serverCardMeta() as Record<string, { source: string; mediaType: string; note?: string }>;
 
-  const name = id?.displayName ?? id?.name ?? NAME;
+  const name = id?.displayName ?? id?.name ?? basename(resolve(root));
 
   const pills = [
     id?.vendor && id.vendor !== id.status && `<span class="pill">${escapeHtml(id.vendor)}</span>`,
@@ -186,7 +186,7 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
       }</div>
     ${preamble ? `<div class="ctx-preamble md">${renderMarkdown(preamble)}</div>` : ""}
     <div class="ctx-body">${sections}</div>`
-    : `<p class="none">No AGENTS.md in this project.</p>`;
+    : `<p class="none">No AGENTS.md yet. Ask your agent to draft one: <code>author_agents_md</code> builds it from this repo's real build and test commands, nothing invented.</p>`;
 
   // MEMORY
   const memoryBody = mem.facts.length
@@ -201,7 +201,7 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
           }" title="${verified ? "verified" : f.verification_status ?? "unverified"}"></span></div></div>`;
         })
         .join("")
-    : `<p class="none">No facts yet.</p>`;
+    : `<p class="none">No facts yet. Ask your agent to remember something, and it lands here.</p>`;
 
   // DISCOVERY
   const rows = Object.entries(meta)
@@ -225,7 +225,7 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
 <main class="card">
   <div class="top">
     <h1>${escapeHtml(name)}</h1>
-    <div class="pills">${pills || '<span class="pill">MCP context card</span>'}</div>
+    ${pills ? `<div class="pills">${pills}</div>` : ""}
   </div>
   <section>
     <p class="label">Context — AGENTS.md</p>
@@ -313,7 +313,7 @@ export function renderCardText(root: string, opts: { detail?: Detail } = {}): st
   const mem = parseFafm(join(root, "project.fafm"));
   const id = resolveIdentity(root);
   const meta = serverCardMeta() as Record<string, { source: string; mediaType: string }>;
-  const name = id?.displayName ?? id?.name ?? NAME;
+  const name = id?.displayName ?? id?.name ?? basename(resolve(root));
   const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
 
   const out = [`### ${name} — context card`];
@@ -330,7 +330,7 @@ export function renderCardText(root: string, opts: { detail?: Detail } = {}): st
   out.push(
     agents
       ? `**Context — AGENTS.md** · ${plural(sections.length, "section")}\n${sections.map((s) => s.heading).join(" · ")}`
-      : "**Context — AGENTS.md** · none in this project",
+      : "**Context — AGENTS.md** · none yet. `author_agents_md` drafts one from this repo's real build and test commands, nothing invented.",
   );
 
   const full = opts.detail === "full";
@@ -341,7 +341,7 @@ export function renderCardText(root: string, opts: { detail?: Detail } = {}): st
       ? `**Memory** · ${plural(mem.facts.length, "fact")}\n${shown
           .map((f) => `- ${full ? f.text : clip(f.text, TLDR_CHARS)}${f.verification_status === "verified" ? " ✓" : ""}`)
           .join("\n")}${rest ? `\n\n…and ${plural(rest, "more fact")}, in the full card` : ""}`
-      : "**Memory** · no facts yet",
+      : "**Memory** · no facts yet. Ask your agent to remember something, and it lands here.",
   );
 
   const rows = Object.entries(meta).map(

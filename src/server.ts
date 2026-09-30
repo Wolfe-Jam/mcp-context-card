@@ -22,15 +22,16 @@ import {
   ListResourceTemplatesRequestSchema,
   ListToolsRequestSchema,
   ReadResourceRequestSchema,
+  RootsListChangedNotificationSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
-import { writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { existsSync, statSync, writeFileSync } from "node:fs";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { findSection, parseAgentsMd } from "./agents-md.js";
 import { authorAgentsMd } from "./author.js";
 import { forget, parseFafm, recall, remember } from "./memory.js";
-import { identity, serverCardMeta, whoami } from "./identity.js";
+import { identity, resolveIdentity, serverCardMeta, whoami } from "./identity.js";
 import { renderCard, renderCardText, safeAccent, type Theme } from "./render-card.js";
 
 export { NAME, VERSION, SERVER_CARD_URI } from "./constants.js";
@@ -96,17 +97,67 @@ export interface ServerOptions {
   /** Open a saved file for the person. Set only for a local (stdio) server;
    *  over HTTP the browser would open on the server, so it stays unset. */
   openFile?: (path: string) => void;
+  /** No root was configured: find the user's project instead — the client's
+   *  MCP roots, then `cwd` if it holds an AGENTS.md, then `root`. Local only. */
+  detectRoot?: boolean;
+  /** The directory the server was started in (default: process.cwd()). */
+  cwd?: string;
 }
 
-export function createServer(root: string = ROOT, opts: ServerOptions = {}): Server {
-  const AGENTS = join(root, "AGENTS.md");
-  const FAFM = join(root, "project.fafm");
-  const FAFA = join(root, ".well-known/fafa");
+/** Where "this project" came from, reported by list_context_sources. */
+type ProjectFrom = "configured" | "client roots" | "start directory" | "package";
 
+export function createServer(root: string = ROOT, opts: ServerOptions = {}): Server {
   const server = new Server(
     { name: NAME, version: VERSION },
     { capabilities: { tools: {}, resources: {} }, instructions: INSTRUCTIONS },
   );
+
+  // ── Which project? ────────────────────────────────────────────────────
+  // Resolved per call, not at startup: a client's roots are only known once
+  // it has connected, and they can change (goose sends its session's working
+  // directory, and notifies when it moves).
+  let found: { root: string; from: ProjectFrom } | undefined;
+  server.setNotificationHandler(RootsListChangedNotificationSchema, async () => {
+    found = undefined;
+  });
+  const isDir = (p: string) => {
+    try {
+      return statSync(p).isDirectory();
+    } catch {
+      return false;
+    }
+  };
+  async function fromClientRoots(): Promise<string | undefined> {
+    if (!server.getClientCapabilities()?.roots) return undefined;
+    try {
+      const { roots } = await server.listRoots(undefined, { timeout: 5000 });
+      for (const r of roots) {
+        if (!r.uri.startsWith("file:")) continue;
+        const dir = fileURLToPath(r.uri);
+        if (isDir(dir)) return dir;
+      }
+    } catch {
+      // a client that declares roots but doesn't answer: fall through
+    }
+    return undefined;
+  }
+  async function project(): Promise<{ root: string; from: ProjectFrom }> {
+    if (!opts.detectRoot) return { root, from: root === ROOT ? "package" : "configured" };
+    if (found) return found;
+    const fromRoots = await fromClientRoots();
+    const cwd = opts.cwd ?? process.cwd();
+    found = fromRoots
+      ? { root: fromRoots, from: "client roots" }
+      : existsSync(join(cwd, "AGENTS.md"))
+        ? { root: cwd, from: "start directory" }
+        : { root, from: "package" };
+    return found;
+  }
+  const files = (dir: string) => ({
+    AGENTS: join(dir, "AGENTS.md"),
+    FAFM: join(dir, "project.fafm"),
+  });
 
   // ── Mechanism 1: the Server Card resource + its _meta context block ───
   server.setRequestHandler(ListResourcesRequestSchema, async () => ({
@@ -131,7 +182,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
       // self-contained (inline CSS, no external requests), and its one script
       // is progressive enhancement, so it still works in a strict sandbox.
       return {
-        contents: [{ uri: CARD_UI_URI, mimeType: MCP_APP_MIME, text: renderCard(root, { theme: "auto" }) }],
+        contents: [{ uri: CARD_UI_URI, mimeType: MCP_APP_MIME, text: renderCard((await project()).root, { theme: "auto" }) }],
       };
     }
     if (req.params.uri !== SERVER_CARD_URI) {
@@ -293,6 +344,8 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
 
   server.setRequestHandler(CallToolRequestSchema, async (req) => {
     const args = (req.params.arguments ?? {}) as Record<string, string>;
+    const { root, from } = await project();
+    const { AGENTS, FAFM } = files(root);
     switch (req.params.name) {
       case "read_agents_md": {
         const doc = parseAgentsMd(AGENTS);
@@ -348,7 +401,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
           const sections = doc?.sections.length ?? 0;
           const facts = mem.facts.length;
           return text(
-            `Showing the context card for ${NAME}: AGENTS.md with ${sections} section${sections === 1 ? "" : "s"}, ` +
+            `Showing the context card for ${resolveIdentity(root)?.name ?? basename(root)}: AGENTS.md with ${sections} section${sections === 1 ? "" : "s"}, ` +
               `${facts} remembered fact${facts === 1 ? "" : "s"}, and this server's identity. ` +
               "The card is displayed to the user; call read_agents_md or recall for the text itself.",
           );
@@ -357,18 +410,24 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
       }
       case "save_context_card": {
         const out = join(root, "context-card.html");
+        const existed = existsSync(out);
         writeFileSync(out, renderCard(root, cardOptions(args)));
+        // First line, plain fact: models tend to rewrite the end of a reply, not the start.
+        const saved = existed
+          ? `**Updated:** \`context-card.html\` in your project, at ${out}.`
+          : `**New file:** \`context-card.html\` in your project, at ${out}. A snapshot of the context your agent reads.`;
         // Many hosts won't follow a file:// link, so a local server opens it.
         const raw = (args as Record<string, unknown>).open;
         const opened = !!opts.openFile && raw !== false && raw !== "false";
         if (opened) opts.openFile!(out);
         return text(
-          `${renderCardText(root, { detail: args.detail === "full" ? "full" : "tldr" })}\n\n` +
+          `${saved}\n\n` +
+            `${renderCardText(root, { detail: args.detail === "full" ? "full" : "tldr" })}\n\n` +
             "_In a host that supports MCP Apps, this card shows inline._\n\n---\n\n" +
             (opened ? "Opened the full card in your browser.\n\n" : "") +
             `**[Open the full card in your browser](${pathToFileURL(out).href})**\n\n` +
             // Some hosts won't follow a file:// link; a code block gets a copy button.
-            `Or copy this into your browser's address bar:\n\n\`\`\`\n${pathToFileURL(out).href}\n\`\`\`\n\nSaved to ${out}`,
+            `Or copy this into your browser's address bar:\n\n\`\`\`\n${pathToFileURL(out).href}\n\`\`\``,
         );
       }
       case "list_context_sources": {
@@ -377,6 +436,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
         return text(
           JSON.stringify(
             {
+              project: { path: root, from },
               context: {
                 source: "AGENTS.md",
                 mediaType: "text/markdown",
@@ -430,5 +490,6 @@ export async function serve(transport: Transport, root: string = ROOT, opts: Ser
 // this correct on Windows, where argv[1] is a `C:\...` path.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { openInBrowser } = await import("./open.js");
-  await serve(new StdioServerTransport(), ROOT, { openFile: openInBrowser });
+  const pinned = process.env.MCP_CONTEXT_CARD_ROOT;
+  await serve(new StdioServerTransport(), pinned ?? ROOT, { openFile: openInBrowser, detectRoot: !pinned });
 }

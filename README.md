@@ -146,22 +146,25 @@ or redirected (`> card.html`, a script, CI) it writes raw HTML to stdout instead
 
 ### Wire it into a host
 
-Claude Desktop, Cursor, or any stdio host:
+goose, Claude Desktop, Cursor, or any stdio host:
 
 ```jsonc
 {
   "mcpServers": {
     "context-card": {
       "command": "npx",
-      "args": ["-y", "mcp-context-card"],
-      "env": { "MCP_CONTEXT_CARD_ROOT": "/abs/path/to/your/project" }
+      "args": ["-y", "mcp-context-card"]
     }
   }
 }
 ```
 
-`MCP_CONTEXT_CARD_ROOT` points at the directory with your `AGENTS.md`. The
-memory tools work with or without it; identity is optional. Over HTTP instead:
+No path to configure: the server asks the host which project you're in (MCP
+roots — goose sends its session's working directory), then falls back to the
+directory it was started in if that has an `AGENTS.md`. `list_context_sources`
+reports which project it picked and how. To pin one project instead, set
+`"env": { "MCP_CONTEXT_CARD_ROOT": "/abs/path/to/your/project" }`; that always
+wins. Identity is optional. Over HTTP instead:
 `PORT=8080 npx mcp-context-card`. Requires Node ≥20.
 
 If `command: "npx"` fails to spawn (`spawn npx ENOENT` — seen on Cursor, whose
@@ -232,7 +235,7 @@ over both transports:
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-117 tests on Linux, macOS, and Windows, coverage‑gated in CI. Two spawn a real
+134 tests on Linux, macOS, and Windows, coverage‑gated in CI. Two spawn a real
 child process and check a remembered fact survives the restart — one against
 an existing `project.fafm`, one starting from a project that has never had
 one; another checks the stdio and HTTP tool surfaces match, and another checks
