@@ -1,13 +1,14 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.Wolfe-Jam/mcp-context-card",
-  "title": "mcp-context-card",
+  "title": "MCP Context Card",
   "description": "MCP server for a project's context (AGENTS.md), memory, and identity — base or drop-in extension.",
   "version": "1.3.0",
   "repository": {
     "url": "https://github.com/Wolfe-Jam/mcp-context-card",
     "source": "github"
   },
+  "websiteUrl": "https://github.com/Wolfe-Jam/mcp-context-card#readme",
   "packages": [
     {
       "registryType": "npm",
@@ -21,7 +22,7 @@
       "environmentVariables": [
         {
           "name": "MCP_CONTEXT_CARD_ROOT",
-          "description": "Directory holding project.faf / project.fafm / .well-known/fafa. Omitted → the server's own bundled copies.",
+          "description": "Pins the project: a directory with AGENTS.md, project.fafm and .well-known/fafa. Unset: the host's MCP roots, then the start directory if it has an AGENTS.md.",
           "isRequired": false
         }
       ]
