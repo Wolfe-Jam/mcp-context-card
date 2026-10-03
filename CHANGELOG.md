@@ -2,6 +2,25 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+The registry listing catches up with 1.3.0.
+
+- **`MCP_CONTEXT_CARD_ROOT` is described as it works now.** The listing
+  still said that, unset, the server reads its own bundled copies. Since
+  1.3.0 it follows the host's MCP roots, then the start directory if it has
+  an `AGENTS.md`. Hosts that install from `server.json` show this text when
+  you add the server.
+- **A display name and a website.** `title` is "MCP Context Card" (it was
+  the package name), and `websiteUrl` points at the README.
+- **`project.faf` scores ✪ 100% on the always-33 scorer** (it was 56% on
+  faf-cli 8): the enterprise slots a single npm package doesn't use are
+  marked `slotignored`, `package_manager` is `npm`, and the build, test, dev
+  and start commands are listed. CI checks it with faf-cli 8.1.0 (it was
+  pinned to 7.10.1, which counted only 21 slots).
+
+No code change.
+
 ## 1.3.0
 
 Your project, with nothing to configure.
