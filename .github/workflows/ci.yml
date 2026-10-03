@@ -61,7 +61,7 @@ jobs:
         if: runner.os == 'Linux'
       # project.faf ships in this repo (dogfood). Validate it stays Trophy —
       # quality gate on committed content, not a dependency. Pinned for repro.
-      - run: npx -y faf-cli@7.10.1 check project.faf --strict
+      - run: npx -y faf-cli@8.1.0 check project.faf --strict
         if: runner.os == 'Linux'
       # Non-blocking: warn if a PR moved the code's shape but not project.faf.
       - run: npm run faf:nudge -- "origin/${{ github.base_ref }}"
