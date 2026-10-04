@@ -16,11 +16,11 @@
  *   GET /.well-known/fafa              — the agent identity card
  */
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { buildCatalog } from "../catalog-gen.js";
+import { fafaFile } from "../identity.js";
 import { createServer, NAME, ROOT, VERSION, serverCard } from "../server.js";
 import { renderCard, safeAccent, type Theme } from "../render-card.js";
 
@@ -52,9 +52,12 @@ export function httpApp(root: string = ROOT): Hono {
     return c.body(JSON.stringify(buildCatalog(root), null, 2));
   });
 
+  // Served at the well-known path, read from agent.fafa or .well-known/fafa.
   app.get("/.well-known/fafa", (c) => {
+    const file = fafaFile(root);
+    if (!file) return c.notFound();
     c.header("content-type", "application/vnd.fafa+yaml");
-    return c.body(readFileSync(join(root, ".well-known/fafa"), "utf8"));
+    return c.body(readFileSync(file, "utf8"));
   });
 
   // ── The card — the view for people ──────────────────────────────────

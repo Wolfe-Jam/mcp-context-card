@@ -4,7 +4,9 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { identity, serverCardMeta, whoami } from "../src/identity.js";
+import { fafaFile, identity, serverCardMeta, whoami } from "../src/identity.js";
+import { buildCatalog } from "../src/catalog-gen.js";
+import { httpApp } from "../src/transport/http.js";
 import { fixture } from "./helpers.js";
 
 /** A temp root carrying only a bespoke `.well-known/fafa`. */
@@ -52,7 +54,7 @@ test("whoami: no .fafa → falls back to package.json", () => {
 });
 
 test("whoami: neither .fafa nor package.json → a clear nothing", () => {
-  assert.match(whoami("/no/such/root"), /no \.well-known\/fafa or package\.json/);
+  assert.match(whoami("/no/such/root"), /no agent\.fafa, \.well-known\/fafa or package\.json/);
 });
 
 test("whoami: a bare card (name only) still renders, no stray separators", () => {
@@ -94,7 +96,7 @@ test("identity: malformed .fafa → null (whoami falls back)", () => {
   const { root, cleanup } = fafaRoot("agent: [unterminated\n");
   try {
     assert.equal(identity(root), null);
-    assert.ok(whoami(root).startsWith("(no .well-known/fafa"));
+    assert.ok(whoami(root).startsWith("(no agent.fafa"));
   } finally {
     cleanup();
   }
@@ -124,4 +126,58 @@ test("serverCardMeta: three publisher-namespaced keys — context is AGENTS.md/m
 
   // no `one.faf/*` key anywhere — the wire is publisher-namespaced
   assert.ok(Object.keys(m).every((k) => k.startsWith("io.github.Wolfe-Jam.mcp-context-card/")));
+});
+
+/** A temp root with the given files (path → body). */
+function rootWith(files: Record<string, string>): { root: string; cleanup: () => void } {
+  const root = mkdtempSync(join(tmpdir(), "mcp-context-card-fafa-"));
+  for (const [f, body] of Object.entries(files)) {
+    mkdirSync(join(root, f, ".."), { recursive: true });
+    writeFileSync(join(root, f), body);
+  }
+  return { root, cleanup: () => rmSync(root, { recursive: true, force: true }) };
+}
+
+const card = (name: string) => `version: "1.0"\nagent:\n  name: ${name}\n  displayName: ${name}\n  version: 1.0.0\n`;
+
+test("identity: reads ./agent.fafa — where faf card init writes it", () => {
+  const { root, cleanup } = rootWith({ "agent.fafa": card("from-agent-fafa") });
+  try {
+    assert.equal(identity(root)?.name, "from-agent-fafa");
+    assert.equal(fafaFile(root), join(root, "agent.fafa"));
+  } finally {
+    cleanup();
+  }
+});
+
+test("identity: agent.fafa first, .well-known/fafa second", () => {
+  const { root, cleanup } = rootWith({ "agent.fafa": card("first"), ".well-known/fafa": card("second") });
+  try {
+    assert.equal(identity(root)?.name, "first");
+  } finally {
+    cleanup();
+  }
+});
+
+test("catalog: the identity row's host comes from agent.fafa too", () => {
+  const { root, cleanup } = rootWith({ "agent.fafa": card("cat-agent") });
+  try {
+    assert.equal(buildCatalog(root).host.displayName, "cat-agent");
+  } finally {
+    cleanup();
+  }
+});
+
+test("http: /.well-known/fafa serves agent.fafa when that is the file; 404 when there is none", async () => {
+  const one = rootWith({ "agent.fafa": card("served") });
+  const none = rootWith({});
+  try {
+    const r = await httpApp(one.root).request("/.well-known/fafa");
+    assert.equal(r.status, 200);
+    assert.match(await r.text(), /name: served/);
+    assert.equal((await httpApp(none.root).request("/.well-known/fafa")).status, 404);
+  } finally {
+    one.cleanup();
+    none.cleanup();
+  }
 });

@@ -2,6 +2,15 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+- **Identity reads `agent.fafa`.** `faf card init` writes the agent's `.fafa`
+  to `./agent.fafa`; the card, `whoami`, the AI Catalog and the served
+  `/.well-known/fafa` now read it, and fall back to `.well-known/fafa` as
+  before. With both, `agent.fafa` wins.
+- The README's identity line names the `.fafa`, not "its own Server Card"
+  (the MCP Server Card is the `_meta` block).
+
 ## 1.3.1
 
 The registry listing catches up with 1.3.0.

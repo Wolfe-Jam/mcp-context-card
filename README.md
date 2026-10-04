@@ -28,7 +28,7 @@ npx mcp-context-card card
 
 ![the card's memory section — a real, tagged, verified fact](./docs/img/card-memory.png)
 
-**identity** — what this server is, from its own Server Card.
+**identity** — what this server is, from its own `.fafa` (`agent.fafa`, else `.well-known/fafa`).
 
 ![the card's identity — name and pills](./docs/img/card-identity.png)
 
@@ -70,7 +70,7 @@ It composes:
 
 Vendor-free — context is plain Markdown (`AGENTS.md`); the memory and
 identity formats are swappable examples. It reads and writes only its own
-three files (`AGENTS.md`, `project.fafm`, `.well-known/fafa`), plus the
+three files (`AGENTS.md`, `project.fafm`, and `agent.fafa` or `.well-known/fafa`), plus the
 `context-card.html` it saves on request — no general file access, no shell,
 no search.
 
