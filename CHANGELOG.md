@@ -10,6 +10,9 @@ All notable changes to this project. Adheres to [Semantic Versioning](https://se
   before. With both, `agent.fafa` wins.
 - The README's identity line names the `.fafa`, not "its own Server Card"
   (the MCP Server Card is the `_meta` block).
+- **The agent ID shows.** `agent.id` (the `urn:air:…` that `faf card init`
+  writes) is read and shown in the card's Discovery section, the Markdown
+  card and `whoami`. No `id`, no line.
 
 ## 1.3.1
 

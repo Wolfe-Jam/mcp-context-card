@@ -19,6 +19,7 @@ export function parseFafa(path: string): AgentIdentity | null {
     version: str(doc.version),
     name: str(agent.name),
     displayName: str(agent.displayName),
+    id: str(agent.id),
     vendor: str(agent.vendor),
     agentVersion: str(agent.version),
     description: str(agent.description),

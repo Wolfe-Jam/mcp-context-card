@@ -181,3 +181,29 @@ test("http: /.well-known/fafa serves agent.fafa when that is the file; 404 when 
     none.cleanup();
   }
 });
+
+test("identity: agent.id (urn:air, as faf card init writes it) is read and shown", async () => {
+  const { renderCard, renderCardText } = await import("../src/render-card.js");
+  const urn = "urn:air:example.com:agent:weather-agent";
+  const { root, cleanup } = rootWith({ "agent.fafa": `${card("weather-agent")}  id: ${urn}\n` });
+  try {
+    assert.equal(identity(root)?.id, urn);
+    assert.ok(whoami(root).endsWith(urn));
+    assert.ok(renderCard(root).includes(`Agent ID <code>${urn}</code>`));
+    assert.ok(renderCardText(root).includes(`Agent ID \`${urn}\``));
+  } finally {
+    cleanup();
+  }
+});
+
+test("identity: no agent.id, no Agent ID line", async () => {
+  const { renderCard, renderCardText } = await import("../src/render-card.js");
+  const { root, cleanup } = rootWith({ "agent.fafa": card("no-id") });
+  try {
+    assert.equal(identity(root)?.id, undefined);
+    assert.ok(!renderCard(root).includes("Agent ID"));
+    assert.ok(!renderCardText(root).includes("Agent ID"));
+  } finally {
+    cleanup();
+  }
+});

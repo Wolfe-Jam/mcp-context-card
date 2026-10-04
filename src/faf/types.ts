@@ -29,6 +29,8 @@ export interface AgentIdentity {
   version?: string;
   name?: string;
   displayName?: string;
+  /** `agent.id` — globally unique, e.g. `urn:air:example.com:agent:weather` (what `faf card init` writes). */
+  id?: string;
   vendor?: string;
   agentVersion?: string;
   description?: string;

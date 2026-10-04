@@ -72,7 +72,7 @@ export function whoami(root: string): string {
     id.status ? `status: ${id.status}` : null,
     id.license ? id.license : null,
   ].filter(Boolean);
-  return parts.join(" · ") + (id.description ? `\n${id.description}` : "");
+  return parts.join(" · ") + (id.description ? `\n${id.description}` : "") + (id.id ? `\n${id.id}` : "");
 }
 
 /**
