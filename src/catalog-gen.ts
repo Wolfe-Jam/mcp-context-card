@@ -13,14 +13,15 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseAgentsMd } from "./agents-md.js";
 import { parseFafm } from "./faf/parse-fafm.js";
 import { parseFafa } from "./faf/parse-fafa.js";
-import { META_NS } from "./identity.js";
+import { META_NS, fafaFile } from "./identity.js";
 
 const iana = (t: string) => `https://www.iana.org/assignments/media-types/${t}`;
 
 export function buildCatalog(root: string) {
   const agents = parseAgentsMd(join(root, "AGENTS.md"));
   const fafm = parseFafm(join(root, "project.fafm"));
-  const fafa = parseFafa(join(root, ".well-known/fafa"));
+  const file = fafaFile(root);
+  const fafa = file ? parseFafa(file) : null;
 
   const host = fafa?.name ?? "mcp-context-card";
 

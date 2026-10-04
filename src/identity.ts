@@ -1,13 +1,14 @@
 /**
- * identity — reads this server's own `.well-known/fafa` and reports it, and
- * builds the `_meta` context block for the Server Card.
+ * identity — reads this server's own `.fafa` (`agent.fafa`, where `faf card
+ * init` writes it, else `.well-known/fafa`) and reports it, and builds the
+ * `_meta` context block for the Server Card.
  *
  * The `_meta` block is three reverse-DNS-namespaced keys — one per concern
  * (context, memory, identity) — each naming a source file, its media type,
  * and (where one exists) its IANA anchor. Same shape a real client reading
  * the Server Card would consume; see server.ts for where it's emitted.
  */
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseFafa } from "./faf/parse-fafa.js";
 import type { AgentIdentity } from "./faf/types.js";
@@ -17,8 +18,22 @@ export const META_NS = "io.github.Wolfe-Jam.mcp-context-card";
 
 const iana = (t: string) => `https://www.iana.org/assignments/media-types/${t}`;
 
+/** Where a project keeps its `.fafa`, in the order they are read. */
+export const FAFA_FILES = ["agent.fafa", ".well-known/fafa"] as const;
+
+/** The project's `.fafa`: `agent.fafa` (what `faf card init` writes), else
+ *  `.well-known/fafa`. null when there is neither. */
+export function fafaFile(root: string): string | null {
+  for (const f of FAFA_FILES) {
+    const p = join(root, f);
+    if (existsSync(p)) return p;
+  }
+  return null;
+}
+
 export function identity(root: string): AgentIdentity | null {
-  return parseFafa(join(root, ".well-known/fafa"));
+  const file = fafaFile(root);
+  return file ? parseFafa(file) : null;
 }
 
 /** Fall back to package.json — most projects have no .fafa, but they have this. */
@@ -38,7 +53,7 @@ function fromPackageJson(root: string): AgentIdentity | null {
 }
 
 /**
- * The identity to show: the `.well-known/fafa` card if present — richer and
+ * The identity to show: the `.fafa` ({@link fafaFile}) if present — richer and
  * portable — else a thin one from `package.json` (the common project has no
  * `.fafa`). null only when neither exists.
  */
@@ -49,7 +64,7 @@ export function resolveIdentity(root: string): AgentIdentity | null {
 /** Human-readable one-liner for the `whoami` tool. */
 export function whoami(root: string): string {
   const id = resolveIdentity(root);
-  if (!id) return "(no .well-known/fafa or package.json found)";
+  if (!id) return "(no agent.fafa, .well-known/fafa or package.json found)";
   const parts = [
     id.displayName ?? id.name ?? "(unnamed)",
     id.agentVersion ? `v${id.agentVersion}` : null,
@@ -57,7 +72,7 @@ export function whoami(root: string): string {
     id.status ? `status: ${id.status}` : null,
     id.license ? id.license : null,
   ].filter(Boolean);
-  return parts.join(" · ") + (id.description ? `\n${id.description}` : "");
+  return parts.join(" · ") + (id.description ? `\n${id.description}` : "") + (id.id ? `\n${id.id}` : "");
 }
 
 /**
