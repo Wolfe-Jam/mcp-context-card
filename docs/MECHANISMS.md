@@ -29,7 +29,7 @@ Both return:
 ```jsonc
 {
   "name": "mcp-context-card",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "_meta": {
     "io.github.Wolfe-Jam.mcp-context-card/context": {
       "source": "AGENTS.md",

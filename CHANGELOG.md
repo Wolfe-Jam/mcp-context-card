@@ -2,7 +2,9 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 1.4.0
+
+The card reads the `.fafa` that `faf card init` writes, and shows the agent's ID.
 
 - **Identity reads `agent.fafa`.** `faf card init` writes the agent's `.fafa`
   to `./agent.fafa`; the card, `whoami`, the AI Catalog and the served
@@ -13,6 +15,8 @@ All notable changes to this project. Adheres to [Semantic Versioning](https://se
 - **The agent ID shows.** `agent.id` (the `urn:air:…` that `faf card init`
   writes) is read and shown in the card's Discovery section, the Markdown
   card and `whoami`. No `id`, no line.
+
+No API change. 140 tests, all green.
 
 ## 1.3.1
 
