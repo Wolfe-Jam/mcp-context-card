@@ -236,8 +236,7 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
     ${memoryBody}
   </section>
   <section>
-    <p class="label">Discovery</p>
-    ${id?.id ? `<p class="fetch">Agent ID <code>${escapeHtml(id.id)}</code></p>` : ""}
+    <p class="label">Discovery</p>${id?.id ? `\n    <p class="fetch">Agent ID <code>${escapeHtml(id.id)}</code></p>` : ""}
     <table class="disc"><thead><tr><th>concern</th><th>source</th><th>media type</th></tr></thead><tbody>${rows}</tbody></table>
     <p class="fetch">A machine reads this over <b>MCP</b> from the
       <code>${escapeHtml(SERVER_CARD_URI)}</code> resource; over <b>HTTP</b> also
