@@ -9,11 +9,14 @@ import { fixture } from "./helpers.js";
 
 const NS = "io.github.Wolfe-Jam.mcp-context-card";
 
-test("buildCatalog: the Server Card + three sibling entries — context is AGENTS.md/markdown", () => {
+test("buildCatalog: the Server Card + AGENTS.md + .fafa; memory only when the project opts in", () => {
   const { root, cleanup } = fixture();
   try {
-    const cat = buildCatalog(root);
-    assert.equal(cat.entries.length, 4);
+    assert.deepEqual(
+      buildCatalog(root).entries.map((e) => e.type),
+      ["application/mcp-server-card+json", "text/markdown", "application/vnd.fafa+yaml"],
+    );
+    const cat = buildCatalog(root, { publishMemory: true });
     assert.deepEqual(
       cat.entries.map((e) => e.type),
       ["application/mcp-server-card+json", "text/markdown", "application/vnd.fafm+yaml", "application/vnd.fafa+yaml"],
@@ -37,7 +40,7 @@ test("buildCatalog: the Server Card + three sibling entries — context is AGENT
 test("buildCatalog: descriptions derive from real file content", () => {
   const { root, cleanup } = fixture();
   try {
-    const cat = buildCatalog(root);
+    const cat = buildCatalog(root, { publishMemory: true });
     assert.equal(cat.host.displayName, "mcp-context-card");
 
     // context entry names real AGENTS.md sections
@@ -57,7 +60,7 @@ test("buildCatalog: reflects a change to a source file", () => {
   const { root, cleanup } = fixture();
   try {
     remember(join(root, "project.fafm"), "extra", "one more");
-    const mem = buildCatalog(root).entries.find(
+    const mem = buildCatalog(root, { publishMemory: true }).entries.find(
       (e) => e.type === "application/vnd.fafm+yaml",
     )!;
     assert.match(mem.description!, /\b5 fact\(s\)/); // 4 authored + 1 added
@@ -71,7 +74,7 @@ test("buildCatalog: synthesises descriptions when sources are absent", () => {
   try {
     // no AGENTS.md, no fafa; minimal fafm
     writeFileSync(join(dir, "project.fafm"), `version: "1.1"\n`);
-    const cat = buildCatalog(dir);
+    const cat = buildCatalog(dir, { publishMemory: true });
 
     const ctx = cat.entries.find((e) => e.type === "text/markdown")!;
     assert.match(ctx.description!, /not present/);

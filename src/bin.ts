@@ -52,6 +52,10 @@ USAGE
 ENV
   MCP_CONTEXT_CARD_ROOT   read AGENTS.md / project.fafm / .well-known/ from here
   PORT                    if set, run HTTP instead of stdio
+  MCP_CONTEXT_CARD_PUBLISH_MEMORY=1
+                          HTTP: also serve project.fafm and list it in the AI
+                          Catalog (off: memory is session data). HTTP has no
+                          auth: keep it local or put it behind your own
 
 A bare run is an stdio server: it waits for a host to speak JSON-RPC on stdin,
 so it looks idle at a terminal. Try \`card\` (opens your context in a browser) or \`--http\`.

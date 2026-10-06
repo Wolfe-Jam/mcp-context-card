@@ -16,7 +16,12 @@
  *                                         `<streamable-http-url>/server-card`)
  *   GET /.well-known/mcp/server-card   — the same card, the 1.x location (alias)
  *   GET /.well-known/ai-catalog.json   — the card + the three sibling entries
- *   GET /AGENTS.md · /project.fafm · /.well-known/fafa — the files the catalog links
+ *   GET /AGENTS.md · /.well-known/fafa — the files the catalog links
+ *   GET /project.fafm                  — only with MCP_CONTEXT_CARD_PUBLISH_MEMORY=1:
+ *                                         memory is session data, private by default
+ *
+ * The plain-HTTP routes above are public by design. The MCP endpoint has no
+ * authentication either: put it behind your own, or keep it local.
  *
  * Discovery documents carry the spec's CORS (GET only, `Content-Type` and
  * `If-None-Match` allowed, `ETag` exposed), `Cache-Control: public,
@@ -38,6 +43,7 @@ import {
   LEGACY_SERVER_CARD_PATH,
   MCP_PATH,
   SERVER_CARD_MEDIA_TYPE,
+  publishMemoryFromEnv,
   SERVER_CARD_PATH,
 } from "../constants.js";
 
@@ -50,6 +56,11 @@ const DISCOVERY_PATHS = [
   "/AGENTS.md",
   "/project.fafm",
 ];
+
+export interface HttpAppOptions {
+  /** Serve `project.fafm` and list it in the catalog. Default: the env switch. */
+  publishMemory?: boolean;
+}
 
 /** CORS exactly as the Server Card spec lists it. */
 const discoveryCors = cors({
@@ -80,7 +91,8 @@ function discovery(c: Context, body: string, contentType: string): Response {
   return c.body(body);
 }
 
-export function httpApp(root: string = ROOT): Hono {
+export function httpApp(root: string = ROOT, opts: HttpAppOptions = {}): Hono {
+  const publishMemory = opts.publishMemory ?? publishMemoryFromEnv();
   const app = new Hono();
   for (const p of DISCOVERY_PATHS) app.use(p, discoveryCors);
   app.use(MCP_PATH, cors());
@@ -110,7 +122,7 @@ export function httpApp(root: string = ROOT): Hono {
   app.get(LEGACY_SERVER_CARD_PATH, card);
 
   app.get("/.well-known/ai-catalog.json", (c) =>
-    discovery(c, JSON.stringify(buildCatalog(root, { origin: originOf(c) }), null, 2), AI_CATALOG_MEDIA_TYPE),
+    discovery(c, JSON.stringify(buildCatalog(root, { origin: originOf(c), publishMemory }), null, 2), AI_CATALOG_MEDIA_TYPE),
   );
 
   // The files the catalog links to, each with the type its entry declares.
@@ -119,7 +131,7 @@ export function httpApp(root: string = ROOT): Hono {
     path && existsSync(path) ? discovery(c, readFileSync(path, "utf8"), type) : c.notFound();
   app.get("/.well-known/fafa", (c) => file(fafaFile(root), "application/vnd.fafa+yaml")(c));
   app.get("/AGENTS.md", file(join(root, "AGENTS.md"), "text/markdown; charset=utf-8"));
-  app.get("/project.fafm", file(join(root, "project.fafm"), "application/vnd.fafm+yaml"));
+  if (publishMemory) app.get("/project.fafm", file(join(root, "project.fafm"), "application/vnd.fafm+yaml"));
 
   // ── The card — the view for people ──────────────────────────────────
   app.get("/card", (c) => {

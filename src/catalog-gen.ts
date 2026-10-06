@@ -1,7 +1,10 @@
 /**
  * catalog-gen — the AI Catalog (`application/ai-catalog+json`, spec 1.0) for
- * this server: its MCP Server Card, plus the three sources (`AGENTS.md`,
- * `project.fafm`, `.fafa`) that also back the Server Card `_meta` block.
+ * this server: its MCP Server Card, plus the sources that also back the Server
+ * Card `_meta` block: `AGENTS.md` and `.fafa`, and `project.fafm` only when the
+ * project opts in ({@link CatalogOptions.publishMemory}). Memory is written
+ * during sessions, and SEP-2127 rules user- or session-specific data out of
+ * public discovery documents, so it is left out by default.
  *
  * Identifiers follow `urn:air:{publisher}:{namespace}:{name}`, with the
  * publisher domain and short name taken from the project's own `.fafa`
@@ -33,6 +36,8 @@ const iana = (t: string) => `https://www.iana.org/assignments/media-types/${t}`;
 export interface CatalogOptions {
   /** Public origin the catalog is served from, e.g. `https://ctx.example.com`. */
   origin?: string;
+  /** List the memory file (`project.fafm`). Default: off. */
+  publishMemory?: boolean;
 }
 
 export function buildCatalog(root: string, opts: CatalogOptions = {}) {
@@ -78,7 +83,7 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
           : "Agent instructions for this project (AGENTS.md — not present).",
         url: at("AGENTS.md"),
       },
-      {
+      ...(opts.publishMemory ? [{
         identifier: id("memory"),
         displayName: `${host} — persistent memory (.fafm)`,
         type: "application/vnd.fafm+yaml",
@@ -87,7 +92,7 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
         }". Recall survives a process restart. No de-facto standard for this concern yet.`,
         url: at("project.fafm"),
         ...ext("application/vnd.fafm+yaml"),
-      },
+      }] : []),
       {
         identifier: id("identity"),
         displayName: `${host} — agent identity (.fafa)`,
@@ -110,6 +115,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     JSON.stringify(buildCatalog(root), null, 2) + "\n",
   );
   console.log(
-    "wrote .well-known/ai-catalog.json — Server Card + 3 sibling entries, derived from AGENTS.md / project.fafm / .fafa",
+    "wrote .well-known/ai-catalog.json — Server Card + AGENTS.md + .fafa entries (memory is opt-in, never in the static file)",
   );
 }

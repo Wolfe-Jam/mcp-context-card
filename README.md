@@ -167,6 +167,12 @@ reports which project it picked and how. To pin one project instead, set
 wins. Identity is optional. Over HTTP instead:
 `PORT=8080 npx mcp-context-card`. Requires Node ≥20.
 
+HTTP mode has no authentication. The MCP endpoint and the discovery files are
+open to anyone who can reach the port, so keep it local or put it behind your
+own auth. Memory (`project.fafm`) is written during sessions, so it isn't
+served or listed in the AI Catalog unless you set
+`MCP_CONTEXT_CARD_PUBLISH_MEMORY=1`.
+
 If `command: "npx"` fails to spawn (`spawn npx ENOENT` — seen on Cursor, whose
 host process doesn't inherit a shell `PATH`), point `command` at `node` and
 the installed `dist/bin.js` instead — see
@@ -190,9 +196,10 @@ grows its own shape.
 
 1. **Server Card `_meta`** ([SEP‑2127](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2127)) —
    one reverse‑DNS‑namespaced key per concern, readable in‑band as an MCP
-   resource and at `GET /.well-known/mcp/server-card`.
-2. **`ai-catalog.json`** — sibling entries keyed by media type, at
-   `GET /.well-known/ai-catalog.json`.
+   resource and at `GET /mcp/server-card` (the 1.x `/.well-known/mcp/server-card`
+   still answers).
+2. **`ai-catalog.json`** — the Server Card plus sibling entries keyed by media
+   type, at `GET /.well-known/ai-catalog.json`.
 
 The context concern points at `AGENTS.md` (`text/markdown`). Memory and identity
 have no de‑facto standard yet, so the examples here use
