@@ -5,7 +5,8 @@
  * Tier 2: Server Card — the portable checker's card tier, with the official v1 schema
  * Tier 3: Hosting — the portable checker's hosting tier (CORS, caching, ETag/304)
  * Tier 4: AI Catalog — the portable checker's catalog tier
- * Tier 5: Security — fixed files only, GET only, memory private unless opted in; the card page escapes
+ * Tier 5: Security — Origin 403 + DNS-rebinding refusal (transports spec), local bind,
+ *         fixed files only, GET only, memory private unless published; the card page escapes
  * Tier 6: Parity — stdio and Streamable HTTP expose the same tools, resources and answers
  * Tier 7: Ship — one version everywhere; the bin answers; the package carries what it serves
  *
@@ -25,6 +26,10 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { checkDiscovery, type DiscoveryReport, type Tier } from "../src/conformance/discovery.js";
 import { VERSION, publishMemoryFromEnv } from "../src/constants.js";
 import { httpApp } from "../src/transport/http.js";
+import { isLoopbackBind } from "../src/transport/guard.js";
+import { bindHost } from "../src/bin.js";
+import { parseFafm } from "../src/memory.js";
+import { escapeHtml } from "../src/md.js";
 import { REPO_ROOT, cardValidator, fixture } from "./helpers.js";
 
 const BIN = join(REPO_ROOT, "src/bin.ts");
@@ -138,7 +143,7 @@ describe("Tier 5: Security", () => {
   });
 
   test("a project that opts in publishes memory: served with its type and listed", async () => {
-    const app = httpApp(fx.root, { publishMemory: true });
+    const app = httpApp(fx.root, { publishMemory: true, exposure: "exposed" });
     const r = await app.fetch(new Request("http://ctx.example.com/project.fafm"));
     assert.equal(r.status, 200);
     assert.equal(r.headers.get("content-type"), "application/vnd.fafm+yaml");
@@ -152,6 +157,83 @@ describe("Tier 5: Security", () => {
     assert.equal(publishMemoryFromEnv({}), false);
     assert.equal(publishMemoryFromEnv({ MCP_CONTEXT_CARD_PUBLISH_MEMORY: "true" }), false);
     assert.equal(publishMemoryFromEnv({ MCP_CONTEXT_CARD_PUBLISH_MEMORY: "1" }), true);
+  });
+
+  test("transport: a foreign Origin gets 403 with a JSON-RPC error (spec MUST)", async () => {
+    const r = await fetch(`${base}/mcp`, {
+      method: "POST",
+      headers: { Origin: "https://evil.example", "Content-Type": "application/json", Accept: "application/json, text/event-stream" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "ping" }),
+    });
+    assert.equal(r.status, 403);
+    const body = (await r.json()) as any;
+    assert.equal(body.id, null);
+    assert.equal(body.error.code, -32000);
+  });
+
+  test("transport: the portable checker's transport tier passes (Origin 403, forged Host refused)", () =>
+    tierPasses("transport"));
+
+  test("transport: a page on this machine may call /mcp", async () => {
+    const r = await fetch(`${base}/mcp`, {
+      method: "POST",
+      headers: { Origin: "http://localhost:6274", "Content-Type": "application/json", Accept: "application/json, text/event-stream" },
+      body: JSON.stringify({
+        jsonrpc: "2.0", id: 1, method: "initialize",
+        params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "t", version: "0" } },
+      }),
+    });
+    assert.equal(r.status, 200);
+  });
+
+  test("transport: a rebound DNS name (foreign Host) is refused on every route", async () => {
+    const app = httpApp(fx.root);
+    for (const p of ["/mcp", "/card", "/AGENTS.md", "/mcp/server-card", "/.well-known/ai-catalog.json", "/"]) {
+      const r = await app.fetch(new Request(`http://rebind.example:3000${p}`));
+      assert.equal(r.status, 403, p);
+    }
+    // a reverse proxy's public name, once allowed, is served
+    const proxied = httpApp(fx.root, { allowedHosts: ["ctx.example.com"] });
+    assert.equal((await proxied.fetch(new Request("http://ctx.example.com/mcp/server-card"))).status, 200);
+  });
+
+  test("transport: foreign browser origins can't read the card or the context; discovery stays open", async () => {
+    for (const p of ["/card", "/AGENTS.md", "/"]) {
+      assert.equal((await fetch(`${base}${p}`, { headers: { Origin: "https://evil.example" } })).status, 403, p);
+    }
+    for (const p of ["/mcp/server-card", "/.well-known/ai-catalog.json", "/.well-known/fafa"]) {
+      const r = await fetch(`${base}${p}`, { headers: { Origin: "https://evil.example" } });
+      assert.equal(r.status, 200, p);
+      assert.equal(r.headers.get("access-control-allow-origin"), "*");
+    }
+    const allowed = httpApp(fx.root, { allowedOrigins: ["https://app.example.com"] });
+    const r = await allowed.fetch(new Request("http://127.0.0.1/card", { headers: { Origin: "https://app.example.com" } }));
+    assert.equal(r.status, 200);
+  });
+
+  test("card: memory in full locally; kept private when exposed, unless published", async () => {
+    const fact = "4 fact"; // the label's count, present in every mode
+    const local = await (await fetch(`${base}/card`)).text();
+    const exposed = await (await httpApp(fx.root, { exposure: "exposed" }).fetch(new Request("http://ctx.example.com/card?expand=all"))).text();
+    const published = await (
+      await httpApp(fx.root, { exposure: "exposed", publishMemory: true }).fetch(new Request("http://ctx.example.com/card"))
+    ).text();
+    const facts = parseFafm(join(fx.root, "project.fafm")).facts.map((f) => f.text.slice(0, 40));
+    assert.ok(facts.length > 0);
+    for (const t of facts) {
+      assert.ok(local.includes(escapeHtml(t).slice(0, 30)), `local card lacks: ${t}`);
+      assert.ok(published.includes(escapeHtml(t).slice(0, 30)), `published card lacks: ${t}`);
+      assert.ok(!exposed.includes(escapeHtml(t).slice(0, 30)), `exposed card leaks: ${t}`);
+    }
+    assert.match(exposed, /kept private/);
+    assert.ok(exposed.includes(fact) && local.includes(fact));
+  });
+
+  test("bind: 127.0.0.1 unless HOST says otherwise; only loopback counts as local", () => {
+    assert.equal(bindHost({}), "127.0.0.1");
+    assert.equal(bindHost({ HOST: "0.0.0.0" }), "0.0.0.0");
+    for (const h of ["127.0.0.1", "localhost", "::1", "127.0.0.2"]) assert.ok(isLoopbackBind(h), h);
+    for (const h of ["0.0.0.0", "::", "192.168.1.5", "example.com"]) assert.ok(!isLoopbackBind(h), h);
   });
 
   test("the card page escapes markup from the project's own files", async () => {

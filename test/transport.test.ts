@@ -148,16 +148,13 @@ test("http: /mcp is genuinely stateless — no session header, independent inits
   assert.equal(b2.result?.serverInfo?.name, "io.github.Wolfe-Jam/mcp-context-card");
 });
 
-test("http: CORS is open (preflight answered)", async () => {
-  const r = await fetch(`${base}/mcp`, {
-    method: "OPTIONS",
-    headers: {
-      origin: "https://example.com",
-      "access-control-request-method": "POST",
-    },
-  });
-  assert.ok(r.status === 204 || r.status === 200);
-  assert.equal(r.headers.get("access-control-allow-origin"), "*");
+test("http: /mcp preflight — a page on this machine is answered, a foreign origin gets 403", async () => {
+  const preflight = (origin: string) =>
+    fetch(`${base}/mcp`, { method: "OPTIONS", headers: { origin, "access-control-request-method": "POST" } });
+  const local = await preflight("http://localhost:6274");
+  assert.ok(local.status === 204 || local.status === 200);
+  assert.ok(local.headers.get("access-control-allow-origin"));
+  assert.equal((await preflight("https://example.com")).status, 403);
 });
 
 test("http: unknown well-known path → 404, not a crash", async () => {

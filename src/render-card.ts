@@ -14,7 +14,7 @@ import { basename, join, resolve } from "node:path";
 import { parseAgentsMd } from "./agents-md.js";
 import { parseFafm } from "./memory.js";
 import { resolveIdentity, serverCardMeta, META_NS } from "./identity.js";
-import { SERVER_CARD_URI } from "./constants.js";
+import { PUBLISH_MEMORY_ENV, SERVER_CARD_URI } from "./constants.js";
 import { escapeHtml, renderInline, renderMarkdown, slug } from "./md.js";
 
 export type Theme = "light" | "dark" | "auto";
@@ -29,6 +29,11 @@ export interface CardOptions {
    * `expanded` is the whole-page render, for a screenshot or a PR.
    */
   expanded?: boolean;
+  /**
+   * `private` shows how many facts memory holds but not the facts: for a card
+   * served beyond this machine without the publish opt-in. Default: `full`.
+   */
+  memory?: "full" | "private";
 }
 
 /** AAIF brand orange (aaif.io). The default accent. */
@@ -189,7 +194,9 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
     : `<p class="none">No AGENTS.md yet. Ask your agent to draft one: <code>author_agents_md</code> builds it from this repo's real build and test commands, nothing invented.</p>`;
 
   // MEMORY
-  const memoryBody = mem.facts.length
+  const memoryBody = opts.memory === "private" && mem.facts.length
+    ? `<p class="none">Kept private on this page. To show the facts, set <code>${PUBLISH_MEMORY_ENV}=1</code>.</p>`
+    : mem.facts.length
     ? mem.facts
         .map((f) => {
           const verified = f.verification_status === "verified";
@@ -232,7 +239,9 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
     ${contextBody}
   </section>
   <section>
-    <p class="label">Memory — ${mem.facts.length} fact${mem.facts.length === 1 ? "" : "s"}</p>
+    <p class="label">Memory — ${mem.facts.length} fact${mem.facts.length === 1 ? "" : "s"}${
+      opts.memory === "private" && mem.facts.length ? ", kept private" : ""
+    }</p>
     ${memoryBody}
   </section>
   <section>

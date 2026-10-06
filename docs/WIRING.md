@@ -46,7 +46,7 @@
 ### Streamable HTTP (remote)
 
 ```bash
-PORT=8080 npx mcp-context-card        # or:  npx mcp-context-card --http
+HOST=0.0.0.0 PORT=8080 npx mcp-context-card   # exposed; without HOST it binds 127.0.0.1 only
 ```
 
 ```jsonc

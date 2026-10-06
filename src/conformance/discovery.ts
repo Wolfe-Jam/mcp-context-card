@@ -1,9 +1,12 @@
 /**
  * conformance/discovery — a portable checker for MCP Server Card discovery
- * (SEP-2127, Final) and the AI Catalog (spec 1.0), run against any server URL.
+ * (SEP-2127, Final), the AI Catalog (spec 1.0), and the Streamable HTTP
+ * transport's security rules, run against any server URL.
  *
  * Self-contained on purpose: no imports from this package, only the global
- * `fetch`, so the file can be lifted into another tool as-is. Point it at a
+ * `fetch` (and `node:http` for the one check that must forge a Host header,
+ * which `fetch` drops), so the file can be lifted into another tool as-is.
+ * The transport checks send one JSON-RPC `ping`, which changes nothing. Point it at a
  * server's Streamable HTTP endpoint and it returns one result per requirement,
  * each tagged MUST or SHOULD exactly as the spec words it. Requirements the
  * spec leaves at MAY (where the card lives, whether a catalog exists) are
@@ -25,7 +28,7 @@ const SECRET_RE = /(api[_-]?key|secret|password|bearer\s|token["']?\s*:)/i;
 const PRIVATE_HOST_RE =
   /\b(localhost|127\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)\b/i;
 
-export type Tier = "card" | "hosting" | "catalog";
+export type Tier = "card" | "hosting" | "catalog" | "transport";
 export type Level = "must" | "should";
 export type Status = "pass" | "fail" | "skip";
 
@@ -53,6 +56,34 @@ export interface DiscoveryOptions {
   validateCard?: (card: unknown) => string | null;
   /** Per-request timeout in milliseconds (default 10000). */
   timeoutMs?: number;
+  /** POST with exact headers (Host included); returns the status, or null. Default: node:http. */
+  rawStatus?: (url: string, headers: Record<string, string>, body: string, timeoutMs: number) => Promise<number | null>;
+}
+
+/** POST through node:http, which (unlike fetch) sends a Host header as given. */
+async function rawStatus(url: string, headers: Record<string, string>, body: string, timeoutMs: number): Promise<number | null> {
+  try {
+    const u = new URL(url);
+    const mod = u.protocol === "https:" ? await import("node:https") : await import("node:http");
+    return await new Promise((resolve) => {
+      const req = mod.request(
+        u,
+        { method: "POST", headers: { ...headers, "Content-Length": String(Buffer.byteLength(body)) }, timeout: timeoutMs },
+        (res) => {
+          res.resume();
+          resolve(res.statusCode ?? null);
+        },
+      );
+      req.on("error", () => resolve(null));
+      req.on("timeout", () => {
+        req.destroy();
+        resolve(null);
+      });
+      req.end(body);
+    });
+  } catch {
+    return null;
+  }
 }
 
 export interface DiscoveryReport {
@@ -293,6 +324,41 @@ export async function checkDiscovery(
         else if (rt !== String(e.type).toLowerCase()) broken.push(`${u} → "${rt}"`);
       }
       check("catalog", t(10)[0], t(10)[1], t(10)[2], broken.length === 0, broken.join("; "));
+    }
+  }
+
+  // ── Tier: transport (Streamable HTTP, Security Warning) ─────────────────
+  const ping = JSON.stringify({ jsonrpc: "2.0", id: 1, method: "ping" });
+  const rpcHeaders = { "Content-Type": "application/json", Accept: "application/json, text/event-stream" };
+  let foreign: Response | null = null;
+  try {
+    foreign = await doFetch(target.mcpUrl, {
+      method: "POST",
+      headers: { ...rpcHeaders, Origin: "https://conformance-check.invalid" },
+      body: ping,
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    await foreign.body?.cancel();
+  } catch {
+    foreign = null;
+  }
+  if (!foreign) {
+    add("transport", "must", "transport.origin-403", "A foreign Origin is refused with 403", "skip", "MCP endpoint unreachable");
+  } else {
+    check("transport", "must", "transport.origin-403", "A foreign Origin is refused with 403", foreign.status === 403,
+      `answered ${foreign.status}`);
+  }
+  if (!isLoopback(mcp)) {
+    add("transport", "should", "transport.rebinding", "A local server refuses a foreign Host (DNS rebinding)", "skip",
+      "not a local server");
+  } else {
+    const status = await (opts.rawStatus ?? rawStatus)(target.mcpUrl, { ...rpcHeaders, Host: "rebind.invalid" }, ping, timeoutMs);
+    if (status === null) {
+      add("transport", "should", "transport.rebinding", "A local server refuses a foreign Host (DNS rebinding)", "skip",
+        "MCP endpoint unreachable");
+    } else {
+      check("transport", "should", "transport.rebinding", "A local server refuses a foreign Host (DNS rebinding)",
+        status === 403, `Host: rebind.invalid answered ${status}`);
     }
   }
 
