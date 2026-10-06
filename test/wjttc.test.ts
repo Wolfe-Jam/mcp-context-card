@@ -192,10 +192,14 @@ describe("Tier 7: Ship", () => {
   });
 
   test("the package carries every file the server serves", () => {
-    const listed = JSON.parse(execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], {
-      cwd: REPO_ROOT,
-      encoding: "utf8",
-    }))[0].files.map((f: { path: string }) => f.path);
+    // Under `npm run`, npm_execpath is npm's own JS entry: run it with this
+    // Node so Windows (where `npm` is npm.cmd) needs no shell.
+    const args = ["pack", "--dry-run", "--json", "--ignore-scripts"];
+    const npmCli = process.env.npm_execpath;
+    const out = npmCli && /\.c?js$/.test(npmCli)
+      ? execFileSync(process.execPath, [npmCli, ...args], { cwd: REPO_ROOT, encoding: "utf8" })
+      : execFileSync("npm", args, { cwd: REPO_ROOT, encoding: "utf8", shell: process.platform === "win32" });
+    const listed = JSON.parse(out)[0].files.map((f: { path: string }) => f.path);
     for (const f of ["AGENTS.md", "project.fafm", ".well-known/fafa", ".well-known/ai-catalog.json", "server.json"]) {
       assert.ok(listed.includes(f), `${f} is not in the package`);
     }
