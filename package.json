@@ -60,7 +60,8 @@
     "card:check": "tsx src/card-gen.ts && git diff --exit-code -- docs/card.html docs/index.html docs/card-light.html docs/card-dark.html",
     "test": "node --import tsx --test \"test/*.test.ts\"",
     "test:coverage": "node --import tsx --test --experimental-test-coverage --test-coverage-exclude=\"test/**\" --test-coverage-exclude=\"demo.ts\" --test-coverage-lines=90 --test-coverage-functions=85 --test-coverage-branches=80 \"test/*.test.ts\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "wjttc": "node --import tsx --test --test-reporter=spec test/wjttc.test.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.17",
@@ -71,6 +72,8 @@
   },
   "devDependencies": {
     "@types/node": "^26.2.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   },

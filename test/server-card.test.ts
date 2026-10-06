@@ -12,22 +12,14 @@ import type { AddressInfo } from "node:net";
 import { serve } from "@hono/node-server";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { Ajv2020 } from "ajv/dist/2020.js";
-import addFormatsModule from "ajv-formats";
 import { httpApp } from "../src/transport/http.js";
 import { buildCatalog } from "../src/catalog-gen.js";
 import { serverCard } from "../src/server-card.js";
-import { REPO_ROOT, fixture } from "./helpers.js";
+import { REPO_ROOT, cardValidator, fixture } from "./helpers.js";
 
 const SCHEMA_URL = "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json";
 const CARD_TYPE = "application/mcp-server-card+json";
-const schema = JSON.parse(readFileSync(join(REPO_ROOT, "test/fixtures/server-card.schema.v1.json"), "utf8"));
-const ajv = new Ajv2020({ strict: false, allErrors: true });
-// ajv-formats is CommonJS: under ESM the callable may sit on `.default`.
-const addFormats = ((addFormatsModule as any).default ?? addFormatsModule) as (a: Ajv2020) => Ajv2020;
-addFormats(ajv);
-ajv.addSchema(schema, "server-card");
-const validateCard = ajv.getSchema("server-card#/$defs/ServerCard")!;
+const validateCard = cardValidator();
 const serverJson = JSON.parse(readFileSync(join(REPO_ROOT, "server.json"), "utf8"));
 const pkg = JSON.parse(readFileSync(join(REPO_ROOT, "package.json"), "utf8"));
 
@@ -53,8 +45,8 @@ const card = async () => (await get("/mcp/server-card")).json() as Promise<Recor
 
 test("A0: the served card validates against the official v1 schema", async () => {
   const c = await card();
-  assert.ok(validateCard(c), JSON.stringify(validateCard.errors));
-  assert.ok(validateCard(serverCard()), JSON.stringify(validateCard.errors)); // in-band form too
+  assert.equal(validateCard(c), null);
+  assert.equal(validateCard(serverCard()), null); // in-band form too
 });
 
 test("A1: $schema is the v1 Server Card schema URL", async () => {
@@ -200,7 +192,7 @@ test("C4: the served catalog links the Server Card at <origin>/mcp/server-card",
 test("C4: the static catalog carries the Server Card inline as data, schema-valid", () => {
   const e = buildCatalog(fx.root).entries.find((x) => x.type === CARD_TYPE) as Record<string, any>;
   assert.ok(e && e.data && !e.url);
-  assert.ok(validateCard(e.data), JSON.stringify(validateCard.errors));
+  assert.equal(validateCard(e.data), null);
   const committed = JSON.parse(readFileSync(join(REPO_ROOT, ".well-known/ai-catalog.json"), "utf8"));
   assert.ok(committed.entries.some((x: any) => x.type === CARD_TYPE && x.data));
 });
