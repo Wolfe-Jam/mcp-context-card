@@ -10,26 +10,85 @@
  * notifications or resumability would set a `sessionIdGenerator` and hold
  * transports in a map; this one deliberately does not.
  *
- * Alongside the MCP endpoint it serves the discovery documents:
- *   GET /.well-known/mcp/server-card   — the Server Card + _meta block
- *   GET /.well-known/ai-catalog.json   — the three sibling entries
- *   GET /.well-known/fafa              — the agent identity card
+ * Alongside the MCP endpoint it serves the discovery documents (MCP Server
+ * Cards, SEP-2127 Final; AI Catalog 1.0):
+ *   GET /mcp/server-card               — the Server Card (the spec's reserved
+ *                                         `<streamable-http-url>/server-card`)
+ *   GET /.well-known/mcp/server-card   — the same card, the 1.x location (alias)
+ *   GET /.well-known/ai-catalog.json   — the card + the three sibling entries
+ *   GET /AGENTS.md · /project.fafm · /.well-known/fafa — the files the catalog links
+ *
+ * Discovery documents carry the spec's CORS (GET only, `Content-Type` and
+ * `If-None-Match` allowed, `ETag` exposed), `Cache-Control: public,
+ * max-age=3600`, and an `ETag` honoured with `304 Not Modified`. Serve them over
+ * HTTPS in production (TLS is the host's job; HTTP is for local development).
  */
-import { readFileSync } from "node:fs";
-import { Hono } from "hono";
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { buildCatalog } from "../catalog-gen.js";
 import { fafaFile } from "../identity.js";
 import { createServer, NAME, ROOT, VERSION, serverCard } from "../server.js";
 import { renderCard, safeAccent, type Theme } from "../render-card.js";
+import {
+  AI_CATALOG_MEDIA_TYPE,
+  LEGACY_SERVER_CARD_PATH,
+  MCP_PATH,
+  SERVER_CARD_MEDIA_TYPE,
+  SERVER_CARD_PATH,
+} from "../constants.js";
+
+/** The paths that are discovery documents (spec CORS + caching). */
+const DISCOVERY_PATHS = [
+  SERVER_CARD_PATH,
+  LEGACY_SERVER_CARD_PATH,
+  "/.well-known/ai-catalog.json",
+  "/.well-known/fafa",
+  "/AGENTS.md",
+  "/project.fafm",
+];
+
+/** CORS exactly as the Server Card spec lists it. */
+const discoveryCors = cors({
+  origin: "*",
+  allowMethods: ["GET"],
+  allowHeaders: ["Content-Type", "If-None-Match"],
+  exposeHeaders: ["ETag"],
+});
+
+/** The public origin of this request, honouring a reverse proxy's forwarded headers. */
+export function originOf(c: Context): string {
+  const url = new URL(c.req.url);
+  const proto = (c.req.header("x-forwarded-proto") ?? url.protocol.replace(":", "")).split(",")[0].trim();
+  const host = (c.req.header("x-forwarded-host") ?? c.req.header("host") ?? url.host).split(",")[0].trim();
+  return `${proto}://${host}`;
+}
+
+/** A cacheable discovery response: Content-Type, Cache-Control, ETag, and 304 on a match. */
+function discovery(c: Context, body: string, contentType: string): Response {
+  const etag = `"${createHash("sha256").update(body).digest("base64url").slice(0, 27)}"`;
+  c.header("Cache-Control", "public, max-age=3600");
+  c.header("ETag", etag);
+  const match = c.req.header("if-none-match");
+  if (match && match.split(",").some((t) => t.trim().replace(/^W\//, "") === etag)) {
+    return c.body(null, 304);
+  }
+  c.header("Content-Type", contentType);
+  return c.body(body);
+}
 
 export function httpApp(root: string = ROOT): Hono {
   const app = new Hono();
-  app.use("*", cors());
+  for (const p of DISCOVERY_PATHS) app.use(p, discoveryCors);
+  app.use(MCP_PATH, cors());
+  app.use("/card", cors());
+  app.use("/", cors());
 
   // ── MCP endpoint — stateless ────────────────────────────────────────
-  app.all("/mcp", async (c) => {
+  app.all(MCP_PATH, async (c) => {
     const server = createServer(root);
     const transport = new WebStandardStreamableHTTPServerTransport({
       sessionIdGenerator: undefined, // stateless
@@ -45,20 +104,22 @@ export function httpApp(root: string = ROOT): Hono {
   });
 
   // ── Discovery documents ─────────────────────────────────────────────
-  app.get("/.well-known/mcp/server-card", (c) => c.json(serverCard()));
+  const card = (c: Context) =>
+    discovery(c, JSON.stringify(serverCard({ origin: originOf(c) }), null, 2), SERVER_CARD_MEDIA_TYPE);
+  app.get(SERVER_CARD_PATH, card);
+  app.get(LEGACY_SERVER_CARD_PATH, card);
 
-  app.get("/.well-known/ai-catalog.json", (c) => {
-    c.header("content-type", "application/ai-catalog+json");
-    return c.body(JSON.stringify(buildCatalog(root), null, 2));
-  });
+  app.get("/.well-known/ai-catalog.json", (c) =>
+    discovery(c, JSON.stringify(buildCatalog(root, { origin: originOf(c) }), null, 2), AI_CATALOG_MEDIA_TYPE),
+  );
 
-  // Served at the well-known path, read from agent.fafa or .well-known/fafa.
-  app.get("/.well-known/fafa", (c) => {
-    const file = fafaFile(root);
-    if (!file) return c.notFound();
-    c.header("content-type", "application/vnd.fafa+yaml");
-    return c.body(readFileSync(file, "utf8"));
-  });
+  // The files the catalog links to, each with the type its entry declares.
+  // Fixed names only: nothing from the request picks a path.
+  const file = (path: string | null, type: string) => (c: Context) =>
+    path && existsSync(path) ? discovery(c, readFileSync(path, "utf8"), type) : c.notFound();
+  app.get("/.well-known/fafa", (c) => file(fafaFile(root), "application/vnd.fafa+yaml")(c));
+  app.get("/AGENTS.md", file(join(root, "AGENTS.md"), "text/markdown; charset=utf-8"));
+  app.get("/project.fafm", file(join(root, "project.fafm"), "application/vnd.fafm+yaml"));
 
   // ── The card — the view for people ──────────────────────────────────
   app.get("/card", (c) => {
@@ -75,10 +136,11 @@ export function httpApp(root: string = ROOT): Hono {
     c.json({
       name: NAME,
       version: VERSION,
-      mcp: "/mcp",
+      mcp: MCP_PATH,
+      serverCard: SERVER_CARD_PATH,
       card: "/card",
       wellKnown: [
-        "/.well-known/mcp/server-card",
+        LEGACY_SERVER_CARD_PATH,
         "/.well-known/ai-catalog.json",
         "/.well-known/fafa",
       ],

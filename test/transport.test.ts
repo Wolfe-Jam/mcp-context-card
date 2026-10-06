@@ -41,7 +41,7 @@ const say = (r: unknown) => (r as any).content[0].text as string;
 
 test("http: MCP works over stateless Streamable HTTP", async () => {
   const client = await httpClient();
-  assert.equal(client.getServerVersion()?.name, "mcp-context-card");
+  assert.equal(client.getServerVersion()?.name, "io.github.Wolfe-Jam/mcp-context-card");
 
   const { tools } = await client.listTools();
   assert.deepEqual(tools.map((t) => t.name).sort(), TOOLS);
@@ -60,22 +60,23 @@ test("http: the Server Card resource carries _meta over HTTP too", async () => {
   await client.close();
 });
 
-test("http: /.well-known/mcp/server-card serves the card out-of-band", async () => {
+test("http: /.well-known/mcp/server-card (1.x alias) still serves the card", async () => {
   const r = await fetch(`${base}/.well-known/mcp/server-card`);
   assert.equal(r.status, 200);
   const card = await r.json();
-  assert.equal(card.name, "mcp-context-card");
+  assert.equal(card.name, "io.github.Wolfe-Jam/mcp-context-card");
   assert.equal(card._meta[META_KEYS[0]].source, "AGENTS.md");
   assert.equal(card._meta[META_KEYS[0]].mediaType, "text/markdown");
 });
 
-test("http: /.well-known/ai-catalog.json serves 3 sibling entries", async () => {
+test("http: /.well-known/ai-catalog.json serves the card + 3 sibling entries", async () => {
   const r = await fetch(`${base}/.well-known/ai-catalog.json`);
   assert.equal(r.status, 200);
   assert.match(r.headers.get("content-type") ?? "", /ai-catalog\+json/);
   const cat = await r.json();
-  assert.equal(cat.entries.length, 3);
-  assert.equal(cat.entries[0].type, "text/markdown");
+  assert.equal(cat.entries.length, 4);
+  assert.equal(cat.entries[0].type, "application/mcp-server-card+json");
+  assert.equal(cat.entries[1].type, "text/markdown");
 });
 
 test("http: /.well-known/fafa serves the raw agent card", async () => {
@@ -144,7 +145,7 @@ test("http: /mcp is genuinely stateless — no session header, independent inits
   const r2 = await fetch(`${base}/mcp`, { method: "POST", headers, body: JSON.stringify(init) });
   assert.equal(r2.status, 200);
   const b2 = await r2.json();
-  assert.equal(b2.result?.serverInfo?.name, "mcp-context-card");
+  assert.equal(b2.result?.serverInfo?.name, "io.github.Wolfe-Jam/mcp-context-card");
 });
 
 test("http: CORS is open (preflight answered)", async () => {

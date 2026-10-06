@@ -240,7 +240,7 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
     <table class="disc"><thead><tr><th>concern</th><th>source</th><th>media type</th></tr></thead><tbody>${rows}</tbody></table>
     <p class="fetch">A machine reads this over <b>MCP</b> from the
       <code>${escapeHtml(SERVER_CARD_URI)}</code> resource; over <b>HTTP</b> also
-      from <code>GET /.well-known/mcp/server-card</code> and
+      from <code>GET /mcp/server-card</code> and
       <code>GET /.well-known/ai-catalog.json</code>.</p>
   </section>
   <div class="foot">${escapeHtml(name)} · context card</div>

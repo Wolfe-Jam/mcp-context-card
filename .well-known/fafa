@@ -8,6 +8,10 @@ version: "1.0"
 agent:
   name: "mcp-context-card"
   displayName: "mcp-context-card"
+  # Publisher identity in AI Catalog form, as `faf card init` writes it:
+  # urn:air:{your domain}:agent:{short name}. This example publishes as faf.one;
+  # a deployment for your own project uses your domain.
+  id: "urn:air:faf.one:agent:mcp-context-card"
   vendor: "io.github.Wolfe-Jam"
   version: "1.4.0"
   description: >-
