@@ -92,7 +92,7 @@ describe("e2e — real child process", () => {
     const fx = fixture();
     try {
       const c = await stdioChild(fx.root);
-      assert.equal(c.getServerVersion()?.name, "mcp-context-card");
+      assert.equal(c.getServerVersion()?.name, "io.github.Wolfe-Jam/mcp-context-card");
       const tools = (await c.listTools()).tools.map((t) => t.name).sort();
       assert.deepEqual(tools, TOOLS);
 
@@ -137,7 +137,7 @@ describe("e2e — real child process", () => {
       assert.equal(r.content[0].text, "over http");
 
       const wk = await (await fetch(`http://127.0.0.1:${port}/.well-known/ai-catalog.json`)).json();
-      assert.equal(wk.entries.length, 3);
+      assert.equal(wk.entries.length, 4); // the Server Card + 3 sibling entries
 
       await c.close();
     } finally {

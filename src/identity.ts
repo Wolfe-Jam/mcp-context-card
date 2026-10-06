@@ -61,6 +61,23 @@ export function resolveIdentity(root: string): AgentIdentity | null {
   return identity(root) ?? fromPackageJson(root);
 }
 
+/**
+ * Who publishes this project's catalog entries: the domain and short name from
+ * the project's own `.fafa`. `faf card init` writes them into `agent.id` as
+ * `urn:air:{domain}:agent:{short name}` (short name also in `agent.name`).
+ * No `.fafa` domain → `domain` is undefined; callers then fall back to the HTTP
+ * host or a plain identifier. A domain is never invented here: each project
+ * publishes under its own (AI Catalog: "the domain name of the organization
+ * publishing the artifact").
+ */
+export function catalogPublisher(root: string): { domain?: string; handle: string } {
+  const id = identity(root);
+  const m = /^urn:air:([^:]+):/i.exec(id?.id ?? "");
+  const domain = m && m[1].includes(".") ? m[1].toLowerCase() : undefined;
+  const handle = (id?.name ?? "").trim() || "mcp-context-card";
+  return { domain, handle };
+}
+
 /** Human-readable one-liner for the `whoami` tool. */
 export function whoami(root: string): string {
   const id = resolveIdentity(root);

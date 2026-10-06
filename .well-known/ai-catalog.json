@@ -6,33 +6,67 @@
   },
   "entries": [
     {
-      "identifier": "urn:air:mcp-context-card:context",
+      "identifier": "urn:air:faf.one:mcp:mcp-context-card",
+      "type": "application/mcp-server-card+json",
+      "data": {
+        "$schema": "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
+        "name": "io.github.Wolfe-Jam/mcp-context-card",
+        "version": "1.4.0",
+        "title": "MCP Context Card",
+        "description": "MCP server for a project's context (AGENTS.md), memory, and identity — base or drop-in extension.",
+        "websiteUrl": "https://github.com/Wolfe-Jam/mcp-context-card",
+        "repository": {
+          "url": "https://github.com/Wolfe-Jam/mcp-context-card",
+          "source": "github"
+        },
+        "_meta": {
+          "io.github.Wolfe-Jam.mcp-context-card/context": {
+            "source": "AGENTS.md",
+            "mediaType": "text/markdown"
+          },
+          "io.github.Wolfe-Jam.mcp-context-card/memory": {
+            "source": "project.fafm",
+            "mediaType": "application/vnd.fafm+yaml",
+            "iana": "https://www.iana.org/assignments/media-types/application/vnd.fafm+yaml",
+            "note": "no de-facto standard for agent memory yet — this is one instantiation"
+          },
+          "io.github.Wolfe-Jam.mcp-context-card/identity": {
+            "source": ".well-known/fafa",
+            "mediaType": "application/vnd.fafa+yaml",
+            "iana": "https://www.iana.org/assignments/media-types/application/vnd.fafa+yaml"
+          }
+        }
+      }
+    },
+    {
+      "identifier": "urn:air:faf.one:context:mcp-context-card",
       "displayName": "mcp-context-card — project context (AGENTS.md)",
       "type": "text/markdown",
-      "mediaType": "text/markdown",
       "description": "Agent instructions for this project — 9 section(s): Setup, Build, Test, Layout, Conventions, The invariant, ….",
       "url": "./AGENTS.md"
     },
     {
-      "identifier": "urn:air:mcp-context-card:memory",
+      "identifier": "urn:air:faf.one:memory:mcp-context-card",
       "displayName": "mcp-context-card — persistent memory (.fafm)",
       "type": "application/vnd.fafm+yaml",
-      "mediaType": "application/vnd.fafm+yaml",
       "description": "Cross-session memory — 4 fact(s), profile \"knowledge\". Recall survives a process restart. No de-facto standard for this concern yet.",
       "url": "./project.fafm",
-      "_meta": {
-        "io.github.Wolfe-Jam.mcp-context-card/iana": "https://www.iana.org/assignments/media-types/application/vnd.fafm+yaml"
+      "extensions": {
+        "io.github.Wolfe-Jam.mcp-context-card": {
+          "iana": "https://www.iana.org/assignments/media-types/application/vnd.fafm+yaml"
+        }
       }
     },
     {
-      "identifier": "urn:air:mcp-context-card:identity",
+      "identifier": "urn:air:faf.one:identity:mcp-context-card",
       "displayName": "mcp-context-card — agent identity (.fafa)",
       "type": "application/vnd.fafa+yaml",
-      "mediaType": "application/vnd.fafa+yaml",
       "description": "The essential MCP components for a project's context (AGENTS.md), cross-session memory, and identity — a base MCP on its own, or a drop-in extension for any existing MCP server, discoverable through the Server Card _meta block and a self-published ai-catalog.json.",
       "url": "./.well-known/fafa",
-      "_meta": {
-        "io.github.Wolfe-Jam.mcp-context-card/iana": "https://www.iana.org/assignments/media-types/application/vnd.fafa+yaml"
+      "extensions": {
+        "io.github.Wolfe-Jam.mcp-context-card": {
+          "iana": "https://www.iana.org/assignments/media-types/application/vnd.fafa+yaml"
+        }
       }
     }
   ]

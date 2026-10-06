@@ -7,27 +7,27 @@ import { buildCatalog } from "../src/catalog-gen.js";
 import { remember } from "../src/faf/parse-fafm.js";
 import { fixture } from "./helpers.js";
 
-const NS_IANA = "io.github.Wolfe-Jam.mcp-context-card/iana";
+const NS = "io.github.Wolfe-Jam.mcp-context-card";
 
-test("buildCatalog: three sibling entries — context is AGENTS.md/markdown", () => {
+test("buildCatalog: the Server Card + three sibling entries — context is AGENTS.md/markdown", () => {
   const { root, cleanup } = fixture();
   try {
     const cat = buildCatalog(root);
-    assert.equal(cat.entries.length, 3);
+    assert.equal(cat.entries.length, 4);
     assert.deepEqual(
       cat.entries.map((e) => e.type),
-      ["text/markdown", "application/vnd.fafm+yaml", "application/vnd.fafa+yaml"],
+      ["application/mcp-server-card+json", "text/markdown", "application/vnd.fafm+yaml", "application/vnd.fafa+yaml"],
     );
-    for (const e of cat.entries) {
-      assert.ok(e.identifier.startsWith("urn:air:mcp-context-card:"));
-      assert.ok(e.url.startsWith("./"));
-      assert.equal(e.type, e.mediaType);
+    for (const e of cat.entries as Record<string, any>[]) {
+      assert.ok(e.identifier.startsWith("urn:air:faf.one:"));
+      if (e.url) assert.ok(e.url.startsWith("./"));
+      assert.equal(e.mediaType, undefined);
     }
-    // only the two IANA-registered artifacts carry an iana anchor
-    const ctx = cat.entries.find((e) => e.type === "text/markdown")!;
-    assert.equal((ctx as Record<string, unknown>)._meta, undefined);
-    for (const e of cat.entries.filter((x) => x.type !== "text/markdown")) {
-      assert.ok((e as any)._meta[NS_IANA].startsWith("https://www.iana.org/"));
+    // only the two IANA-registered artifacts carry an iana anchor, under extensions
+    const files = cat.entries.slice(1) as Record<string, any>[];
+    assert.equal(files[0].extensions, undefined);
+    for (const e of files.slice(1)) {
+      assert.ok(e.extensions[NS].iana.startsWith("https://www.iana.org/"));
     }
   } finally {
     cleanup();
@@ -42,12 +42,12 @@ test("buildCatalog: descriptions derive from real file content", () => {
 
     // context entry names real AGENTS.md sections
     const ctx = cat.entries.find((e) => e.type === "text/markdown")!;
-    assert.match(ctx.description, /\bsection\(s\)/);
-    assert.match(ctx.description, /Setup/);
+    assert.match(ctx.description!, /\bsection\(s\)/);
+    assert.match(ctx.description!, /Setup/);
 
     // memory entry names the real fact count
     const mem = cat.entries.find((e) => e.type === "application/vnd.fafm+yaml")!;
-    assert.match(mem.description, /\b4 fact\(s\)/);
+    assert.match(mem.description!, /\b4 fact\(s\)/);
   } finally {
     cleanup();
   }
@@ -60,7 +60,7 @@ test("buildCatalog: reflects a change to a source file", () => {
     const mem = buildCatalog(root).entries.find(
       (e) => e.type === "application/vnd.fafm+yaml",
     )!;
-    assert.match(mem.description, /\b5 fact\(s\)/); // 4 authored + 1 added
+    assert.match(mem.description!, /\b5 fact\(s\)/); // 4 authored + 1 added
   } finally {
     cleanup();
   }
@@ -74,13 +74,13 @@ test("buildCatalog: synthesises descriptions when sources are absent", () => {
     const cat = buildCatalog(dir);
 
     const ctx = cat.entries.find((e) => e.type === "text/markdown")!;
-    assert.match(ctx.description, /not present/);
+    assert.match(ctx.description!, /not present/);
 
     const mem = cat.entries.find((e) => e.type === "application/vnd.fafm+yaml")!;
-    assert.match(mem.description, /\b0 fact\(s\)/);
+    assert.match(mem.description!, /\b0 fact\(s\)/);
 
     const id = cat.entries.find((e) => e.type === "application/vnd.fafa+yaml")!;
-    assert.match(id.description, /status: unknown/);
+    assert.match(id.description!, /status: unknown/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

@@ -31,25 +31,25 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { findSection, parseAgentsMd } from "./agents-md.js";
 import { authorAgentsMd } from "./author.js";
 import { forget, parseFafm, recall, remember } from "./memory.js";
-import { identity, resolveIdentity, serverCardMeta, whoami } from "./identity.js";
+import { identity, resolveIdentity, whoami } from "./identity.js";
 import { renderCard, renderCardText, safeAccent, type Theme } from "./render-card.js";
 
 export { NAME, VERSION, SERVER_CARD_URI } from "./constants.js";
-import { NAME, VERSION, SERVER_CARD_URI, CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION } from "./constants.js";
+import { NAME, VERSION, SERVER_CARD_URI, CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION, REGISTRY_NAME, TITLE, SERVER_CARD_MEDIA_TYPE } from "./constants.js";
+import { serverCard } from "./server-card.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 /** Default package root — `dist/` at runtime, `src/` under tsx. Both are one up. */
 export const ROOT = join(here, "..");
 
 /**
- * The Server Card — this server's identity plus the `_meta` context block,
- * one namespaced key per concern. Served in-band as the
- * `mcp-context-card://server-card` resource and out-of-band at
- * `/.well-known/mcp/server-card`.
+ * The Server Card (SEP-2127, schema v1): this server's identity plus the `_meta`
+ * context block, one namespaced key per concern. Served in-band as the
+ * `mcp-context-card://server-card` resource and out-of-band at `/mcp/server-card`
+ * (the spec's reserved `<streamable-http-url>/server-card`; the 1.x path
+ * `/.well-known/mcp/server-card` is kept as an alias). Built in server-card.ts.
  */
-export function serverCard() {
-  return { name: NAME, version: VERSION, _meta: serverCardMeta() };
-}
+export { serverCard } from "./server-card.js";
 
 const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] });
 
@@ -109,7 +109,7 @@ type ProjectFrom = "configured" | "client roots" | "start directory" | "package"
 
 export function createServer(root: string = ROOT, opts: ServerOptions = {}): Server {
   const server = new Server(
-    { name: NAME, version: VERSION },
+    { name: REGISTRY_NAME, title: TITLE, version: VERSION },
     { capabilities: { tools: {}, resources: {} }, instructions: INSTRUCTIONS },
   );
 
@@ -166,7 +166,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
         uri: SERVER_CARD_URI,
         name: "Server Card",
         description: "This server's identity + the _meta context block.",
-        mimeType: "application/json",
+        mimeType: SERVER_CARD_MEDIA_TYPE,
       },
       {
         uri: CARD_UI_URI,
@@ -190,7 +190,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
     }
     return {
       contents: [
-        { uri: SERVER_CARD_URI, mimeType: "application/json", text: JSON.stringify(serverCard(), null, 2) },
+        { uri: SERVER_CARD_URI, mimeType: SERVER_CARD_MEDIA_TYPE, text: JSON.stringify(serverCard(), null, 2) },
       ],
     };
   });
@@ -460,7 +460,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
                   card: `resource ${CARD_UI_URI} (MCP App, ${MCP_APP_MIME})`,
                 },
                 http: {
-                  serverCard: "GET /.well-known/mcp/server-card",
+                  serverCard: "GET /mcp/server-card",
                   aiCatalog: "GET /.well-known/ai-catalog.json",
                   card: "GET /card",
                 },

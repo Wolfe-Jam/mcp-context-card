@@ -22,7 +22,7 @@ test("server: advertises its name + every tool", async () => {
   const { root, cleanup } = fixture();
   try {
     const client = await connected(root);
-    assert.equal(client.getServerVersion()?.name, "mcp-context-card");
+    assert.equal(client.getServerVersion()?.name, "io.github.Wolfe-Jam/mcp-context-card");
     const { tools } = await client.listTools();
     assert.deepEqual(tools.map((t) => t.name).sort(), TOOLS);
     await client.close();
@@ -88,7 +88,7 @@ test("server: the Server Card resource carries the _meta context block", async (
 
     const res = await client.readResource({ uri: SERVER_CARD_URI });
     const card = JSON.parse((res.contents[0] as { text: string }).text);
-    assert.equal(card.name, "mcp-context-card");
+    assert.equal(card.name, "io.github.Wolfe-Jam/mcp-context-card");
     assert.deepEqual(Object.keys(card._meta), [
       "io.github.Wolfe-Jam.mcp-context-card/context",
       "io.github.Wolfe-Jam.mcp-context-card/memory",
@@ -326,7 +326,7 @@ test("server: list_context_sources — three concerns, surfaces split by transpo
     assert.equal(s.identity.present, true); // the fixture ships a .fafa
     assert.match(s.surfaces.mcp.serverCard, /mcp-context-card:\/\/server-card/);
     assert.ok(s.surfaces.mcp.card.includes(CARD_UI_URI), `card surface missing: ${s.surfaces.mcp.card}`);
-    assert.match(s.surfaces.http.serverCard, /GET \/\.well-known\/mcp\/server-card/);
+    assert.match(s.surfaces.http.serverCard, /GET \/mcp\/server-card/);
     assert.match(s.surfaces.http.card, /GET \/card/);
     await client.close();
   } finally {
