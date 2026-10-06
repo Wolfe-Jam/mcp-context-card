@@ -137,7 +137,7 @@ describe("e2e — real child process", () => {
       assert.equal(r.content[0].text, "over http");
 
       const wk = await (await fetch(`http://127.0.0.1:${port}/.well-known/ai-catalog.json`)).json();
-      assert.equal(wk.entries.length, 4); // the Server Card + 3 sibling entries
+      assert.equal(wk.entries.length, 3); // the Server Card + AGENTS.md + .fafa; memory is opt-in
 
       await c.close();
     } finally {

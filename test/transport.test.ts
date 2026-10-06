@@ -69,12 +69,12 @@ test("http: /.well-known/mcp/server-card (1.x alias) still serves the card", asy
   assert.equal(card._meta[META_KEYS[0]].mediaType, "text/markdown");
 });
 
-test("http: /.well-known/ai-catalog.json serves the card + 3 sibling entries", async () => {
+test("http: /.well-known/ai-catalog.json serves the card + AGENTS.md + .fafa (memory is opt-in)", async () => {
   const r = await fetch(`${base}/.well-known/ai-catalog.json`);
   assert.equal(r.status, 200);
   assert.match(r.headers.get("content-type") ?? "", /ai-catalog\+json/);
   const cat = await r.json();
-  assert.equal(cat.entries.length, 4);
+  assert.equal(cat.entries.length, 3);
   assert.equal(cat.entries[0].type, "application/mcp-server-card+json");
   assert.equal(cat.entries[1].type, "text/markdown");
 });

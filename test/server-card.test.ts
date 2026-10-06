@@ -202,7 +202,6 @@ test("C5: identifiers use the publisher domain from the project's .fafa (faf.one
   assert.deepEqual(ids, [
     "urn:air:faf.one:mcp:mcp-context-card",
     "urn:air:faf.one:context:mcp-context-card",
-    "urn:air:faf.one:memory:mcp-context-card",
     "urn:air:faf.one:identity:mcp-context-card",
   ]);
 });

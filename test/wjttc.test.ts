@@ -5,7 +5,7 @@
  * Tier 2: Server Card — the portable checker's card tier, with the official v1 schema
  * Tier 3: Hosting — the portable checker's hosting tier (CORS, caching, ETag/304)
  * Tier 4: AI Catalog — the portable checker's catalog tier
- * Tier 5: Security — discovery routes serve fixed files only, GET only; the card page escapes
+ * Tier 5: Security — fixed files only, GET only, memory private unless opted in; the card page escapes
  * Tier 6: Parity — stdio and Streamable HTTP expose the same tools, resources and answers
  * Tier 7: Ship — one version everywhere; the bin answers; the package carries what it serves
  *
@@ -23,7 +23,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { checkDiscovery, type DiscoveryReport, type Tier } from "../src/conformance/discovery.js";
-import { VERSION } from "../src/constants.js";
+import { VERSION, publishMemoryFromEnv } from "../src/constants.js";
 import { httpApp } from "../src/transport/http.js";
 import { REPO_ROOT, cardValidator, fixture } from "./helpers.js";
 
@@ -128,6 +128,30 @@ describe("Tier 5: Security", () => {
         assert.ok(r.status >= 400, `${method} ${p} → ${r.status}`);
       }
     }
+  });
+
+  test("memory stays private by default: not served, not in the catalog", async () => {
+    assert.equal((await fetch(`${base}/project.fafm`)).status, 404);
+    const cat = (await (await fetch(`${base}/.well-known/ai-catalog.json`)).json()) as { entries: any[] };
+    assert.ok(!cat.entries.some((e) => e.type === "application/vnd.fafm+yaml"), "memory entry listed");
+    assert.ok(!JSON.stringify(cat).includes("project.fafm"), "catalog points at project.fafm");
+  });
+
+  test("a project that opts in publishes memory: served with its type and listed", async () => {
+    const app = httpApp(fx.root, { publishMemory: true });
+    const r = await app.fetch(new Request("http://ctx.example.com/project.fafm"));
+    assert.equal(r.status, 200);
+    assert.equal(r.headers.get("content-type"), "application/vnd.fafm+yaml");
+    const cat = (await (await app.fetch(new Request("http://ctx.example.com/.well-known/ai-catalog.json"))).json()) as {
+      entries: any[];
+    };
+    assert.equal(cat.entries.find((e) => e.type === "application/vnd.fafm+yaml")?.url, "http://ctx.example.com/project.fafm");
+  });
+
+  test("the opt-in is exactly MCP_CONTEXT_CARD_PUBLISH_MEMORY=1", () => {
+    assert.equal(publishMemoryFromEnv({}), false);
+    assert.equal(publishMemoryFromEnv({ MCP_CONTEXT_CARD_PUBLISH_MEMORY: "true" }), false);
+    assert.equal(publishMemoryFromEnv({ MCP_CONTEXT_CARD_PUBLISH_MEMORY: "1" }), true);
   });
 
   test("the card page escapes markup from the project's own files", async () => {

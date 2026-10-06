@@ -24,6 +24,13 @@ export const MCP_PATH = "/mcp";
 export const SERVER_CARD_PATH = `${MCP_PATH}/server-card`;
 /** The 1.x location, kept as an alias so existing links keep working. */
 export const LEGACY_SERVER_CARD_PATH = "/.well-known/mcp/server-card";
+/**
+ * Set to `1` to publish the memory file (`project.fafm`) over HTTP and list it
+ * in the AI Catalog. Off by default: memory is written during sessions, and
+ * discovery documents must not carry user- or session-specific data (SEP-2127).
+ */
+export const PUBLISH_MEMORY_ENV = "MCP_CONTEXT_CARD_PUBLISH_MEMORY";
+export const publishMemoryFromEnv = (env: NodeJS.ProcessEnv = process.env) => env[PUBLISH_MEMORY_ENV] === "1";
 
 /** MCP Apps (io.modelcontextprotocol/ui): the card as an inline UI resource.
  *  A host that supports MCP Apps fetches this resource and renders it in a
