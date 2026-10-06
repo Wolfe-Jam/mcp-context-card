@@ -47,8 +47,9 @@ test("a server that only serves bare JSON fails the MUSTs and SHOULDs it misses"
     "hosting.cors-origin",
     "hosting.cors-preflight",
     "hosting.etag",
+    "transport.origin-403", // no /mcp at all: 404, not 403
   ]);
-  assert.equal(r.mustFailures, 8);
+  assert.equal(r.mustFailures, 9);
   assert.equal(status(r, "hosting.https"), "pass");
   assert.ok(r.results.filter((x) => x.tier === "catalog").every((x) => x.status === "skip"), "no catalog → skipped");
 });
@@ -64,6 +65,9 @@ test("a correct hosted card over HTTPS passes, and plain HTTP off localhost fail
     c.header("Content-Type", SERVER_CARD_TYPE);
     return c.body(JSON.stringify(goodCard(new URL(c.req.url).origin + "/mcp")));
   });
+  app.post("/mcp", (c) =>
+    c.req.header("origin") ? c.json({ jsonrpc: "2.0", error: { code: -32000, message: "Invalid Origin" }, id: null }, 403) : c.json({}),
+  );
   app.options("/mcp/server-card", (c) => {
     c.header("Access-Control-Allow-Origin", "*");
     c.header("Access-Control-Allow-Methods", "GET");
@@ -158,14 +162,15 @@ test("a broken catalog fails each catalog requirement it misses", async () => {
   assert.equal(status(r, "catalog.card-entry"), "pass");
 });
 
-test("nothing published: the card is reported missing and every other check skips", async () => {
+test("nothing published: the card is reported missing and the discovery checks skip", async () => {
   const r = await checkDiscovery({ mcpUrl: "https://wx.example.com/mcp" }, { fetch: via(new Hono()) });
-  assert.deepEqual(failed(r), ["card.found"]);
-  assert.equal(r.mustFailures, 0); // where (and whether) a card is hosted is the spec's MAY
+  assert.deepEqual(failed(r), ["card.found", "transport.origin-403"]);
+  assert.equal(r.mustFailures, 1); // only the transport MUST: where (and whether) a card is hosted is the spec's MAY
   assert.equal(r.passed, 0);
 
   const down = await checkDiscovery({ mcpUrl: "https://wx.example.com/mcp" }, { fetch: offline });
   assert.deepEqual(failed(down), ["card.found"]);
+  assert.equal(down.results.find((x) => x.id === "transport.origin-403")!.status, "skip");
   assert.match(down.results.find((x) => x.id === "catalog.links")!.detail!, /unreachable/);
 });
 
@@ -177,4 +182,17 @@ test("a body that is not JSON fails card.json and the catalog is skipped", async
   assert.equal(status(r, "card.found"), "pass");
   assert.equal(status(r, "card.json"), "fail");
   assert.match(r.results.find((x) => x.id === "catalog.spec-version")!.detail!, /not a JSON object/);
+});
+
+test("transport: a local server must refuse a forged Host; remote servers skip that check", async () => {
+  const app = new Hono();
+  app.post("/mcp", (c) => c.json({}, c.req.header("origin") ? 403 : 200));
+  const run = (status: number | null) =>
+    checkDiscovery({ mcpUrl: "http://127.0.0.1:3000/mcp" }, { fetch: via(app), rawStatus: async () => status });
+  assert.equal(status(await run(403), "transport.rebinding"), "pass");
+  assert.equal(status(await run(200), "transport.rebinding"), "fail");
+  assert.equal(status(await run(null), "transport.rebinding"), "skip");
+  assert.equal(status(await run(403), "transport.origin-403"), "pass");
+  const remote = await checkDiscovery({ mcpUrl: "https://wx.example.com/mcp" }, { fetch: via(app) });
+  assert.equal(status(remote, "transport.rebinding"), "skip");
 });

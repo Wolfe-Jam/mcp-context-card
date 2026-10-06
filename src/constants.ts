@@ -30,6 +30,10 @@ export const LEGACY_SERVER_CARD_PATH = "/.well-known/mcp/server-card";
  * discovery documents must not carry user- or session-specific data (SEP-2127).
  */
 export const PUBLISH_MEMORY_ENV = "MCP_CONTEXT_CARD_PUBLISH_MEMORY";
+/** Extra Host names the HTTP server accepts (comma-separated), e.g. a reverse proxy's public name. */
+export const ALLOWED_HOSTS_ENV = "MCP_CONTEXT_CARD_ALLOWED_HOSTS";
+/** Browser origins allowed to call the HTTP server (comma-separated). */
+export const ALLOWED_ORIGINS_ENV = "MCP_CONTEXT_CARD_ALLOWED_ORIGINS";
 export const publishMemoryFromEnv = (env: NodeJS.ProcessEnv = process.env) => env[PUBLISH_MEMORY_ENV] === "1";
 
 /** MCP Apps (io.modelcontextprotocol/ui): the card as an inline UI resource.

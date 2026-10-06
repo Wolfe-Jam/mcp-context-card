@@ -52,15 +52,28 @@ USAGE
 ENV
   MCP_CONTEXT_CARD_ROOT   read AGENTS.md / project.fafm / .well-known/ from here
   PORT                    if set, run HTTP instead of stdio
+  HOST                    HTTP bind address (default 127.0.0.1, this machine
+                          only); 0.0.0.0 exposes it, e.g. in a container
+  MCP_CONTEXT_CARD_ALLOWED_HOSTS / _ALLOWED_ORIGINS
+                          comma-separated Host names / browser origins to
+                          accept besides this machine's own (reverse proxy, web app)
   MCP_CONTEXT_CARD_PUBLISH_MEMORY=1
-                          HTTP: also serve project.fafm and list it in the AI
-                          Catalog (off: memory is session data). HTTP has no
-                          auth: keep it local or put it behind your own
+                          HTTP: serve project.fafm, list it in the AI Catalog,
+                          and show its facts on an exposed /card (off: memory
+                          is session data). HTTP has no auth
 
 A bare run is an stdio server: it waits for a host to speak JSON-RPC on stdin,
 so it looks idle at a terminal. Try \`card\` (opens your context in a browser) or \`--http\`.
 https://github.com/Wolfe-Jam/mcp-context-card
 `;
+
+/**
+ * The address the HTTP server binds: `HOST`, else 127.0.0.1. Local by default,
+ * as the MCP transports spec recommends; a hosted deploy sets HOST=0.0.0.0.
+ */
+export function bindHost(env: NodeJS.ProcessEnv = process.env): string {
+  return env.HOST?.trim() || "127.0.0.1";
+}
 
 /**
  * Decide how to launch, from argv + env. Pure — so the mode matrix is unit
@@ -148,9 +161,17 @@ if (entryPath && import.meta.url === pathToFileURL(entryPath).href) {
   } else if (mode === "http") {
     const { httpApp } = await import("./transport/http.js");
     const { serve: serveHttp } = await import("@hono/node-server");
-    serveHttp({ fetch: httpApp(root).fetch, port });
+    const { isLoopbackBind } = await import("./transport/guard.js");
+    const host = bindHost();
+    const local = isLoopbackBind(host);
+    serveHttp({ fetch: httpApp(root, { exposure: local ? "local" : "exposed" }).fetch, port, hostname: host });
     // stderr, not stdout — stdout is the MCP wire in stdio mode.
-    console.error(`${NAME} · http · :${port}  (POST /mcp · GET /card · GET /.well-known/*)`);
+    console.error(
+      `${NAME} · http · ${host.includes(":") ? `[${host}]` : host}:${port}  (POST /mcp · GET /card · GET /.well-known/*)` +
+        (local
+          ? "  · local only (HOST=0.0.0.0 to expose)"
+          : "  · EXPOSED beyond this machine, no authentication: put it behind your own"),
+    );
   } else {
     // stderr so it never touches the JSON-RPC wire on stdout; a bare run at a
     // terminal otherwise looks hung.

@@ -167,11 +167,14 @@ reports which project it picked and how. To pin one project instead, set
 wins. Identity is optional. Over HTTP instead:
 `PORT=8080 npx mcp-context-card`. Requires Node ≥20.
 
-HTTP mode has no authentication. The MCP endpoint and the discovery files are
-open to anyone who can reach the port, so keep it local or put it behind your
-own auth. Memory (`project.fafm`) is written during sessions, so it isn't
-served or listed in the AI Catalog unless you set
-`MCP_CONTEXT_CARD_PUBLISH_MEMORY=1`.
+HTTP mode is local by default, as the MCP transports spec asks: it binds
+`127.0.0.1`, refuses foreign browser origins with 403, and refuses DNS names
+rebound to this machine. `HOST=0.0.0.0` exposes it (a container or hosted
+deploy). There is no authentication, so put an exposed server behind your own.
+Memory is session data: an exposed server shows only its count on `/card`, and
+never serves or lists `project.fafm`, unless you set
+`MCP_CONTEXT_CARD_PUBLISH_MEMORY=1`. Details:
+[docs/TRANSPORT.md](./docs/TRANSPORT.md#security-local-by-default).
 
 If `command: "npx"` fails to spawn (`spawn npx ENOENT` — seen on Cursor, whose
 host process doesn't inherit a shell `PATH`), point `command` at `node` and

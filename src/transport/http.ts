@@ -15,13 +15,16 @@
  *   GET /mcp/server-card               — the Server Card (the spec's reserved
  *                                         `<streamable-http-url>/server-card`)
  *   GET /.well-known/mcp/server-card   — the same card, the 1.x location (alias)
- *   GET /.well-known/ai-catalog.json   — the card + the three sibling entries
+ *   GET /.well-known/ai-catalog.json   — the card + its sibling entries
  *   GET /AGENTS.md · /.well-known/fafa — the files the catalog links
  *   GET /project.fafm                  — only with MCP_CONTEXT_CARD_PUBLISH_MEMORY=1:
  *                                         memory is session data, private by default
  *
- * The plain-HTTP routes above are public by design. The MCP endpoint has no
- * authentication either: put it behind your own, or keep it local.
+ * Local by default (MCP transports spec, Security Warning): the bin binds
+ * 127.0.0.1, `hostGuard` serves loopback Host names only (DNS rebinding), and
+ * `originGuard` refuses foreign browser origins with 403 on every route except
+ * the public discovery documents. Exposing the server (HOST=0.0.0.0) is a
+ * deliberate act; there is no authentication, so put it behind your own.
  *
  * Discovery documents carry the spec's CORS (GET only, `Content-Type` and
  * `If-None-Match` allowed, `ETag` exposed), `Cache-Control: public,
@@ -44,22 +47,33 @@ import {
   MCP_PATH,
   SERVER_CARD_MEDIA_TYPE,
   publishMemoryFromEnv,
+  ALLOWED_HOSTS_ENV,
+  ALLOWED_ORIGINS_ENV,
   SERVER_CARD_PATH,
 } from "../constants.js";
+import { hostGuard, listFromEnv, originGuard } from "./guard.js";
 
-/** The paths that are discovery documents (spec CORS + caching). */
-const DISCOVERY_PATHS = [
-  SERVER_CARD_PATH,
-  LEGACY_SERVER_CARD_PATH,
-  "/.well-known/ai-catalog.json",
-  "/.well-known/fafa",
-  "/AGENTS.md",
-  "/project.fafm",
-];
+/**
+ * Public-by-design discovery documents: the Server Card spec requires them to
+ * be readable from any origin, so they get its CORS and skip the Origin check.
+ * They carry no private data (SEP-2127 rules that out).
+ */
+const PUBLIC_PATHS = [SERVER_CARD_PATH, LEGACY_SERVER_CARD_PATH, "/.well-known/ai-catalog.json", "/.well-known/fafa"];
 
 export interface HttpAppOptions {
   /** Serve `project.fafm` and list it in the catalog. Default: the env switch. */
   publishMemory?: boolean;
+  /**
+   * `local` (default): only loopback Host names are served, and the card shows
+   * memory in full (the reader is on this machine). `exposed`: bound beyond
+   * this machine; no Host check unless `allowedHosts` is given, and the card
+   * keeps memory private unless `publishMemory` is on.
+   */
+  exposure?: "local" | "exposed";
+  /** Extra Host names to accept (a reverse proxy's public name). */
+  allowedHosts?: string[];
+  /** Browser origins allowed to call this server, e.g. `https://app.example.com`. */
+  allowedOrigins?: string[];
 }
 
 /** CORS exactly as the Server Card spec lists it. */
@@ -93,8 +107,14 @@ function discovery(c: Context, body: string, contentType: string): Response {
 
 export function httpApp(root: string = ROOT, opts: HttpAppOptions = {}): Hono {
   const publishMemory = opts.publishMemory ?? publishMemoryFromEnv();
+  const exposure = opts.exposure ?? "local";
+  const allowedHosts = opts.allowedHosts ?? listFromEnv(process.env[ALLOWED_HOSTS_ENV]);
+  const allowedOrigins = opts.allowedOrigins ?? listFromEnv(process.env[ALLOWED_ORIGINS_ENV]);
   const app = new Hono();
-  for (const p of DISCOVERY_PATHS) app.use(p, discoveryCors);
+  // DNS-rebinding and cross-origin protection first, before any route runs.
+  if (exposure === "local" || allowedHosts.length) app.use("*", hostGuard(allowedHosts));
+  app.use("*", originGuard(allowedOrigins, (path) => PUBLIC_PATHS.includes(path)));
+  for (const p of PUBLIC_PATHS) app.use(p, discoveryCors);
   app.use(MCP_PATH, cors());
   app.use("/card", cors());
   app.use("/", cors());
@@ -139,7 +159,14 @@ export function httpApp(root: string = ROOT, opts: HttpAppOptions = {}): Hono {
     const theme = (["light", "dark", "auto"].includes(q.theme ?? "") ? q.theme : "auto") as Theme;
     c.header("content-type", "text/html; charset=utf-8");
     return c.body(
-      renderCard(root, { theme, accent: safeAccent(q.accent), expanded: q.expand === "all" }),
+      renderCard(root, {
+        theme,
+        accent: safeAccent(q.accent),
+        expanded: q.expand === "all",
+        // A card that may be read beyond this machine keeps memory private
+        // unless the project publishes it.
+        memory: exposure === "exposed" && !publishMemory ? "private" : "full",
+      }),
     );
   });
 
