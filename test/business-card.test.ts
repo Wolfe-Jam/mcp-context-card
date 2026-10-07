@@ -11,6 +11,9 @@ import { join } from "node:path";
 import { cardInitials, cardKind, cardOneLiner, cardTitle, readCard, renderBusinessCard, renderCard } from "../src/render-card.js";
 import { parseFafa } from "../src/faf/parse-fafa.js";
 import { fixture } from "./helpers.js";
+import { VERSION } from "../src/constants.js";
+
+const V = VERSION.replace(/\./g, "\\.");
 
 /** A project whose only file is the given .fafa. */
 function withFafa(yaml: string, fn: (root: string) => void) {
@@ -71,9 +74,9 @@ test("front: name, title, one-liner; the version shows once, in the title", () =
     const html = renderCard(root);
     const front = html.slice(html.indexOf('class="face front"'), html.indexOf('class="face back"'));
     assert.match(front, /<h1>mcp-context-card<\/h1>/);
-    assert.match(front, /<p class="title">MCP server · v1\.5\.0<\/p>/);
+    assert.match(front, new RegExp(`<p class="title">MCP server · v${V}</p>`));
     assert.match(front, /<p class="oneliner">The essential MCP components/);
-    assert.equal((front.match(/v1\.5\.0/g) ?? []).length, 1);
+    assert.equal((front.match(new RegExp(`v${V}`, "g")) ?? []).length, 1);
     assert.match(front, /<span class="domain">faf\.one<\/span>/);
     assert.match(front, /<label for="flip" class="flipbtn" data-tip="Flip the card"[^>]*aria-label="Flip the card"><span aria-hidden="true">↻<\/span><\/label>/);
     assert.match(front, /<details class="whatis">[\s\S]*Business Cards for Agents/);
@@ -156,7 +159,7 @@ test("read and render are separate: readCard gives a neutral card, renderBusines
   try {
     const card = readCard(root);
     assert.equal(card.name, "mcp-context-card");
-    assert.equal(card.title, "MCP server · v1.5.0");
+    assert.equal(card.title, `MCP server · v${VERSION}`);
     assert.deepEqual(card.tabs.map((t) => t.key), ["about", "context", "memory", "discovery"]);
     assert.ok(card.chips.some((c) => c.accent && c.text === "published"));
     assert.equal(renderCard(root), renderBusinessCard(card)); // renderCard = read, then draw

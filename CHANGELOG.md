@@ -2,6 +2,47 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## 1.6.0
+
+The card is a business card.
+
+`npx mcp-context-card card` used to open a technical page. It now opens a
+**business card**: what you'd hand someone on the front, and the full detail
+one flip away.
+
+- **Front:** a monogram logo (the first letters of the name: **MC**), the
+  name, a title, and a one-liner.
+  - The **title** says what it is and its version ("MCP server · v1.6.0",
+    "A2A agent · v0.3.0"), from where the project's `.fafa` says it runs
+    (`endpoints`, or `metadata.cards.packages`). With nothing declared, it
+    claims nothing.
+  - The **one-liner** is the start of the description, stopping at its first
+    natural pause rather than mid-phrase.
+  - Domain, publisher, status and licence sit along the bottom.
+- **Back:** tabs for About (the identity in full), Skills (when the `.fafa`
+  lists capabilities), Context (AGENTS.md), Memory and Discovery. Long content
+  scrolls inside the card, including by mouse wheel or trackpad on macOS.
+- **Controls:** the same two on both faces. **(i)** top-right explains
+  Business Cards for Agents; the outline flip button bottom-right (↻ on the
+  front, ↺ on the back) has an instant tooltip.
+- **Views:** ▭ ▯ switches landscape or portrait (`--portrait`,
+  `?layout=portrait`, `layout` on the tools). ◐ switches the **card** between
+  light and dark. `--theme` / `?theme=` set the card's starting colour, and
+  the page around it follows your OS on its own.
+- **Works with scripts off:** flip, tabs and both toggles are CSS. The one
+  small script adds Expand all, `#section` links on the back, and printing.
+  `--expanded` and print lay both faces out flat.
+- **The `.fafa` reader** now reads `endpoints`, `capabilities` and
+  `metadata.cards.packages`, as `faf card init` writes them. This repo's own
+  `.fafa` declares its npm package.
+- **Read and render are separate:** `readCard` turns a project's files into a
+  neutral business card; `renderBusinessCard` draws any card, so a person's
+  card or an A2A Agent Card needs no renderer change.
+- The saved file is still `context-card.html`: underneath, it's the project's
+  context.
+
+No tool or protocol change. 209 tests, all green.
+
 ## 1.5.0
 
 MCP Server Cards (SEP-2127, Final) and the AI Catalog (specVersion 1.0), and HTTP that is local by default.

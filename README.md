@@ -271,7 +271,7 @@ over both transports:
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-200 tests on Linux, macOS, and Windows, coverage‑gated in CI.
+209 tests on Linux, macOS, and Windows, coverage‑gated in CI.
 `npm run wjttc` runs the WJTTC certification suite (seven tiers, from protocol
 and Server Card conformance to stdio/HTTP parity and the shipped package). Two spawn a real
 child process and check a remembered fact survives the restart — one against

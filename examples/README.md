@@ -28,7 +28,7 @@ $ curl -s localhost:3000/mcp/server-card
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
   "name": "io.github.Wolfe-Jam/mcp-context-card",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "title": "MCP Context Card",
   "description": "MCP server for a project's context (AGENTS.md), memory, and identity — base or drop-in extension.",
   "websiteUrl": "https://github.com/Wolfe-Jam/mcp-context-card",
