@@ -188,6 +188,19 @@ Extending an MCP you already run: most hosts accept more than one
 `server-git`, or your own, and every agent in that host gains context,
 memory, and identity discovery without anything else changing.
 
+### Your identifiers
+
+The AI Catalog names each entry `urn:air:{domain}:{namespace}:{name}`, and
+the domain is yours. It comes from your project's `.fafa`: run
+`npx faf-cli card init` (or `--domain example.com`), and it writes
+`agent.id: urn:air:example.com:agent:<short-name>`. Your catalog then publishes
+`urn:air:example.com:context:<short-name>` and so on, with no code to change.
+This repo's own `.fafa` says `faf.one`; that's our example, and yours says yours.
+
+With no `.fafa`, no domain is invented: the served catalog uses the host it's
+served from (`localhost` when you run it locally), and the static
+`.well-known/ai-catalog.json` uses plain `<short-name>:<namespace>` IDs.
+
 ## Why
 
 `AGENTS.md` is the de-facto standard for telling a coding agent how to work in a

@@ -104,10 +104,15 @@ To serve *your* artifacts:
 1. **Replace the three files** — `AGENTS.md`, `project.fafm`, `.well-known/fafa`
    — with your own, or point `MCP_CONTEXT_CARD_ROOT` at a directory that has them.
    `AGENTS.md` is the one with a real standard; the other two are swappable.
-2. **Rename the namespace.** `serverCardMeta()` in `src/identity.ts` uses
-   `io.github.Wolfe-Jam.mcp-context-card/*` keys, and `buildCatalog()` in
-   `src/catalog-gen.ts` uses `urn:air:mcp-context-card:*` identifiers. Change both to
-   a domain or GitHub identity you control ([MECHANISMS.md](./MECHANISMS.md)).
+2. **Set your domain in your `.fafa`, not in code.** The AI Catalog identifiers
+   (`urn:air:{domain}:{namespace}:{name}`) take the domain and short name from
+   your project's `.fafa`: `npx faf-cli card init` (or `--domain example.com`)
+   writes `agent.id: urn:air:example.com:agent:<short-name>`, and the catalog
+   follows it. No `.fafa`, no invented domain: the served catalog uses the host
+   it's served from, and the static file uses plain IDs. Only the Server Card
+   `_meta` key namespace (`io.github.Wolfe-Jam.mcp-context-card/*`,
+   `META_NS` in `src/identity.ts`) is a code constant. Change it if you fork
+   ([MECHANISMS.md](./MECHANISMS.md)).
 3. **Swap the media types** in `serverCardMeta()` if your memory / identity
    artifacts aren't `.fafm` / `.fafa`. Drop the `iana` field for any that isn't
    a registered type.

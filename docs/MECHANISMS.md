@@ -85,39 +85,52 @@ publisher lists artifacts, each entry keyed by its **media type** (`type`).
 GET /.well-known/ai-catalog.json
 ```
 
+Served from `https://ctx.example.com` (1.5.0, this repo's own files):
+
 ```jsonc
 {
   "specVersion": "1.0",
   "host": { "displayName": "mcp-context-card", "identifier": "https://github.com/Wolfe-Jam/mcp-context-card" },
   "entries": [
-    {
-      "identifier": "urn:air:mcp-context-card:context",
-      "type": "text/markdown",
-      "mediaType": "text/markdown",
-      "description": "…derived from the real AGENTS.md — section count + headings…",
-      "url": "./AGENTS.md"
-    },
-    { "identifier": "urn:air:mcp-context-card:memory",   "type": "application/vnd.fafm+yaml", "…": "…" },
-    { "identifier": "urn:air:mcp-context-card:identity", "type": "application/vnd.fafa+yaml", "…": "…" }
+    { "identifier": "urn:air:faf.one:mcp:mcp-context-card", "type": "application/mcp-server-card+json",
+      "url": "https://ctx.example.com/mcp/server-card" },
+    { "identifier": "urn:air:faf.one:context:mcp-context-card", "type": "text/markdown",
+      "displayName": "mcp-context-card — project context (AGENTS.md)",
+      "description": "Agent instructions for this project — 9 section(s): Setup, Build, Test, …",
+      "url": "https://ctx.example.com/AGENTS.md" },
+    { "identifier": "urn:air:faf.one:identity:mcp-context-card", "type": "application/vnd.fafa+yaml",
+      "url": "https://ctx.example.com/.well-known/fafa",
+      "extensions": { "io.github.Wolfe-Jam.mcp-context-card": { "iana": "https://www.iana.org/assignments/media-types/application/vnd.fafa+yaml" } },
+      "…": "…" }
   ]
 }
 ```
 
+The static `.well-known/ai-catalog.json` is the same, with relative URLs and the
+Server Card inline as `data`. Memory (`application/vnd.fafm+yaml`) is listed only
+with `MCP_CONTEXT_CARD_PUBLISH_MEMORY=1`.
+
 **Why it looks like this:**
 
+- **The Server Card comes first** (`application/mcp-server-card+json`). It
+  carries its own name, description and version, so the entry repeats none.
 - **`type` is the routing key.** A consumer scanning catalogs for
   `text/markdown` context, or `application/vnd.fafm+yaml` memory, finds the
   entry without knowing this publisher.
 - **`identifier` is a `urn:air:` URN** scoped to the publisher
-  (`urn:air:<host>:<concern>`). In ai-catalog's
+  (`urn:air:{domain}:{namespace}:{name}`). The domain is the one your `.fafa`
+  declares (`faf card init` writes it into `agent.id`); `faf.one` above is this
+  repo's. With no `.fafa` domain, the served catalog uses the serving host and
+  the static file uses plain IDs. No domain is ever invented. In ai-catalog's
   [trust‑manifest ADRs](https://github.com/Agent-Card/ai-catalog/tree/main/adr),
-  `urn:air` identifiers carry a publisher‑domain‑aligned trust manifest — the
-  entries here align to `github.com/Wolfe-Jam/mcp-context-card`.
+  `urn:air` identifiers carry a publisher‑domain‑aligned trust manifest, so the
+  domain in the identifier is the one a publisher would sign with.
 - **`description` is derived from real content** — the live AGENTS.md heading
   list, the current fact count, the agent's own description — not a blurb that
   drifts. See `buildCatalog()` in [`src/catalog-gen.ts`](../src/catalog-gen.ts).
-- **`url` is relative.** Served over HTTP it resolves against the origin; in a
-  repo browser, against the tree.
+- **`url` is absolute when served** (against the request's origin, honouring a
+  reverse proxy's forwarded headers) and relative in the static file, so it also
+  resolves in a repo browser.
 
 ---
 
