@@ -116,13 +116,21 @@ h1{margin:0;font-size:2.1rem;line-height:1.15;letter-spacing:-.025em}
   box-shadow:0 0 0 3px var(--card),0 0 0 4px color-mix(in srgb,var(--accent) 45%,transparent),0 6px 20px color-mix(in srgb,var(--accent) 30%,transparent)}
 .front .id{margin-top:70px}
 .corner.br{bottom:16px;right:16px}
-.flipbtn{position:absolute;right:18px;bottom:16px;z-index:4;cursor:pointer;display:inline-flex;align-items:center;gap:7px;
-  font-weight:700;font-size:.86rem;letter-spacing:.02em;padding:8px 16px;border-radius:999px;
-  color:#fff;background:var(--accent);box-shadow:0 2px 10px color-mix(in srgb,var(--accent) 35%,transparent)}
-.flipbtn span{font-size:1.1rem;line-height:1}
-.flipbtn:hover{filter:brightness(1.08)}
-.tabbar .flipbtn.back-btn{position:static;margin:0 0 7px auto;padding:5px 13px;font-size:.78rem;
-  color:var(--accent);background:transparent;border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);box-shadow:none}
+.flipbtn{position:absolute;right:18px;bottom:16px;z-index:4;cursor:pointer;width:42px;height:42px;border-radius:50%;
+  display:grid;place-items:center;color:var(--card);background:var(--fg);box-shadow:0 2px 8px rgba(0,0,0,.18);
+  transition:transform .2s ease}
+.flipbtn span{font-size:1.3rem;line-height:1;font-weight:700}
+
+.tabbar .flipbtn.back-btn{position:relative;margin:0 0 7px auto;width:32px;height:32px;padding:0;border-radius:50%;
+  color:var(--card);background:var(--fg);box-shadow:none}
+/* fast tooltip: shows at once on hover or keyboard focus (a title tooltip waits ~1 s) */
+.flipbtn[data-tip]::after{content:attr(data-tip);position:absolute;right:0;bottom:calc(100% + 8px);white-space:nowrap;
+  font:600 .74rem/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;letter-spacing:0;padding:6px 9px;border-radius:7px;
+  color:var(--card);background:var(--fg);opacity:0;transform:translateY(3px);pointer-events:none;transition:opacity .08s,transform .08s}
+.flipbtn[data-tip]:hover::after,#flip:focus-visible~.stage .flipbtn[data-tip]::after{opacity:1;transform:none}
+.tabbar .flipbtn.back-btn::after{bottom:auto;top:calc(100% + 8px)}
+.flipbtn:hover{transform:none}.flipbtn:hover span{transform:rotate(-25deg)}.flipbtn span{transition:transform .2s ease}
+.tabbar .flipbtn.back-btn span{font-size:1.05rem}
 .whatis{position:absolute;top:16px;right:16px;z-index:5}
 .whatis>summary{position:static;list-style:none}
 .whatis>summary::-webkit-details-marker{display:none}
@@ -433,11 +441,11 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
           ${oneLiner ? `<p class="oneliner">${escapeHtml(oneLiner)}</p>` : ""}
         </div>
         <div class="foot-front">${domain ? `<span class="domain">${escapeHtml(domain)}</span>` : ""}${pills ? `<div class="pills">${pills}</div>` : ""}</div>
-        <label for="flip" class="flipbtn" title="Flip the card over">Flip <span aria-hidden="true">↻</span></label>
+        <label for="flip" class="flipbtn" data-tip="Flip the card" aria-label="Flip the card"><span aria-hidden="true">↻</span></label>
       </section>
       <section class="face back">
         ${radios}
-        <div class="tabbar">${tabbar}<label for="flip" class="flipbtn back-btn" title="Back to the front"><span aria-hidden="true">↺</span> Front</label></div>
+        <div class="tabbar">${tabbar}<label for="flip" class="flipbtn back-btn" data-tip="Flip back" aria-label="Flip back"><span aria-hidden="true">↺</span></label></div>
         <div class="panes">${panes}</div>
       </section>
     </div>
