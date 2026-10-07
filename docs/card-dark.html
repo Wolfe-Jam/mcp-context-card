@@ -73,12 +73,13 @@ h1{margin:0;font-size:2.1rem;line-height:1.15;letter-spacing:-.025em}
 .front .id{margin-top:70px}
 .corner.br{bottom:16px;right:16px}
 .flipbtn{position:absolute;right:18px;bottom:16px;z-index:4;cursor:pointer;width:42px;height:42px;border-radius:50%;
-  display:grid;place-items:center;color:var(--card);background:var(--fg);box-shadow:0 2px 8px rgba(0,0,0,.18);
+  display:grid;place-items:center;color:var(--fg);background:transparent;box-shadow:inset 0 0 0 2px var(--fg);
   transition:transform .2s ease}
 .flipbtn span{font-size:1.3rem;line-height:1;font-weight:700}
 
-/* the back's button: same spot as the front's, inverted (card fill, ink ring and arrow) */
-.flipbtn.back-btn{color:var(--fg);background:var(--card);box-shadow:inset 0 0 0 2px var(--fg),0 2px 8px rgba(0,0,0,.12)}
+/* the back's button: same spot and outline as the front's; ↺ instead of ↻. Over
+   scrolling text it takes the card's colour, so the arrow stays readable. */
+.flipbtn.back-btn{background:var(--card)}
 /* fast tooltip: shows at once on hover or keyboard focus (a title tooltip waits ~1 s) */
 .flipbtn[data-tip]::after{content:attr(data-tip);position:absolute;right:0;bottom:calc(100% + 8px);white-space:nowrap;
   font:600 .74rem/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;letter-spacing:0;padding:6px 9px;border-radius:7px;
