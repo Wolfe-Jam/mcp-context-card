@@ -15,7 +15,7 @@ rendered as one card you can read.
 
 **See your own project's business card** — run this in its folder. It writes
 `context-card.html` and opens it in your browser. The front is the card: name,
-title, one-liner. Flip it (⟲) for the back: About, Context, Memory, Discovery.
+title, one-liner. Flip it for the back: About, Context, Memory, Discovery.
 
 ```
 npx mcp-context-card card
@@ -84,7 +84,7 @@ people: read it, screenshot it, drop it in a PR, put it on a status page.
 - **Front:** the name, a title (what it is and its version: "MCP server", "A2A
   agent", from where the project's `.fafa` says it runs) and a one-liner (the
   start of its description).
-- **Back (⟲ to flip):** tabs for **About** (the identity in full),
+- **Back (Flip):** tabs for **About** (the identity in full),
   **Skills** (when the `.fafa` lists capabilities), **Context** (`AGENTS.md`),
   **Memory** and **Discovery**. Long content scrolls inside the card.
 - **Landscape or portrait:** the ▭ ▯ button switches the view; `--portrait` /

@@ -75,6 +75,9 @@ test("front: name, title, one-liner; the version shows once, in the title", () =
     assert.match(front, /<p class="oneliner">The essential MCP components/);
     assert.equal((front.match(/v1\.5\.0/g) ?? []).length, 1);
     assert.match(front, /<span class="domain">faf\.one<\/span>/);
+    assert.match(front, /<label for="flip" class="flipbtn"[^>]*>Flip /);
+    assert.match(front, /<details class="whatis">[\s\S]*Business Cards for Agents/);
+    assert.match(html, /class="flipbtn back-btn"[^>]*>[\s\S]*Front<\/label>/);
   } finally {
     cleanup();
   }
