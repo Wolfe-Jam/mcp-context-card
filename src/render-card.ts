@@ -143,11 +143,6 @@ h1{margin:0;font-size:2.1rem;line-height:1.15;letter-spacing:-.025em}
 .tabbar label:hover{color:var(--fg)}
 .panes{flex:1;overflow:auto;padding:20px 26px 72px}
 .pane{display:none}
-#t-about:checked~.panes .p-about,#t-skills:checked~.panes .p-skills,#t-context:checked~.panes .p-context,
-#t-memory:checked~.panes .p-memory,#t-discovery:checked~.panes .p-discovery{display:block}
-#t-about:checked~.tabbar label[for=t-about],#t-skills:checked~.tabbar label[for=t-skills],
-#t-context:checked~.tabbar label[for=t-context],#t-memory:checked~.tabbar label[for=t-memory],
-#t-discovery:checked~.tabbar label[for=t-discovery]{color:var(--accent);background:var(--chip)}
 .lead{margin:0 0 14px;font-size:1rem;line-height:1.6}
 .kv{border-collapse:collapse;font-size:.86rem;width:100%}
 .kv th{text-align:left;font-weight:600;color:var(--muted);padding:6px 14px 6px 0;white-space:nowrap;vertical-align:top}
@@ -271,10 +266,43 @@ export function cardOneLiner(id: AgentIdentity | null, max = 140): string {
   return pause && pause.index >= 40 && pause.index <= max ? d.slice(0, pause.index).trim() : first;
 }
 
+/**
+ * A business card, independent of where its facts came from: everything the
+ * renderer draws. `readCard` builds one from a project's files; another reader
+ * (an A2A Agent Card, an MCP Server Card, a person's card) can build one too,
+ * and `renderBusinessCard` draws any of them the same way.
+ */
+export interface BusinessCard {
+  name: string;
+  /** What it is (and its version): "MCP server · v1.5.0", or a person's role. */
+  title?: string;
+  oneLiner?: string;
+  /** Shown bottom-left on the front, e.g. the publisher domain. */
+  domain?: string;
+  /** Footer chips; `accent` highlights one (e.g. the status). Plain text. */
+  chips: { text: string; accent?: boolean }[];
+  /** The back's tabs, in order. `key` is [a-z0-9-]; `html` is already-safe markup. */
+  tabs: { key: string; label: string; heading: string; html: string }[];
+  /** The (i) panel, as already-safe markup. */
+  about: string;
+}
+
+/** How to draw a card: the owner's colour and accent, the view, and the flat (print) layout. */
+export type RenderOptions = Pick<CardOptions, "theme" | "accent" | "layout" | "expanded">;
+
+/** The project's card: read its files, then draw. */
 export function renderCard(root: string, opts: CardOptions = {}): string {
-  const theme: Theme = opts.theme ?? "auto";
-  const accent = safeAccent(opts.accent);
-  const portrait = opts.layout === "portrait";
+  return renderBusinessCard(readCard(root, opts), opts);
+}
+
+/** The (i) panel for an agent or server card. */
+const AGENT_ABOUT = `<p class="whatis-head">Business Cards for Agents</p>
+            <p>This is the public card of an AI agent or MCP server: who it is, what it does, where to reach it. Flip it for the detail.</p>
+            <p>People read it here. Machines read the same facts from its MCP Server Card and AI Catalog, before they ever connect.</p>
+            <p class="whatis-foot">Made with <code>mcp-context-card</code></p>`;
+
+/** Read a project's AGENTS.md, memory and identity into a business card. */
+export function readCard(root: string, opts: Pick<CardOptions, "expanded" | "memory"> = {}): BusinessCard {
   const flat = !!opts.expanded;
 
   const agents = parseAgentsMd(join(root, "AGENTS.md"));
@@ -287,15 +315,13 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
   const oneLiner = cardOneLiner(id);
   const domain = /^urn:air:([^:]+):/i.exec(id?.id ?? "")?.[1];
 
-  // The version rides in the title line, so the front's pills skip it.
-  const pills = [
-    id?.vendor && id.vendor !== id.status && `<span class="pill">${escapeHtml(id.vendor)}</span>`,
-    !title && id?.agentVersion && `<span class="pill">v${escapeHtml(id.agentVersion)}</span>`,
-    id?.status && `<span class="pill accent">${escapeHtml(id.status)}</span>`,
-    id?.license && `<span class="pill">${escapeHtml(id.license)}</span>`,
-  ]
-    .filter(Boolean)
-    .join("");
+  // The version rides in the title line, so the front's chips skip it.
+  const chips = [
+    id?.vendor && id.vendor !== id.status ? { text: id.vendor } : null,
+    !title && id?.agentVersion ? { text: `v${id.agentVersion}` } : null,
+    id?.status ? { text: id.status, accent: true } : null,
+    id?.license ? { text: id.license } : null,
+  ].filter((c): c is { text: string; accent?: boolean } => !!c);
 
   // CONTEXT — one <details> per AGENTS.md section, collapsed by default;
   // `expanded` renders them all open. The "# AGENTS.md" top-level heading is
@@ -399,22 +425,49 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
     ["memory", "Memory", `Memory — ${memLabel}`, memoryBody],
     ["discovery", "Discovery", "Discovery", discoveryBody],
   ];
-  const radios = tabs
-    .map(([k], i) => `<input type="radio" name="tab" id="t-${k}" class="sr"${i === 0 ? " checked" : ""}>`)
+  return {
+    name,
+    title,
+    oneLiner,
+    domain,
+    chips,
+    tabs: tabs.map(([key, label, heading, html]) => ({ key, label, heading, html })),
+    about: AGENT_ABOUT,
+  };
+}
+
+/** Draw any business card as one self-contained HTML page. */
+export function renderBusinessCard(card: BusinessCard, opts: RenderOptions = {}): string {
+  const theme: Theme = opts.theme ?? "auto";
+  const accent = safeAccent(opts.accent);
+  const portrait = opts.layout === "portrait";
+  const flat = !!opts.expanded;
+  const { name, title, oneLiner, domain } = card;
+  const tabs = card.tabs.map((t) => ({ ...t, key: t.key.replace(/[^a-z0-9-]/gi, "").toLowerCase() || "tab" }));
+
+  const pills = card.chips
+    .map((c) => `<span class="pill${c.accent ? " accent" : ""}">${escapeHtml(c.text)}</span>`)
     .join("");
-  const tabbar = tabs.map(([k, label]) => `<label for="t-${k}">${escapeHtml(label)}</label>`).join("");
+  const radios = tabs
+    .map((t, i) => `<input type="radio" name="tab" id="t-${t.key}" class="sr"${i === 0 ? " checked" : ""}>`)
+    .join("");
+  const tabbar = tabs.map((t) => `<label for="t-${t.key}">${escapeHtml(t.label)}</label>`).join("");
   const panes = tabs
-    .map(([k, , heading, body]) => `<div class="pane p-${k}"><p class="label">${escapeHtml(heading)}</p>${body}</div>`)
+    .map((t) => `<div class="pane p-${t.key}"><p class="label">${escapeHtml(t.heading)}</p>${t.html}</div>`)
+    .join("");
+  // One CSS rule pair per tab: its pane shows, its label lights, when its radio is checked.
+  const tabCss = tabs
+    .map(
+      (t) =>
+        `#t-${t.key}:checked~.panes .p-${t.key}{display:block}#t-${t.key}:checked~.tabbar label[for=t-${t.key}]{color:var(--accent);background:var(--chip)}`,
+    )
     .join("");
 
   // The (i) panel: the same control, in the same spot, on both faces.
   const WHATIS = `<details class="whatis">
-          <summary class="corner tr" title="About Business Cards for Agents" aria-label="About Business Cards for Agents">i</summary>
+          <summary class="corner tr" title="About this card" aria-label="About this card">i</summary>
           <div class="whatis-panel">
-            <p class="whatis-head">Business Cards for Agents</p>
-            <p>This is the public card of an AI agent or MCP server: who it is, what it does, where to reach it. Flip it for the detail.</p>
-            <p>People read it here. Machines read the same facts from its MCP Server Card and AI Catalog, before they ever connect.</p>
-            <p class="whatis-foot">Made with <code>mcp-context-card</code></p>
+            ${card.about}
           </div>
         </details>`;
 
@@ -424,7 +477,7 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escapeHtml(name)} — business card</title>
-<style>${CSS(accent)}</style>
+<style>${CSS(accent)}${tabCss}</style>
 </head>
 <body${flat ? ` class="flat"` : ""}${htmlAttr(theme)}>
 <input type="checkbox" id="flip" class="sr" aria-label="Flip the card">
