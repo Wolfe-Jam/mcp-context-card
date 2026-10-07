@@ -77,6 +77,9 @@ test("front: name, title, one-liner; the version shows once, in the title", () =
     assert.match(front, /<span class="domain">faf\.one<\/span>/);
     assert.match(front, /<label for="flip" class="flipbtn" data-tip="Flip the card"[^>]*aria-label="Flip the card"><span aria-hidden="true">↻<\/span><\/label>/);
     assert.match(front, /<details class="whatis">[\s\S]*Business Cards for Agents/);
+    const back = html.slice(html.indexOf('class="face back"'));
+    assert.match(back, /<details class="whatis">[\s\S]*Business Cards for Agents/); // (i) on both faces
+    assert.match(back, /class="flipbtn back-btn"/); // flip on both faces, same spot
     assert.match(html, /class="flipbtn back-btn"[^>]*aria-label="Flip back"><span aria-hidden="true">↺<\/span><\/label>/);
   } finally {
     cleanup();

@@ -93,7 +93,7 @@ h1{margin:0;font-size:2.1rem;line-height:1.15;letter-spacing:-.025em}
   background:var(--card);border:1px solid var(--line);box-shadow:var(--card-shadow);font-size:.84rem;line-height:1.5}
 .whatis-panel p{margin:0 0 8px}.whatis-head{font-weight:800;color:var(--accent);letter-spacing:-.01em;font-size:.95rem}
 .whatis-foot{color:var(--muted);margin:0!important}.whatis-panel code{font:.86em ui-monospace,SFMono-Regular,Menlo,monospace}
-.tabbar{display:flex;flex-wrap:wrap;gap:4px;padding:14px 18px 0;border-bottom:1px solid var(--line);border-top:5px solid var(--accent)}
+.tabbar{display:flex;flex-wrap:wrap;gap:4px;padding:14px 60px 0 18px;border-bottom:1px solid var(--line);border-top:5px solid var(--accent)}
 .tabbar label{cursor:pointer;font-size:.8rem;font-weight:600;color:var(--muted);padding:6px 11px;border-radius:8px 8px 0 0}
 .tabbar label:hover{color:var(--fg)}
 .panes{flex:1;overflow:auto;padding:20px 26px 72px}
@@ -217,6 +217,15 @@ details.ctx-section>.md{padding:0 0 16px}
       </section>
       <section class="face back">
         <input type="radio" name="tab" id="t-about" class="sr" checked><input type="radio" name="tab" id="t-context" class="sr"><input type="radio" name="tab" id="t-memory" class="sr"><input type="radio" name="tab" id="t-discovery" class="sr">
+        <details class="whatis">
+          <summary class="corner tr" title="About Business Cards for Agents" aria-label="About Business Cards for Agents">i</summary>
+          <div class="whatis-panel">
+            <p class="whatis-head">Business Cards for Agents</p>
+            <p>This is the public card of an AI agent or MCP server: who it is, what it does, where to reach it. Flip it for the detail.</p>
+            <p>People read it here. Machines read the same facts from its MCP Server Card and AI Catalog, before they ever connect.</p>
+            <p class="whatis-foot">Made with <code>mcp-context-card</code></p>
+          </div>
+        </details>
         <div class="tabbar"><label for="t-about">About</label><label for="t-context">Context</label><label for="t-memory">Memory · 4</label><label for="t-discovery">Discovery</label></div>
         <div class="panes"><div class="pane p-about"><p class="label">About</p><p class="lead">The essential MCP components for a project's context (AGENTS.md), cross-session memory, and identity — a base MCP on its own, or a drop-in extension for any existing MCP server, discoverable through the Server Card _meta block and a self-published ai-catalog.json.</p><table class="kv"><tbody><tr><th>Agent ID</th><td><code>urn:air:faf.one:agent:mcp-context-card</code></td></tr><tr><th>Publisher</th><td>io.github.Wolfe-Jam</td></tr><tr><th>Version</th><td>v1.5.0</td></tr><tr><th>Status</th><td>published</td></tr><tr><th>License</th><td>MIT</td></tr><tr><th>Package (npm)</th><td><code>mcp-context-card</code></td></tr></tbody></table></div><div class="pane p-context"><p class="label">Context — AGENTS.md</p><div class="ctx-nav"><ul class="toc"><li><a href="#setup">Setup</a></li><li><a href="#build">Build</a></li><li><a href="#test">Test</a></li><li><a href="#layout">Layout</a></li><li><a href="#conventions">Conventions</a></li><li><a href="#the-invariant">The invariant</a></li><li><a href="#safety">Safety</a></li><li><a href="#definition-of-done">Definition of done</a></li><li><a href="#authoring-this-file">Authoring this file</a></li></ul><button type="button" class="xall" hidden>Expand all</button></div>
     <div class="ctx-preamble md"><p><code>mcp-context-card</code> is the essential MCP server for a project's <strong>context</strong> (this file), <strong>memory</strong>, and <strong>identity</strong> — usable as your base MCP, or dropped into any existing MCP server as an extension. Discoverable to any MCP client through the two surfaces already in the ecosystem: the Server Card <code>_meta</code> block and <code>ai-catalog.json</code> sibling entries.</p>

@@ -137,7 +137,7 @@ h1{margin:0;font-size:2.1rem;line-height:1.15;letter-spacing:-.025em}
   background:var(--card);border:1px solid var(--line);box-shadow:var(--card-shadow);font-size:.84rem;line-height:1.5}
 .whatis-panel p{margin:0 0 8px}.whatis-head{font-weight:800;color:var(--accent);letter-spacing:-.01em;font-size:.95rem}
 .whatis-foot{color:var(--muted);margin:0!important}.whatis-panel code{font:.86em ui-monospace,SFMono-Regular,Menlo,monospace}
-.tabbar{display:flex;flex-wrap:wrap;gap:4px;padding:14px 18px 0;border-bottom:1px solid var(--line);border-top:5px solid var(--accent)}
+.tabbar{display:flex;flex-wrap:wrap;gap:4px;padding:14px 60px 0 18px;border-bottom:1px solid var(--line);border-top:5px solid var(--accent)}
 .tabbar label{cursor:pointer;font-size:.8rem;font-weight:600;color:var(--muted);padding:6px 11px;border-radius:8px 8px 0 0}
 .tabbar label:hover{color:var(--fg)}
 .panes{flex:1;overflow:auto;padding:20px 26px 72px}
@@ -406,6 +406,17 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
     .map(([k, , heading, body]) => `<div class="pane p-${k}"><p class="label">${escapeHtml(heading)}</p>${body}</div>`)
     .join("");
 
+  // The (i) panel: the same control, in the same spot, on both faces.
+  const WHATIS = `<details class="whatis">
+          <summary class="corner tr" title="About Business Cards for Agents" aria-label="About Business Cards for Agents">i</summary>
+          <div class="whatis-panel">
+            <p class="whatis-head">Business Cards for Agents</p>
+            <p>This is the public card of an AI agent or MCP server: who it is, what it does, where to reach it. Flip it for the detail.</p>
+            <p>People read it here. Machines read the same facts from its MCP Server Card and AI Catalog, before they ever connect.</p>
+            <p class="whatis-foot">Made with <code>mcp-context-card</code></p>
+          </div>
+        </details>`;
+
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -424,15 +435,7 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
     <div class="faces">
       <section class="face front">
         <div class="logo" aria-hidden="true">${escapeHtml(cardInitials(name))}</div>
-        <details class="whatis">
-          <summary class="corner tr" title="About Business Cards for Agents" aria-label="About Business Cards for Agents">i</summary>
-          <div class="whatis-panel">
-            <p class="whatis-head">Business Cards for Agents</p>
-            <p>This is the public card of an AI agent or MCP server: who it is, what it does, where to reach it. Flip it for the detail.</p>
-            <p>People read it here. Machines read the same facts from its MCP Server Card and AI Catalog, before they ever connect.</p>
-            <p class="whatis-foot">Made with <code>mcp-context-card</code></p>
-          </div>
-        </details>
+        ${WHATIS}
         <div class="id">
           <h1>${escapeHtml(name)}</h1>
           ${title ? `<p class="title">${escapeHtml(title)}</p>` : ""}
@@ -443,6 +446,7 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
       </section>
       <section class="face back">
         ${radios}
+        ${WHATIS}
         <div class="tabbar">${tabbar}</div>
         <div class="panes">${panes}</div>
         <label for="flip" class="flipbtn back-btn" data-tip="Flip back" aria-label="Flip back"><span aria-hidden="true">↺</span></label>
