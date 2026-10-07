@@ -1,5 +1,5 @@
 /**
- * MCP Server Cards (SEP-2127, Final) + AI Catalog 1.0 — one test per
+ * MCP Server Cards (SEP-2127, Final) + AI Catalog (specVersion 1.0) — one test per
  * requirement in PLANET-FAF's compliance list (rows A1–A13, B1–B5, C1–C10).
  * The card is validated against the official v1 JSON Schema from
  * modelcontextprotocol/experimental-ext-server-card@526201bb (the SEP's snapshot).

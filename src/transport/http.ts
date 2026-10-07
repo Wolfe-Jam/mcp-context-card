@@ -11,7 +11,7 @@
  * transports in a map; this one deliberately does not.
  *
  * Alongside the MCP endpoint it serves the discovery documents (MCP Server
- * Cards, SEP-2127 Final; AI Catalog 1.0):
+ * Cards, SEP-2127 Final; AI Catalog specVersion 1.0):
  *   GET /mcp/server-card               — the Server Card (the spec's reserved
  *                                         `<streamable-http-url>/server-card`)
  *   GET /.well-known/mcp/server-card   — the same card, the 1.x location (alias)
