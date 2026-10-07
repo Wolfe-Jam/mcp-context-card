@@ -97,7 +97,7 @@ test("back: tabs, with Skills only when the .fafa lists capabilities", () => {
   }
   withFafa(`agent: { name: wx }\ncapabilities: [{ name: forecast }, { name: tides }]\n`, (root) => {
     const html = renderCard(root);
-    assert.match(html, /<label for="t-skills">Skills · 2<\/label>/);
+    assert.match(html, /<label for="t-skills">Skills<\/label>/);
     assert.match(html, /<b>forecast<\/b>/);
   });
 });

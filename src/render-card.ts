@@ -393,10 +393,10 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
   const tabs: [string, string, string, string][] = [
     ["about", "About", "About", aboutBody],
     ...(skills.length
-      ? ([["skills", `Skills · ${skills.length}`, `Skills — ${skills.length}`, skillsBody]] as [string, string, string, string][])
+      ? ([["skills", "Skills", `Skills — ${skills.length}`, skillsBody]] as [string, string, string, string][])
       : []),
     ["context", "Context", "Context — AGENTS.md", contextBody],
-    ["memory", `Memory · ${mem.facts.length}`, `Memory — ${memLabel}`, memoryBody],
+    ["memory", "Memory", `Memory — ${memLabel}`, memoryBody],
     ["discovery", "Discovery", "Discovery", discoveryBody],
   ];
   const radios = tabs
