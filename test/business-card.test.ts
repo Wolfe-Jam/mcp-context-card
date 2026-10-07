@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { cardKind, cardOneLiner, cardTitle, renderCard } from "../src/render-card.js";
+import { cardInitials, cardKind, cardOneLiner, cardTitle, renderCard } from "../src/render-card.js";
 import { parseFafa } from "../src/faf/parse-fafa.js";
 import { fixture } from "./helpers.js";
 
@@ -129,4 +129,16 @@ endpoints: [{ protocol: a2a, location: "javascript:alert(3)" }]
       assert.ok(html.includes("&lt;script&gt;alert(1)&lt;/script&gt;"));
     },
   );
+});
+
+test("logo: a monogram from the name's first two words, top-left on the front", () => {
+  assert.equal(cardInitials("mcp-context-card"), "MC");
+  assert.equal(cardInitials("Weather Agent"), "WA");
+  assert.equal(cardInitials("faf"), "F");
+  assert.equal(cardInitials("@scope/pkg_name"), "SP");
+  assert.equal(cardInitials("élan vital"), "ÉV");
+  withFafa(`agent: { name: "<x> y" }\n`, (root) => {
+    const html = renderCard(root);
+    assert.match(html, /<div class="logo" aria-hidden="true">XY<\/div>/);
+  });
 });

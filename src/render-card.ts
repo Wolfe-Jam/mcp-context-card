@@ -101,7 +101,11 @@ h1{margin:0;font-size:2.1rem;line-height:1.15;letter-spacing:-.025em}
 .corner{position:absolute;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
   cursor:pointer;font-weight:700;font-size:.9rem;color:var(--muted);background:var(--chip);border:1px solid var(--line);z-index:4}
 .corner:hover{color:var(--accent);border-color:var(--accent)}
-.corner.tl{top:16px;left:16px;font-family:Georgia,serif;font-style:italic}
+.corner.tr{top:16px;right:16px;font-family:Georgia,serif;font-style:italic}
+.logo{position:absolute;top:22px;left:24px;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;
+  color:#fff;font-weight:800;font-size:1.05rem;letter-spacing:.02em;
+  background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 55%,#000));
+  box-shadow:0 2px 10px color-mix(in srgb,var(--accent) 35%,transparent)}
 .corner.br{bottom:16px;right:16px}
 .tabbar .corner.flipback{position:static;margin:0 0 6px auto;width:28px;height:28px;padding:0;border-radius:50%;color:var(--muted)}
 .tabbar{display:flex;flex-wrap:wrap;gap:4px;padding:14px 18px 0;border-bottom:1px solid var(--line);border-top:5px solid var(--accent)}
@@ -213,6 +217,15 @@ export function cardKind(id: AgentIdentity | null): string[] {
 /** The front's title line: what it is, then its version. Empty when nothing is known. */
 export function cardTitle(id: AgentIdentity | null): string {
   return [cardKind(id).join(" · "), id?.agentVersion ? `v${id.agentVersion}` : ""].filter(Boolean).join(" · ");
+}
+
+/** The front's logo: the first letters of the name's first two words ("mcp-context-card" → "MC"). */
+export function cardInitials(name: string): string {
+  const words = name.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  return words
+    .slice(0, 2)
+    .map((w) => Array.from(w)[0].toUpperCase())
+    .join("");
 }
 
 /** The front's one-liner: the first sentence of the description. */
@@ -379,7 +392,8 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
   <main class="bcard">
     <div class="faces">
       <section class="face front">
-        <label for="flip" class="corner tl" title="About">i</label>
+        <div class="logo" aria-hidden="true">${escapeHtml(cardInitials(name))}</div>
+        <label for="flip" class="corner tr" title="About">i</label>
         <div class="id">
           <h1>${escapeHtml(name)}</h1>
           ${title ? `<p class="title">${escapeHtml(title)}</p>` : ""}
