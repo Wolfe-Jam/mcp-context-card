@@ -2,6 +2,51 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## 1.5.0
+
+MCP Server Cards (SEP-2127, Final) and AI Catalog 1.0, and HTTP that is local by default.
+
+**Breaking for exposed deploys:** HTTP mode now binds `127.0.0.1`. A container or
+hosted deploy must set `HOST=0.0.0.0` (`examples/Dockerfile` does). Local use is
+unchanged.
+
+- **Server Card (SEP-2127, Final).** Served at `GET /mcp/server-card`
+  (`<streamable-http-url>/server-card`). The 1.x `/.well-known/mcp/server-card`
+  still answers with the same card. The card validates against the official v1
+  schema: `$schema`, a reverse-DNS `name` (`io.github.Wolfe-Jam/mcp-context-card`,
+  as in `server.json`), `title`, `description`, `websiteUrl`, `repository`, and a
+  `streamable-http` remote when served over HTTP. `serverInfo` reports the same
+  name, title and version.
+- **Discovery hosting.** The card, catalog and `.well-known/fafa` carry the
+  spec's CORS (`Access-Control-Allow-Origin: *`, GET, `Content-Type` and
+  `If-None-Match` allowed, `ETag` exposed), `Cache-Control: public,
+  max-age=3600`, and an `ETag` answered with `304 Not Modified`.
+- **AI Catalog 1.0.** The Server Card is the first entry. Entries use `type`,
+  custom data sits in `extensions`, and identifiers are
+  `urn:air:{domain}:{namespace}:{name}` with the domain taken from the project's
+  own `.fafa` (none is ever invented). `/AGENTS.md` is served, so every catalog
+  link resolves with its declared type.
+- **Memory stays private over HTTP.** `project.fafm` is session data, so it is
+  not served or listed in the AI Catalog, and an exposed `/card` shows only how
+  many facts there are, unless `MCP_CONTEXT_CARD_PUBLISH_MEMORY=1`. Local
+  surfaces (the CLI card, the MCP App, the tools, a local `/card`) are unchanged.
+- **Local by default (MCP transports spec).** A foreign browser `Origin` gets
+  403 with a JSON-RPC error. A local server serves loopback `Host` names only,
+  so a DNS name rebound to this machine is refused. The server binds
+  `127.0.0.1` unless `HOST` is set. `MCP_CONTEXT_CARD_ALLOWED_HOSTS` and
+  `MCP_CONTEXT_CARD_ALLOWED_ORIGINS` admit a reverse proxy or a web app. The
+  startup line says whether the server is local or exposed, and now prints
+  once the socket is listening.
+- **WJTTC suite (`npm run wjttc`).** Seven tiers: Protocol, Server Card,
+  Hosting, AI Catalog, Security, stdio/HTTP Parity, Ship. Tiers 2 to 4 and the
+  transport checks run `src/conformance/discovery.ts`, a self-contained checker
+  for any server URL that reports each requirement as MUST or SHOULD, worded
+  as the specs word it.
+- Dependencies: `@modelcontextprotocol/sdk` 1.32.1 (GHSA-6qxp-vccf-f47h) and
+  `hono` 4.13.13. `npm audit` reports 0 vulnerabilities.
+
+No tool change. 200 tests, all green.
+
 ## 1.4.0
 
 The card reads the `.fafa` that `faf card init` writes, and shows the agent's ID.

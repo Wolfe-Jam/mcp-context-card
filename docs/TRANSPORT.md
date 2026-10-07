@@ -90,6 +90,7 @@ of a server, and this one does them as follows:
 | MUST validate `Origin`; refuse an invalid one with 403 | `originGuard` on every route except the public discovery documents: a request with no `Origin` (a non-browser client), from a page on this machine, from an allowlisted origin, or from the server's own origin passes; any other gets 403 with a JSON-RPC error (`id: null`) |
 | SHOULD bind only to localhost when running locally | binds `127.0.0.1` unless `HOST` says otherwise; the startup line says which |
 | SHOULD authenticate every connection | not built in: keep it local, or put it behind your own auth |
+| SHOULD rate-limit the Server Card endpoint (Server Card spec) | not built in: your proxy or host's limiter |
 
 A local server also checks the `Host` header (`hostGuard`, the SDK's Express
 `hostHeaderValidation` semantics for Hono): only loopback names are served, so a

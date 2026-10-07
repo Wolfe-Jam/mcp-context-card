@@ -170,7 +170,8 @@ wins. Identity is optional. Over HTTP instead:
 HTTP mode is local by default, as the MCP transports spec asks: it binds
 `127.0.0.1`, refuses foreign browser origins with 403, and refuses DNS names
 rebound to this machine. `HOST=0.0.0.0` exposes it (a container or hosted
-deploy). There is no authentication, so put an exposed server behind your own.
+deploy). There is no authentication or rate limiting, so put an exposed server
+behind your own.
 Memory is session data: an exposed server shows only its count on `/card`, and
 never serves or lists `project.fafm`, unless you set
 `MCP_CONTEXT_CARD_PUBLISH_MEMORY=1`. Details:
@@ -245,11 +246,15 @@ over both transports:
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-140 tests on Linux, macOS, and Windows, coverage‑gated in CI. Two spawn a real
+200 tests on Linux, macOS, and Windows, coverage‑gated in CI.
+`npm run wjttc` runs the WJTTC certification suite (seven tiers, from protocol
+and Server Card conformance to stdio/HTTP parity and the shipped package). Two spawn a real
 child process and check a remembered fact survives the restart — one against
 an existing `project.fafm`, one starting from a project that has never had
 one; another checks the stdio and HTTP tool surfaces match, and another checks
 every tool's title and behaviour hints against what it actually does.
+`src/conformance/discovery.ts` checks any server's Server Card, AI Catalog and
+transport security against the specs, one MUST or SHOULD at a time.
 
 ## Layout
 
@@ -262,8 +267,11 @@ every tool's title and behaviour hints against what it actually does.
 | `src/render-card.ts` | the card — identity + `AGENTS.md` + memory + discovery, as one HTML page |
 | `src/memory.ts` | file‑backed `remember` / `recall` / `forget` |
 | `src/identity.ts` | `whoami` (`.fafa` → `package.json` fallback) + the `_meta` block |
-| `src/catalog-gen.ts` | writes `ai-catalog.json` from the same three sources |
+| `src/server-card.ts` | the MCP Server Card (SEP-2127, schema v1) |
+| `src/catalog-gen.ts` | writes `ai-catalog.json`: the Server Card + its sibling entries |
 | `src/transport/http.ts` | the stateless Streamable HTTP app (Hono) |
+| `src/transport/guard.ts` | Origin and Host checks (DNS-rebinding protection) |
+| `src/conformance/discovery.ts` | a portable Server Card / AI Catalog / transport checker |
 | `src/bin.ts` | the entry point — `stdio` · `--http` · `card` · `--help` · `--version` |
 
 ## Related

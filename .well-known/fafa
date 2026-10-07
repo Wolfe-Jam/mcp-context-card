@@ -13,7 +13,7 @@ agent:
   # a deployment for your own project uses your domain.
   id: "urn:air:faf.one:agent:mcp-context-card"
   vendor: "io.github.Wolfe-Jam"
-  version: "1.4.0"
+  version: "1.5.0"
   description: >-
     The essential MCP components for a project's context (AGENTS.md),
     cross-session memory, and identity — a base MCP on its own, or a
