@@ -104,6 +104,8 @@ test("flip, tabs and the view toggle are CSS: no script needed, and portrait is 
     assert.match(html, /<input type="checkbox" id="portrait" class="sr" aria-label="Portrait view">/);
     assert.match(html, /#flip:checked~\.stage \.faces\{transform:rotateY\(180deg\)\}/);
     assert.match(html, /#t-about:checked~\.panes \.p-about/);
+    // the face turned away takes no wheel or pointer events, so the back scrolls (macOS Chrome/Safari)
+    assert.match(html, /#flip:checked~\.stage \.front,#flip:not\(:checked\)~\.stage \.back\{pointer-events:none/);
     assert.match(renderCard(root, { layout: "portrait" }), /id="portrait" class="sr" aria-label="Portrait view" checked>/);
     assert.match(renderCard(root, { expanded: true }), /<body class="flat">/);
   } finally {

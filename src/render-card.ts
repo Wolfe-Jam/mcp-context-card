@@ -88,7 +88,12 @@ body{margin:0;background:var(--bg);color:var(--fg);
 #flip:checked~.stage .faces{transform:rotateY(180deg)}
 .face{position:absolute;inset:0;background:var(--card);border:1px solid var(--line);border-radius:16px;
   box-shadow:var(--card-shadow);backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
-.back{transform:rotateY(180deg);display:flex;flex-direction:column}
+.back{transform:rotateY(180deg) translateZ(1px);display:flex;flex-direction:column}
+/* The face turned away takes no pointer or wheel events, so the visible face
+   scrolls (a hidden backface can still win hit-testing, notably in Chrome/Safari on macOS). */
+#flip:checked~.stage .front,#flip:not(:checked)~.stage .back{pointer-events:none;visibility:hidden;transition:visibility 0s .3s}
+#flip:checked~.stage .back,#flip:not(:checked)~.stage .front{visibility:visible;transition:visibility 0s .3s}
+.panes{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .front{display:flex;flex-direction:column;justify-content:center;padding:34px 44px;
   border-top:5px solid var(--accent);
   background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 10%,var(--card)) 0%,var(--card) 55%)}
