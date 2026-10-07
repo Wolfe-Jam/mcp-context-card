@@ -3,50 +3,144 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>mcp-context-card — context card</title>
+<title>mcp-context-card — business card</title>
 <style>
+/* The page and the card are themed independently. The page follows the
+   viewer's OS. The card is the owner's choice: body[data-theme] (light | dark;
+   none = follow the OS), and the reader can switch it with the ◐ toggle (#ink). */
 :root{
   --accent:#FF702D;
-  --bg:#f4f4f5; --card:#fff; --fg:#0a0a0a; --muted:#6b6b70;
-  --line:rgba(0,0,0,.09); --chip:rgba(0,0,0,.05);
-  --card-shadow:0 1px 3px rgba(0,0,0,.06), 0 12px 32px rgba(0,0,0,.10);
-}
-:root[data-theme="dark"]{
-  --bg:#000; --card:#0d0d0d; --fg:#fafafa; --muted:#9a9aa0;
-  --line:rgba(255,255,255,.13); --chip:rgba(255,255,255,.07);
-  --card-shadow:0 0 0 1px rgba(255,255,255,.16),
-    0 8px 40px color-mix(in srgb, var(--accent) 20%, transparent);
+  --page-bg:#f4f4f5;--page-muted:#6b6b70;--page-line:rgba(0,0,0,.09);--page-chip:rgba(0,0,0,.05);
 }
 @media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --bg:#000; --card:#0d0d0d; --fg:#fafafa; --muted:#9a9aa0;
-    --line:rgba(255,255,255,.13); --chip:rgba(255,255,255,.07);
-    --card-shadow:0 0 0 1px rgba(255,255,255,.16),
-      0 8px 40px color-mix(in srgb, var(--accent) 20%, transparent);
-  }
+  :root{--page-bg:#000;--page-muted:#9a9aa0;--page-line:rgba(255,255,255,.13);--page-chip:rgba(255,255,255,.07)}
 }
+.bcard{--card:#fff;--fg:#0a0a0a;--muted:#6b6b70;--line:rgba(0,0,0,.09);--chip:rgba(0,0,0,.05);--card-shadow:0 1px 3px rgba(0,0,0,.06),0 12px 32px rgba(0,0,0,.10)}
+body[data-theme="dark"] .bcard,
+body[data-theme="light"] #ink:checked~.stage .bcard{--card:#0d0d0d;--fg:#fafafa;--muted:#9a9aa0;--line:rgba(255,255,255,.13);--chip:rgba(255,255,255,.07);--card-shadow:0 0 0 1px rgba(255,255,255,.16),0 8px 40px color-mix(in srgb,var(--accent) 20%,transparent)}
+body[data-theme="dark"] #ink:checked~.stage .bcard{--card:#fff;--fg:#0a0a0a;--muted:#6b6b70;--line:rgba(0,0,0,.09);--chip:rgba(0,0,0,.05);--card-shadow:0 1px 3px rgba(0,0,0,.06),0 12px 32px rgba(0,0,0,.10)}
+@media (prefers-color-scheme:dark){
+  body:not([data-theme]) .bcard{--card:#0d0d0d;--fg:#fafafa;--muted:#9a9aa0;--line:rgba(255,255,255,.13);--chip:rgba(255,255,255,.07);--card-shadow:0 0 0 1px rgba(255,255,255,.16),0 8px 40px color-mix(in srgb,var(--accent) 20%,transparent)}
+  body:not([data-theme]) #ink:checked~.stage .bcard{--card:#fff;--fg:#0a0a0a;--muted:#6b6b70;--line:rgba(0,0,0,.09);--chip:rgba(0,0,0,.05);--card-shadow:0 1px 3px rgba(0,0,0,.06),0 12px 32px rgba(0,0,0,.10)}
+}
+@media (prefers-color-scheme:light){
+  body:not([data-theme]) #ink:checked~.stage .bcard{--card:#0d0d0d;--fg:#fafafa;--muted:#9a9aa0;--line:rgba(255,255,255,.13);--chip:rgba(255,255,255,.07);--card-shadow:0 0 0 1px rgba(255,255,255,.16),0 8px 40px color-mix(in srgb,var(--accent) 20%,transparent)}
+}
+.bcard{color:var(--fg)}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);
+body{margin:0;background:var(--page-bg);color:var(--page-muted);
   font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  padding:40px 18px}
-.card{max-width:760px;margin:0 auto;background:var(--card);border:1px solid var(--line);
-  border-radius:14px;overflow:clip;box-shadow:var(--card-shadow)}
-.card>*{padding:26px 30px}
-.top{border-top:4px solid var(--accent);border-bottom:1px solid var(--line)}
-h1{margin:0 0 10px;font-size:1.7rem;letter-spacing:-.02em}
+  padding:40px 16px}
+/* ── the business card: two faces, flip, two views ─────────────────── */
+.sr{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.stage{max-width:760px;margin:0 auto}
+.views{display:flex;justify-content:flex-end;margin:0 0 10px}
+.view,.hint label{cursor:pointer}
+.view{font-size:.78rem;font-weight:600;padding:3px 11px;border-radius:20px;border:1px solid var(--page-line);
+  background:var(--page-chip);color:var(--page-muted);letter-spacing:.2em}
+.views{gap:8px}
+.view:hover,.hint label:hover{color:var(--accent);border-color:var(--accent)}
+.bcard{margin:0 auto;width:100%;aspect-ratio:7/4;perspective:1600px}
+#portrait:checked~.stage{max-width:480px}
+#portrait:checked~.stage .bcard{aspect-ratio:4/7}
+.faces{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .6s ease}
+#flip:checked~.stage .faces{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;background:var(--card);border:1px solid var(--line);border-radius:16px;
+  box-shadow:var(--card-shadow);backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
+.back{transform:rotateY(180deg) translateZ(1px);display:flex;flex-direction:column}
+/* The face turned away takes no pointer or wheel events, so the visible face
+   scrolls (a hidden backface can still win hit-testing, notably in Chrome/Safari on macOS). */
+#flip:checked~.stage .front,#flip:not(:checked)~.stage .back{pointer-events:none;visibility:hidden;transition:visibility 0s .3s}
+#flip:checked~.stage .back,#flip:not(:checked)~.stage .front{visibility:visible;transition:visibility 0s .3s}
+.panes{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.front{display:flex;flex-direction:column;justify-content:center;padding:34px 44px;
+  border-top:5px solid var(--accent);
+  background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 10%,var(--card)) 0%,var(--card) 55%)}
+.front .id{max-width:34em}
+h1{margin:0;font-size:2.1rem;line-height:1.15;letter-spacing:-.025em}
+.title{margin:8px 0 0;font-size:.82rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.oneliner{margin:16px 0 0;font-size:1.05rem;color:var(--muted);line-height:1.5}
+.foot-front{position:absolute;left:44px;right:130px;bottom:22px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.domain{font:.8rem ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted)}
+.corner{position:absolute;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  cursor:pointer;font-weight:700;font-size:.9rem;color:var(--muted);background:var(--chip);border:1px solid var(--line);z-index:4}
+.corner:hover{color:var(--accent);border-color:var(--accent)}
+.corner.tr{top:16px;right:16px;font-family:Georgia,serif;font-style:italic}
+.logo{position:absolute;top:34px;left:44px;width:84px;height:84px;border-radius:50%;display:grid;place-items:center;
+  color:#fff;font-weight:800;font-size:2rem;letter-spacing:-.02em;line-height:1;
+  background:radial-gradient(circle at 30% 25%,color-mix(in srgb,var(--accent) 80%,#fff),var(--accent) 45%,color-mix(in srgb,var(--accent) 50%,#000));
+  box-shadow:0 0 0 3px var(--card),0 0 0 4px color-mix(in srgb,var(--accent) 45%,transparent),0 6px 20px color-mix(in srgb,var(--accent) 30%,transparent)}
+.front .id{margin-top:70px}
+.corner.br{bottom:16px;right:16px}
+.flipbtn{position:absolute;right:18px;bottom:16px;z-index:4;cursor:pointer;width:42px;height:42px;border-radius:50%;
+  display:grid;place-items:center;color:var(--fg);background:transparent;box-shadow:inset 0 0 0 2px var(--fg);
+  transition:transform .2s ease}
+.flipbtn span{font-size:1.3rem;line-height:1;font-weight:700}
+
+/* the back's button: same spot and outline as the front's; ↺ instead of ↻. Over
+   scrolling text it takes the card's colour, so the arrow stays readable. */
+.flipbtn.back-btn{background:var(--card)}
+/* fast tooltip: shows at once on hover or keyboard focus (a title tooltip waits ~1 s) */
+.flipbtn[data-tip]::after{content:attr(data-tip);position:absolute;right:0;bottom:calc(100% + 8px);white-space:nowrap;
+  font:600 .74rem/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;letter-spacing:0;padding:6px 9px;border-radius:7px;
+  color:var(--card);background:var(--fg);opacity:0;transform:translateY(3px);pointer-events:none;transition:opacity .08s,transform .08s}
+.flipbtn[data-tip]:hover::after,#flip:focus-visible~.stage .flipbtn[data-tip]::after{opacity:1;transform:none}
+.flipbtn:hover{transform:none}.flipbtn:hover span{transform:rotate(-25deg)}.flipbtn span{transition:transform .2s ease}
+.whatis{position:absolute;top:16px;right:16px;z-index:5}
+.whatis>summary{position:static;list-style:none}
+.whatis>summary::-webkit-details-marker{display:none}
+.whatis[open]>summary{color:var(--accent);border-color:var(--accent)}
+.whatis-panel{position:absolute;right:0;top:38px;width:min(320px,70vw);padding:14px 16px;border-radius:12px;
+  background:var(--card);border:1px solid var(--line);box-shadow:var(--card-shadow);font-size:.84rem;line-height:1.5}
+.whatis-panel p{margin:0 0 8px}.whatis-head{font-weight:800;color:var(--accent);letter-spacing:-.01em;font-size:.95rem}
+.whatis-foot{color:var(--muted);margin:0!important}.whatis-panel code{font:.86em ui-monospace,SFMono-Regular,Menlo,monospace}
+.tabbar{display:flex;flex-wrap:wrap;gap:4px;padding:14px 60px 0 18px;border-bottom:1px solid var(--line);border-top:5px solid var(--accent)}
+.tabbar label{cursor:pointer;font-size:.8rem;font-weight:600;color:var(--muted);padding:6px 11px;border-radius:8px 8px 0 0}
+.tabbar label:hover{color:var(--fg)}
+.panes{flex:1;overflow:auto;padding:20px 26px 72px}
+.pane{display:none}
+#t-about:checked~.panes .p-about,#t-skills:checked~.panes .p-skills,#t-context:checked~.panes .p-context,
+#t-memory:checked~.panes .p-memory,#t-discovery:checked~.panes .p-discovery{display:block}
+#t-about:checked~.tabbar label[for=t-about],#t-skills:checked~.tabbar label[for=t-skills],
+#t-context:checked~.tabbar label[for=t-context],#t-memory:checked~.tabbar label[for=t-memory],
+#t-discovery:checked~.tabbar label[for=t-discovery]{color:var(--accent);background:var(--chip)}
+.lead{margin:0 0 14px;font-size:1rem;line-height:1.6}
+.kv{border-collapse:collapse;font-size:.86rem;width:100%}
+.kv th{text-align:left;font-weight:600;color:var(--muted);padding:6px 14px 6px 0;white-space:nowrap;vertical-align:top}
+.kv td{padding:6px 0;border-bottom:1px solid var(--line)}
+.kv code,.lead code{font:.86em ui-monospace,SFMono-Regular,Menlo,monospace}
+.hint{text-align:center;color:var(--page-muted);font-size:.78rem;margin:14px 0 0}
+.hint label{color:var(--accent)}
+#flip:focus-visible~.stage .flipbtn,#portrait:focus-visible~.stage .view[for=portrait],#ink:focus-visible~.stage .view[for=ink]{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:640px){
+  .bcard,#portrait:checked~.stage .bcard{aspect-ratio:auto;height:min(78vh,720px)}
+  .front{padding:28px 26px}.foot-front{left:26px}
+  .logo{top:24px;left:26px;width:64px;height:64px;font-size:1.5rem}.front .id{margin-top:56px}
+  h1{font-size:1.7rem}
+}
+/* flat: expanded render and print — both faces, every tab, no flip */
+.flat .faces,.flat .face{position:static;transform:none!important;height:auto}
+.flat .bcard{aspect-ratio:auto;perspective:none}
+.flat .face{margin:0 0 18px}.flat .front{min-height:260px;position:relative}
+.flat .pane{display:block;margin:0 0 22px}.flat .bcard{color:var(--fg)}.flat .tabbar,.flat .views,.flat .hint,.flat .corner,.flat .flipbtn,.flat .whatis{display:none}
+.flat .panes{overflow:visible}
+@media print{
+  .faces,.face{position:static!important;transform:none!important;height:auto!important}
+  .bcard{aspect-ratio:auto!important}.face{margin:0 0 18px;box-shadow:none}
+  .pane{display:block!important;margin:0 0 22px}.tabbar,.views,.hint,.corner,.flipbtn,.whatis{display:none!important}
+  .panes{overflow:visible}
+}
 .pills{display:flex;flex-wrap:wrap;gap:6px}
 .pill{font-size:.74rem;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--chip);color:var(--muted)}
 .pill.accent{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
-section{border-bottom:1px solid var(--line)}
-section:last-child{border-bottom:0}
 .label{font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
   color:var(--accent);margin:0 0 14px}
 .toc{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0;padding:0;list-style:none}
 .toc a{font-size:.82rem;color:var(--muted);text-decoration:none}
 .toc a:hover{color:var(--accent)}
 /* ── collapsible context ─────────────────────────────────────────── */
-.ctx-nav{position:sticky;top:0;z-index:3;background:var(--card);
-  margin:0 -30px 16px;padding:11px 30px;border-bottom:1px solid var(--line);
+.ctx-nav{position:sticky;top:-20px;z-index:3;background:var(--card);
+  margin:0 -26px 16px;padding:11px 26px;border-bottom:1px solid var(--line);
   display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px 16px}
 .xall{margin-left:auto;flex:none;font:inherit;font-size:.76rem;font-weight:600;
   white-space:nowrap;padding:3px 11px;border-radius:20px;border:1px solid var(--line);
@@ -92,19 +186,49 @@ details.ctx-section>.md{padding:0 0 16px}
 .disc code{font:.86em ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted)}
 .fetch{margin:14px 0 0;font-size:.82rem;color:var(--muted)}
 .fetch code{background:var(--chip);padding:1px 5px;border-radius:5px}
-.foot{color:var(--muted);font-size:.78rem;text-align:center;border-top:1px solid var(--line)}
 .none{color:var(--muted);font-style:italic}
 </style>
 </head>
 <body>
-<main class="card">
-  <div class="top">
-    <h1>mcp-context-card</h1>
-    <div class="pills"><span class="pill">io.github.Wolfe-Jam</span><span class="pill">v1.5.0</span><span class="pill accent">published</span><span class="pill">MIT</span></div>
-  </div>
-  <section>
-    <p class="label">Context — AGENTS.md</p>
-    <div class="ctx-nav"><ul class="toc"><li><a href="#setup">Setup</a></li><li><a href="#build">Build</a></li><li><a href="#test">Test</a></li><li><a href="#layout">Layout</a></li><li><a href="#conventions">Conventions</a></li><li><a href="#the-invariant">The invariant</a></li><li><a href="#safety">Safety</a></li><li><a href="#definition-of-done">Definition of done</a></li><li><a href="#authoring-this-file">Authoring this file</a></li></ul><button type="button" class="xall" hidden>Expand all</button></div>
+<input type="checkbox" id="flip" class="sr" aria-label="Flip the card">
+<input type="checkbox" id="ink" class="sr" aria-label="Switch the card between light and dark">
+<input type="checkbox" id="portrait" class="sr" aria-label="Portrait view">
+<div class="stage">
+  <div class="views"><label for="ink" class="view" title="Card: light or dark">◐</label><label for="portrait" class="view" title="Landscape or portrait">▭ ▯</label></div>
+  <main class="bcard">
+    <div class="faces">
+      <section class="face front">
+        <div class="logo" aria-hidden="true">MC</div>
+        <details class="whatis">
+          <summary class="corner tr" title="About Business Cards for Agents" aria-label="About Business Cards for Agents">i</summary>
+          <div class="whatis-panel">
+            <p class="whatis-head">Business Cards for Agents</p>
+            <p>This is the public card of an AI agent or MCP server: who it is, what it does, where to reach it. Flip it for the detail.</p>
+            <p>People read it here. Machines read the same facts from its MCP Server Card and AI Catalog, before they ever connect.</p>
+            <p class="whatis-foot">Made with <code>mcp-context-card</code></p>
+          </div>
+        </details>
+        <div class="id">
+          <h1>mcp-context-card</h1>
+          <p class="title">MCP server · v1.5.0</p>
+          <p class="oneliner">The essential MCP components for a project's context (AGENTS.md), cross-session memory, and identity</p>
+        </div>
+        <div class="foot-front"><span class="domain">faf.one</span><div class="pills"><span class="pill">io.github.Wolfe-Jam</span><span class="pill accent">published</span><span class="pill">MIT</span></div></div>
+        <label for="flip" class="flipbtn" data-tip="Flip the card" aria-label="Flip the card"><span aria-hidden="true">↻</span></label>
+      </section>
+      <section class="face back">
+        <input type="radio" name="tab" id="t-about" class="sr" checked><input type="radio" name="tab" id="t-context" class="sr"><input type="radio" name="tab" id="t-memory" class="sr"><input type="radio" name="tab" id="t-discovery" class="sr">
+        <details class="whatis">
+          <summary class="corner tr" title="About Business Cards for Agents" aria-label="About Business Cards for Agents">i</summary>
+          <div class="whatis-panel">
+            <p class="whatis-head">Business Cards for Agents</p>
+            <p>This is the public card of an AI agent or MCP server: who it is, what it does, where to reach it. Flip it for the detail.</p>
+            <p>People read it here. Machines read the same facts from its MCP Server Card and AI Catalog, before they ever connect.</p>
+            <p class="whatis-foot">Made with <code>mcp-context-card</code></p>
+          </div>
+        </details>
+        <div class="tabbar"><label for="t-about">About</label><label for="t-context">Context</label><label for="t-memory">Memory</label><label for="t-discovery">Discovery</label></div>
+        <div class="panes"><div class="pane p-about"><p class="label">About</p><p class="lead">The essential MCP components for a project's context (AGENTS.md), cross-session memory, and identity — a base MCP on its own, or a drop-in extension for any existing MCP server, discoverable through the Server Card _meta block and a self-published ai-catalog.json.</p><table class="kv"><tbody><tr><th>Agent ID</th><td><code>urn:air:faf.one:agent:mcp-context-card</code></td></tr><tr><th>Publisher</th><td>io.github.Wolfe-Jam</td></tr><tr><th>Version</th><td>v1.5.0</td></tr><tr><th>Status</th><td>published</td></tr><tr><th>License</th><td>MIT</td></tr><tr><th>Package (npm)</th><td><code>mcp-context-card</code></td></tr></tbody></table></div><div class="pane p-context"><p class="label">Context — AGENTS.md</p><div class="ctx-nav"><ul class="toc"><li><a href="#setup">Setup</a></li><li><a href="#build">Build</a></li><li><a href="#test">Test</a></li><li><a href="#layout">Layout</a></li><li><a href="#conventions">Conventions</a></li><li><a href="#the-invariant">The invariant</a></li><li><a href="#safety">Safety</a></li><li><a href="#definition-of-done">Definition of done</a></li><li><a href="#authoring-this-file">Authoring this file</a></li></ul><button type="button" class="xall" hidden>Expand all</button></div>
     <div class="ctx-preamble md"><p><code>mcp-context-card</code> is the essential MCP server for a project's <strong>context</strong> (this file), <strong>memory</strong>, and <strong>identity</strong> — usable as your base MCP, or dropped into any existing MCP server as an extension. Discoverable to any MCP client through the two surfaces already in the ecosystem: the Server Card <code>_meta</code> block and <code>ai-catalog.json</code> sibling entries.</p>
 <p><code>read_agents_md</code> serves this file, section by section, over the same MCP connection.</p></div>
     <div class="ctx-body"><details class="ctx-section" id="setup"><summary>Setup</summary><div class="md"><pre><code class="language-bash">npm ci</code></pre>
@@ -114,36 +238,34 @@ npm run test:coverage # + the coverage gate (lines 90 / funcs 85 / branches 80, 
 npm run demo          # end to end: all tools over stdio, then over stateless HTTP
 npm run version:check # every version-bearing spot agrees with package.json
 npm run faf:check     # project.faf / project.fafm / .well-known/fafa still describe the project</code></pre>
-<p>CI runs <code>version:check → faf:check → typecheck → build → test:coverage → demo</code> on Linux, macOS, and Windows for every push and PR to <code>main</code> (<code>.github/workflows/ci.yml</code>), plus <code>catalog:check</code> / <code>card:check</code>, <code>faf-cli check project.faf --strict</code> (the repo dogfoods a <code>project.faf</code> — this keeps it Trophy), and <code>faf:nudge</code> (PR-only, non-blocking — warns if the code's shape moved without <code>project.faf</code>) on Linux.</p></div></details><details class="ctx-section" id="layout"><summary>Layout</summary><div class="md"><table><thead><tr><th>Path</th><th>What</th></tr></thead><tbody><tr><td><code>src/server.ts</code></td><td>the MCP server — the ten tools + the Server Card and card resources</td></tr><tr><td><code>src/agents-md.ts</code></td><td>reads and section-splits this file</td></tr><tr><td><code>src/author.ts</code></td><td><code>author_agents_md</code> — BETTER via <code>agents-md-facts</code>, BEST when <code>project.faf</code> exists</td></tr><tr><td><code>src/md.ts</code></td><td>a minimal dependency-free Markdown → HTML renderer</td></tr><tr><td><code>src/render-card.ts</code></td><td>the card — identity + this file + memory + discovery, as one HTML page</td></tr><tr><td><code>src/memory.ts</code> → <code>src/faf/parse-fafm.ts</code></td><td>file-backed <code>remember</code> / <code>recall</code> / <code>forget</code></td></tr><tr><td><code>src/identity.ts</code></td><td><code>whoami</code> (<code>.fafa</code> → <code>package.json</code> fallback) + the <code>_meta</code> context block</td></tr><tr><td><code>src/catalog-gen.ts</code></td><td>writes <code>.well-known/ai-catalog.json</code> from the same three sources</td></tr><tr><td><code>src/transport/http.ts</code></td><td>the stateless Streamable HTTP app (Hono)</td></tr><tr><td><code>src/bin.ts</code></td><td>the entry point (<code>resolveLaunch</code>) — <code>stdio</code> · <code>--http</code> · <code>card</code> · <code>--help</code> · <code>--version</code></td></tr><tr><td><code>src/faf/parse-fafm.ts</code> · <code>parse-fafa.ts</code></td><td>the <code>.fafm</code> / <code>.fafa</code> parsers</td></tr></tbody></table></div></details><details class="ctx-section" id="conventions"><summary>Conventions</summary><div class="md"><ul><li>TypeScript strict, ESM only (<code>&quot;type&quot;: &quot;module&quot;</code>, <code>.js</code> import specifiers).</li><li>Tests use <code>node:test</code> + <code>node:assert/strict</code> — no test framework.</li><li>Every source file opens with a comment stating what it is and why.</li><li>Conventional Commit messages (<code>feat:</code>, <code>fix:</code>, <code>chore:</code>, <code>test:</code>, <code>docs:</code>).</li></ul></div></details><details class="ctx-section" id="the-invariant"><summary>The invariant</summary><div class="md"><p><code>src/identity.ts</code>, <code>src/catalog-gen.ts</code>, and <code>src/render-card.ts</code> all describe the <strong>same three sources</strong>: this file, <code>project.fafm</code>, <code>.well-known/fafa</code>. Change what one exposes and you must change the others. <code>npm run catalog:check</code> and <code>npm run card:check</code> enforce it in CI — each regenerates its surface and fails on any diff.</p></div></details><details class="ctx-section" id="safety"><summary>Safety</summary><div class="md"><ul><li>Branch off <code>main</code>; CI must be green before merge.</li><li><code>npm run demo</code> writes a fact to <code>project.fafm</code> and restores the file on exit — don't kill it mid-run.</li><li>No secrets live in this repo; never add any.</li></ul></div></details><details class="ctx-section" id="definition-of-done"><summary>Definition of done</summary><div class="md"><p><code>npm run typecheck &amp;&amp; npm run build &amp;&amp; npm test &amp;&amp; npm run demo</code> all green, plus <code>npm run catalog:check</code> and <code>npm run card:check</code> clean if you touched <code>AGENTS.md</code>, <code>project.fafm</code>, or <code>.well-known/fafa</code>, and <code>npm run faf:check</code> green if you changed the layout, a dependency, or the identity. On a version bump, <code>npm run version:check</code> green (it lists every spot that must move together) and <code>project.faf</code> still Trophy (<code>faf-cli check project.faf --strict</code>). If CI's <code>faf:nudge</code> warns on your PR, reconcile <code>project.faf</code> (and re-check <code>project.fafm</code> facts if <code>AGENTS.md</code> moved) or say why it's fine.</p></div></details><details class="ctx-section" id="authoring-this-file"><summary>Authoring this file</summary><div class="md"><p><code>AGENTS.md</code> here is maintained by hand. The <code>author_agents_md</code> tool (or <code>faf export --agents</code>) would draft a BEST version straight from this repo's own <code>project.faf</code> plus its detected facts — the server doesn't care how the file was authored, only that it's valid Markdown.</p></div></details></div>
-  </section>
-  <section>
-    <p class="label">Memory — 4 facts</p>
-    <div class="fact"><p>The context concern points at AGENTS.md — the de-facto standard for agent instructions. read_agents_md serves it whole or one section at a time, so a client pulls '## Test' without spending its context window on the whole file. Memory and identity have no de-facto standard, so this server uses .fafm and .fafa as one instantiation each.</p><div class="meta"><span class="tag">scope</span><span class="tag">agents-md</span><span class="dot" title="verified"></span></div></div><div class="fact"><p>Both exposure mechanisms — the Server Card _meta block and a self-published ai-catalog.json — already exist in the MCP ecosystem. This server wires all three concerns through them, from one set of source files, with a CI check (catalog:check) that fails if the two surfaces drift apart.</p><div class="meta"><span class="tag">mcp</span><span class="tag">server-card</span><span class="tag">ai-catalog</span><span class="dot" title="verified"></span></div></div><div class="fact"><p>Distribution: a published npm package (bin <code>mcp-context-card</code>, dual transport). The three source files (AGENTS.md, project.fafm, .well-known/fafa) ship with the package so it is a working discovery target on install. MCP_CONTEXT_CARD_ROOT points it at a real project.</p><div class="meta"><span class="tag">distribution</span><span class="tag">mit</span><span class="tag">npm</span><span class="dot" title="verified"></span></div></div><div class="fact"><p>author_agents_md authors the best AGENTS.md the project has the material for, not a fixed floor. BETTER is the facts-only draft (via agents-md-facts: build/test commands, entry points, conventions — nothing invented). BEST is that plus a '## Project' section ahead of it, read straight from project.faf when one exists — goal, who it's for, why, and a start-here file list. The rule is concrete: project.faf present means BEST, absent means BETTER.</p><div class="meta"><span class="tag">agents-md</span><span class="tag">author_agents_md</span><span class="tag">faf</span><span class="dot" title="verified"></span></div></div>
-  </section>
-  <section>
-    <p class="label">Discovery</p>
-    <p class="fetch">Agent ID <code>urn:air:faf.one:agent:mcp-context-card</code></p>
-    <table class="disc"><thead><tr><th>concern</th><th>source</th><th>media type</th></tr></thead><tbody><tr><td>context</td><td><code>AGENTS.md</code></td><td><code>text/markdown</code></td></tr><tr><td>memory</td><td><code>project.fafm</code></td><td><code>application/vnd.fafm+yaml</code></td></tr><tr><td>identity</td><td><code>.well-known/fafa</code></td><td><code>application/vnd.fafa+yaml</code></td></tr></tbody></table>
+<p>CI runs <code>version:check → faf:check → typecheck → build → test:coverage → demo</code> on Linux, macOS, and Windows for every push and PR to <code>main</code> (<code>.github/workflows/ci.yml</code>), plus <code>catalog:check</code> / <code>card:check</code>, <code>faf-cli check project.faf --strict</code> (the repo dogfoods a <code>project.faf</code> — this keeps it Trophy), and <code>faf:nudge</code> (PR-only, non-blocking — warns if the code's shape moved without <code>project.faf</code>) on Linux.</p></div></details><details class="ctx-section" id="layout"><summary>Layout</summary><div class="md"><table><thead><tr><th>Path</th><th>What</th></tr></thead><tbody><tr><td><code>src/server.ts</code></td><td>the MCP server — the ten tools + the Server Card and card resources</td></tr><tr><td><code>src/agents-md.ts</code></td><td>reads and section-splits this file</td></tr><tr><td><code>src/author.ts</code></td><td><code>author_agents_md</code> — BETTER via <code>agents-md-facts</code>, BEST when <code>project.faf</code> exists</td></tr><tr><td><code>src/md.ts</code></td><td>a minimal dependency-free Markdown → HTML renderer</td></tr><tr><td><code>src/render-card.ts</code></td><td>the card — identity + this file + memory + discovery, as one HTML page</td></tr><tr><td><code>src/memory.ts</code> → <code>src/faf/parse-fafm.ts</code></td><td>file-backed <code>remember</code> / <code>recall</code> / <code>forget</code></td></tr><tr><td><code>src/identity.ts</code></td><td><code>whoami</code> (<code>.fafa</code> → <code>package.json</code> fallback) + the <code>_meta</code> context block</td></tr><tr><td><code>src/catalog-gen.ts</code></td><td>writes <code>.well-known/ai-catalog.json</code> from the same three sources</td></tr><tr><td><code>src/transport/http.ts</code></td><td>the stateless Streamable HTTP app (Hono)</td></tr><tr><td><code>src/bin.ts</code></td><td>the entry point (<code>resolveLaunch</code>) — <code>stdio</code> · <code>--http</code> · <code>card</code> · <code>--help</code> · <code>--version</code></td></tr><tr><td><code>src/faf/parse-fafm.ts</code> · <code>parse-fafa.ts</code></td><td>the <code>.fafm</code> / <code>.fafa</code> parsers</td></tr></tbody></table></div></details><details class="ctx-section" id="conventions"><summary>Conventions</summary><div class="md"><ul><li>TypeScript strict, ESM only (<code>&quot;type&quot;: &quot;module&quot;</code>, <code>.js</code> import specifiers).</li><li>Tests use <code>node:test</code> + <code>node:assert/strict</code> — no test framework.</li><li>Every source file opens with a comment stating what it is and why.</li><li>Conventional Commit messages (<code>feat:</code>, <code>fix:</code>, <code>chore:</code>, <code>test:</code>, <code>docs:</code>).</li></ul></div></details><details class="ctx-section" id="the-invariant"><summary>The invariant</summary><div class="md"><p><code>src/identity.ts</code>, <code>src/catalog-gen.ts</code>, and <code>src/render-card.ts</code> all describe the <strong>same three sources</strong>: this file, <code>project.fafm</code>, <code>.well-known/fafa</code>. Change what one exposes and you must change the others. <code>npm run catalog:check</code> and <code>npm run card:check</code> enforce it in CI — each regenerates its surface and fails on any diff.</p></div></details><details class="ctx-section" id="safety"><summary>Safety</summary><div class="md"><ul><li>Branch off <code>main</code>; CI must be green before merge.</li><li><code>npm run demo</code> writes a fact to <code>project.fafm</code> and restores the file on exit — don't kill it mid-run.</li><li>No secrets live in this repo; never add any.</li></ul></div></details><details class="ctx-section" id="definition-of-done"><summary>Definition of done</summary><div class="md"><p><code>npm run typecheck &amp;&amp; npm run build &amp;&amp; npm test &amp;&amp; npm run demo</code> all green, plus <code>npm run catalog:check</code> and <code>npm run card:check</code> clean if you touched <code>AGENTS.md</code>, <code>project.fafm</code>, or <code>.well-known/fafa</code>, and <code>npm run faf:check</code> green if you changed the layout, a dependency, or the identity. On a version bump, <code>npm run version:check</code> green (it lists every spot that must move together) and <code>project.faf</code> still Trophy (<code>faf-cli check project.faf --strict</code>). If CI's <code>faf:nudge</code> warns on your PR, reconcile <code>project.faf</code> (and re-check <code>project.fafm</code> facts if <code>AGENTS.md</code> moved) or say why it's fine.</p></div></details><details class="ctx-section" id="authoring-this-file"><summary>Authoring this file</summary><div class="md"><p><code>AGENTS.md</code> here is maintained by hand. The <code>author_agents_md</code> tool (or <code>faf export --agents</code>) would draft a BEST version straight from this repo's own <code>project.faf</code> plus its detected facts — the server doesn't care how the file was authored, only that it's valid Markdown.</p></div></details></div></div><div class="pane p-memory"><p class="label">Memory — 4 facts</p><div class="fact"><p>The context concern points at AGENTS.md — the de-facto standard for agent instructions. read_agents_md serves it whole or one section at a time, so a client pulls '## Test' without spending its context window on the whole file. Memory and identity have no de-facto standard, so this server uses .fafm and .fafa as one instantiation each.</p><div class="meta"><span class="tag">scope</span><span class="tag">agents-md</span><span class="dot" title="verified"></span></div></div><div class="fact"><p>Both exposure mechanisms — the Server Card _meta block and a self-published ai-catalog.json — already exist in the MCP ecosystem. This server wires all three concerns through them, from one set of source files, with a CI check (catalog:check) that fails if the two surfaces drift apart.</p><div class="meta"><span class="tag">mcp</span><span class="tag">server-card</span><span class="tag">ai-catalog</span><span class="dot" title="verified"></span></div></div><div class="fact"><p>Distribution: a published npm package (bin <code>mcp-context-card</code>, dual transport). The three source files (AGENTS.md, project.fafm, .well-known/fafa) ship with the package so it is a working discovery target on install. MCP_CONTEXT_CARD_ROOT points it at a real project.</p><div class="meta"><span class="tag">distribution</span><span class="tag">mit</span><span class="tag">npm</span><span class="dot" title="verified"></span></div></div><div class="fact"><p>author_agents_md authors the best AGENTS.md the project has the material for, not a fixed floor. BETTER is the facts-only draft (via agents-md-facts: build/test commands, entry points, conventions — nothing invented). BEST is that plus a '## Project' section ahead of it, read straight from project.faf when one exists — goal, who it's for, why, and a start-here file list. The rule is concrete: project.faf present means BEST, absent means BETTER.</p><div class="meta"><span class="tag">agents-md</span><span class="tag">author_agents_md</span><span class="tag">faf</span><span class="dot" title="verified"></span></div></div></div><div class="pane p-discovery"><p class="label">Discovery</p><table class="disc"><thead><tr><th>concern</th><th>source</th><th>media type</th></tr></thead><tbody><tr><td>context</td><td><code>AGENTS.md</code></td><td><code>text/markdown</code></td></tr><tr><td>memory</td><td><code>project.fafm</code></td><td><code>application/vnd.fafm+yaml</code></td></tr><tr><td>identity</td><td><code>.well-known/fafa</code></td><td><code>application/vnd.fafa+yaml</code></td></tr></tbody></table>
     <p class="fetch">A machine reads this over <b>MCP</b> from the
       <code>mcp-context-card://server-card</code> resource; over <b>HTTP</b> also
       from <code>GET /mcp/server-card</code> and
-      <code>GET /.well-known/ai-catalog.json</code>.</p>
-  </section>
-  <div class="foot">mcp-context-card · context card</div>
-</main>
+      <code>GET /.well-known/ai-catalog.json</code>.</p></div></div>
+        <label for="flip" class="flipbtn back-btn" data-tip="Flip back" aria-label="Flip back"><span aria-hidden="true">↺</span></label>
+      </section>
+    </div>
+  </main>
+  <p class="hint">mcp-context-card · business card · <label for="flip">flip it over</label></p>
+</div>
 <script>
 (function(){
-  var btn=document.querySelector(".xall");
   var secs=[].slice.call(document.querySelectorAll("details.ctx-section"));
-  if(!btn||!secs.length)return;
-  var sync=function(){btn.textContent=secs.every(function(d){return d.open})?"Collapse all":"Expand all"};
-  btn.hidden=false;
-  btn.addEventListener("click",function(){
-    var open=!secs.every(function(d){return d.open});
-    secs.forEach(function(d){d.open=open});sync();
-  });
-  secs.forEach(function(d){d.addEventListener("toggle",sync)});
-  var openHash=function(){var d=document.getElementById(location.hash.slice(1));if(d&&d.tagName==="DETAILS")d.open=true};
+  var btn=document.querySelector(".xall");
+  var sync=function(){if(btn)btn.textContent=secs.every(function(d){return d.open})?"Collapse all":"Expand all"};
+  if(btn&&secs.length){
+    btn.hidden=false;
+    btn.addEventListener("click",function(){var open=!secs.every(function(d){return d.open});secs.forEach(function(d){d.open=open});sync()});
+    secs.forEach(function(d){d.addEventListener("toggle",sync)});
+  }
+  var openHash=function(){
+    var d=document.getElementById(decodeURIComponent(location.hash.slice(1)));
+    if(!d||d.tagName!=="DETAILS")return;
+    var f=document.getElementById("flip"),t=document.getElementById("t-context");
+    if(f)f.checked=true;if(t)t.checked=true;d.open=true;sync();
+    setTimeout(function(){d.scrollIntoView({block:"nearest"})},620);
+  };
   addEventListener("hashchange",openHash);openHash();
   var pre=[];
   addEventListener("beforeprint",function(){pre=secs.map(function(d){return d.open});secs.forEach(function(d){d.open=true})});

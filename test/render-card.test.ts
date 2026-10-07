@@ -19,7 +19,7 @@ test("renderCard: a complete, self-contained HTML document", () => {
   try {
     const html = renderCard(root);
     assert.match(html, /^<!doctype html>/);
-    assert.match(html, /<title>mcp-context-card — context card<\/title>/);
+    assert.match(html, /<title>mcp-context-card — business card<\/title>/);
     // self-contained: nothing loaded from the network — no external script,
     // stylesheet, font or image. The one <script> is inline (the toggle helper).
     assert.ok(!/<script[^>]+\bsrc=/.test(html), "no external script");
@@ -82,13 +82,17 @@ test("renderCard: sections collapse by default; expanded opens them all", () => 
   }
 });
 
-test("renderCard: theme option sets data-theme on <html>; auto leaves it off", () => {
+test("renderCard: theme is the CARD's colour (data-theme on <body>); the page follows the OS on its own", () => {
   const { root, cleanup } = fixture();
-  const htmlTag = (s: string) => s.match(/<html[^>]*>/)![0];
+  const bodyTag = (s: string) => s.match(/<body[^>]*>/)![0];
   try {
-    assert.equal(htmlTag(renderCard(root, { theme: "dark" })), '<html lang="en" data-theme="dark">');
-    assert.equal(htmlTag(renderCard(root, { theme: "light" })), '<html lang="en" data-theme="light">');
-    assert.equal(htmlTag(renderCard(root, { theme: "auto" })), '<html lang="en">');
+    assert.equal(bodyTag(renderCard(root, { theme: "dark" })), '<body data-theme="dark">');
+    assert.equal(bodyTag(renderCard(root, { theme: "light" })), '<body data-theme="light">');
+    assert.equal(bodyTag(renderCard(root, { theme: "auto" })), "<body>");
+    const html = renderCard(root);
+    assert.match(html, /<html lang="en">/);
+    assert.match(html, /<label for="ink" class="view"/); // the card's ◐ toggle
+    assert.match(html, /body\{margin:0;background:var\(--page-bg\)/); // page colours are separate
   } finally {
     cleanup();
   }
@@ -122,7 +126,7 @@ test("renderCardText: the card as Markdown — identity, AGENTS.md headings, mem
   const { root, cleanup } = fixture();
   try {
     const md = renderCardText(root);
-    assert.match(md, /^### mcp-context-card — context card/);
+    assert.match(md, /^### mcp-context-card — business card/);
     assert.match(md, /io\.github\.Wolfe-Jam · v\d+\.\d+\.\d+ · published · MIT/);
     // every AGENTS.md section heading, and none of their bodies
     for (const h of ["Setup", "Build", "Test", "Layout", "Safety", "Definition of done"]) {
@@ -212,9 +216,9 @@ test("card: a project with no identity file or package.json is named after its f
   mkdirSync(dir);
   writeFileSync(join(dir, "AGENTS.md"), "# AGENTS.md\n\n## Build\n\nnpm run build\n");
   try {
-    assert.match(renderCardText(dir), /^### my-app — context card/);
+    assert.match(renderCardText(dir), /^### my-app — business card/);
     const html = renderCard(dir);
-    assert.match(html, /<title>my-app — context card<\/title>/);
+    assert.match(html, /<title>my-app — business card<\/title>/);
     assert.ok(!html.includes("<h1>mcp-context-card"), "the server's name must not stand in for the project's");
   } finally {
     rmSync(base, { recursive: true, force: true });

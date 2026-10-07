@@ -11,10 +11,11 @@ rendered as one card you can read.
 
 | Light | Dark |
 |---|---|
-| ![the context card, light theme](./docs/img/card-light.png) | ![the context card, dark theme](./docs/img/card-dark.png) |
+| ![the business card front, light theme: name, title, one-liner](./docs/img/card-light.png) | ![the business card front, dark theme](./docs/img/card-dark.png) |
 
-**See your own project's card** — run this in its folder. It writes
-`context-card.html` and opens it in your browser:
+**See your own project's business card** — run this in its folder. It writes
+`context-card.html` and opens it in your browser. The front is the card: name,
+title, one-liner. Flip it for the back: About, Context, Memory, Discovery.
 
 ```
 npx mcp-context-card card
@@ -22,15 +23,15 @@ npx mcp-context-card card
 
 **context** — the project's `AGENTS.md`, served whole or one section at a time.
 
-![the card's context section — AGENTS.md, section nav, read_agents_md](./docs/img/card-context.png)
+![the back's Context tab — AGENTS.md, section nav, read_agents_md](./docs/img/card-context.png)
 
 **memory** — facts that persist across sessions, in a file.
 
-![the card's memory section — a real, tagged, verified fact](./docs/img/card-memory.png)
+![the back's Memory tab — real, tagged, verified facts](./docs/img/card-memory.png)
 
 **identity** — what this server is, from its own `.fafa` (`agent.fafa`, else `.well-known/fafa`).
 
-![the card's identity — name and pills](./docs/img/card-identity.png)
+![the back's About tab — the identity in full](./docs/img/card-identity.png)
 
 Discovery goes through two surfaces already in the ecosystem: the Server Card
 `_meta` block and `ai-catalog.json` sibling entries.
@@ -76,23 +77,34 @@ no search.
 
 ## The card
 
-The screenshot at the top of this page is exactly this — the same three
-sources rendered as one self‑contained HTML page: identity, `AGENTS.md`,
-memory, and how a machine fetches it. The view for people: read it, screenshot
-it, drop it in a PR, put it on a status page.
+The screenshot at the top of this page is exactly this: the same sources
+rendered as a **business card** in one self‑contained HTML page. The view for
+people: read it, screenshot it, drop it in a PR, put it on a status page.
 
-`AGENTS.md` sections are collapsed by default, so the card scans in one screen;
-a sticky index jumps to any section, **Expand all** opens everything. Sections
-toggle natively — the one small inline script only adds the bulk button and the
-print handler. `--expanded` / `?expand=all` renders it fully open, script-free,
-for a screenshot.
+- **Front:** the name, a title (what it is and its version: "MCP server", "A2A
+  agent", from where the project's `.fafa` says it runs) and a one-liner (the
+  start of its description).
+- **Back (Flip):** tabs for **About** (the identity in full),
+  **Skills** (when the `.fafa` lists capabilities), **Context** (`AGENTS.md`),
+  **Memory** and **Discovery**. Long content scrolls inside the card.
+- **Landscape or portrait:** the ▭ ▯ button switches the view; `--portrait` /
+  `?layout=portrait` sets it.
+- **Light or dark card:** the card's colour is its own, like a printed card.
+  `--theme` / `?theme=` sets it (default: follow your OS), and ◐ switches it.
+  The page around it always follows your OS.
+
+Flip, tabs and the view switch are plain CSS, so they work with scripts off.
+The one small inline script adds Expand all, opens a `#section` link on the
+back, and opens every section for printing. `--expanded` / `?expand=all`
+renders both faces flat, every section open, for a screenshot or print.
 
 ```
 npx mcp-context-card card            # at a terminal: writes context-card.html and opens it
-npx mcp-context-card card --expanded # every section open
+npx mcp-context-card card --portrait # the tall view
+npx mcp-context-card card --expanded # both faces flat, every section open
 npx mcp-context-card card > x.html   # piped/redirected: raw HTML to stdout
 GET /card                            # live, on the HTTP transport
-GET /card?expand=all&theme=light&accent=%230066cc
+GET /card?layout=portrait&theme=light&accent=%230066cc
 ```
 
 In a chat, hosts that support [MCP Apps](https://modelcontextprotocol.io/extensions/apps)

@@ -21,3 +21,8 @@ agent:
     Server Card _meta block and a self-published ai-catalog.json.
   status: "published"
   license: "MIT"
+metadata:
+  cards:
+    packages:
+      - registryType: "npm"
+        identifier: "mcp-context-card"

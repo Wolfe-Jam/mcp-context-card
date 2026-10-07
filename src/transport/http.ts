@@ -162,6 +162,7 @@ export function httpApp(root: string = ROOT, opts: HttpAppOptions = {}): Hono {
       renderCard(root, {
         theme,
         accent: safeAccent(q.accent),
+        layout: q.layout === "portrait" ? "portrait" : "landscape",
         expanded: q.expand === "all",
         // A card that may be read beyond this machine keeps memory private
         // unless the project publishes it.
