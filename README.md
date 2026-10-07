@@ -89,6 +89,9 @@ people: read it, screenshot it, drop it in a PR, put it on a status page.
   **Memory** and **Discovery**. Long content scrolls inside the card.
 - **Landscape or portrait:** the ▭ ▯ button switches the view; `--portrait` /
   `?layout=portrait` sets it.
+- **Light or dark card:** the card's colour is its own, like a printed card.
+  `--theme` / `?theme=` sets it (default: follow your OS), and ◐ switches it.
+  The page around it always follows your OS.
 
 Flip, tabs and the view switch are plain CSS, so they work with scripts off.
 The one small inline script adds Expand all, opens a `#section` link on the

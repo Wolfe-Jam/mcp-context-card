@@ -5,28 +5,30 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>mcp-context-card — business card</title>
 <style>
+/* The page and the card are themed independently. The page follows the
+   viewer's OS. The card is the owner's choice: body[data-theme] (light | dark;
+   none = follow the OS), and the reader can switch it with the ◐ toggle (#ink). */
 :root{
   --accent:#FF702D;
-  --bg:#f4f4f5; --card:#fff; --fg:#0a0a0a; --muted:#6b6b70;
-  --line:rgba(0,0,0,.09); --chip:rgba(0,0,0,.05);
-  --card-shadow:0 1px 3px rgba(0,0,0,.06), 0 12px 32px rgba(0,0,0,.10);
-}
-:root[data-theme="dark"]{
-  --bg:#000; --card:#0d0d0d; --fg:#fafafa; --muted:#9a9aa0;
-  --line:rgba(255,255,255,.13); --chip:rgba(255,255,255,.07);
-  --card-shadow:0 0 0 1px rgba(255,255,255,.16),
-    0 8px 40px color-mix(in srgb, var(--accent) 20%, transparent);
+  --page-bg:#f4f4f5;--page-muted:#6b6b70;--page-line:rgba(0,0,0,.09);--page-chip:rgba(0,0,0,.05);
 }
 @media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --bg:#000; --card:#0d0d0d; --fg:#fafafa; --muted:#9a9aa0;
-    --line:rgba(255,255,255,.13); --chip:rgba(255,255,255,.07);
-    --card-shadow:0 0 0 1px rgba(255,255,255,.16),
-      0 8px 40px color-mix(in srgb, var(--accent) 20%, transparent);
-  }
+  :root{--page-bg:#000;--page-muted:#9a9aa0;--page-line:rgba(255,255,255,.13);--page-chip:rgba(255,255,255,.07)}
 }
+.bcard{--card:#fff;--fg:#0a0a0a;--muted:#6b6b70;--line:rgba(0,0,0,.09);--chip:rgba(0,0,0,.05);--card-shadow:0 1px 3px rgba(0,0,0,.06),0 12px 32px rgba(0,0,0,.10)}
+body[data-theme="dark"] .bcard,
+body[data-theme="light"] #ink:checked~.stage .bcard{--card:#0d0d0d;--fg:#fafafa;--muted:#9a9aa0;--line:rgba(255,255,255,.13);--chip:rgba(255,255,255,.07);--card-shadow:0 0 0 1px rgba(255,255,255,.16),0 8px 40px color-mix(in srgb,var(--accent) 20%,transparent)}
+body[data-theme="dark"] #ink:checked~.stage .bcard{--card:#fff;--fg:#0a0a0a;--muted:#6b6b70;--line:rgba(0,0,0,.09);--chip:rgba(0,0,0,.05);--card-shadow:0 1px 3px rgba(0,0,0,.06),0 12px 32px rgba(0,0,0,.10)}
+@media (prefers-color-scheme:dark){
+  body:not([data-theme]) .bcard{--card:#0d0d0d;--fg:#fafafa;--muted:#9a9aa0;--line:rgba(255,255,255,.13);--chip:rgba(255,255,255,.07);--card-shadow:0 0 0 1px rgba(255,255,255,.16),0 8px 40px color-mix(in srgb,var(--accent) 20%,transparent)}
+  body:not([data-theme]) #ink:checked~.stage .bcard{--card:#fff;--fg:#0a0a0a;--muted:#6b6b70;--line:rgba(0,0,0,.09);--chip:rgba(0,0,0,.05);--card-shadow:0 1px 3px rgba(0,0,0,.06),0 12px 32px rgba(0,0,0,.10)}
+}
+@media (prefers-color-scheme:light){
+  body:not([data-theme]) #ink:checked~.stage .bcard{--card:#0d0d0d;--fg:#fafafa;--muted:#9a9aa0;--line:rgba(255,255,255,.13);--chip:rgba(255,255,255,.07);--card-shadow:0 0 0 1px rgba(255,255,255,.16),0 8px 40px color-mix(in srgb,var(--accent) 20%,transparent)}
+}
+.bcard{color:var(--fg)}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);
+body{margin:0;background:var(--page-bg);color:var(--page-muted);
   font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   padding:40px 16px}
 /* ── the business card: two faces, flip, two views ─────────────────── */
@@ -34,8 +36,9 @@ body{margin:0;background:var(--bg);color:var(--fg);
 .stage{max-width:760px;margin:0 auto}
 .views{display:flex;justify-content:flex-end;margin:0 0 10px}
 .view,.hint label{cursor:pointer}
-.view{font-size:.78rem;font-weight:600;padding:3px 11px;border-radius:20px;border:1px solid var(--line);
-  background:var(--chip);color:var(--muted);letter-spacing:.2em}
+.view{font-size:.78rem;font-weight:600;padding:3px 11px;border-radius:20px;border:1px solid var(--page-line);
+  background:var(--page-chip);color:var(--page-muted);letter-spacing:.2em}
+.views{gap:8px}
 .view:hover,.hint label:hover{color:var(--accent);border-color:var(--accent)}
 .bcard{margin:0 auto;width:100%;aspect-ratio:7/4;perspective:1600px}
 #portrait:checked~.stage{max-width:480px}
@@ -99,9 +102,9 @@ h1{margin:0;font-size:2.1rem;line-height:1.15;letter-spacing:-.025em}
 .kv th{text-align:left;font-weight:600;color:var(--muted);padding:6px 14px 6px 0;white-space:nowrap;vertical-align:top}
 .kv td{padding:6px 0;border-bottom:1px solid var(--line)}
 .kv code,.lead code{font:.86em ui-monospace,SFMono-Regular,Menlo,monospace}
-.hint{text-align:center;color:var(--muted);font-size:.78rem;margin:14px 0 0}
+.hint{text-align:center;color:var(--page-muted);font-size:.78rem;margin:14px 0 0}
 .hint label{color:var(--accent)}
-#flip:focus-visible~.stage .flipbtn,#portrait:focus-visible~.stage .view{outline:2px solid var(--accent);outline-offset:2px}
+#flip:focus-visible~.stage .flipbtn,#portrait:focus-visible~.stage .view[for=portrait],#ink:focus-visible~.stage .view[for=ink]{outline:2px solid var(--accent);outline-offset:2px}
 @media (max-width:640px){
   .bcard,#portrait:checked~.stage .bcard{aspect-ratio:auto;height:min(78vh,720px)}
   .front{padding:28px 26px}.foot-front{left:26px}
@@ -112,7 +115,7 @@ h1{margin:0;font-size:2.1rem;line-height:1.15;letter-spacing:-.025em}
 .flat .faces,.flat .face{position:static;transform:none!important;height:auto}
 .flat .bcard{aspect-ratio:auto;perspective:none}
 .flat .face{margin:0 0 18px}.flat .front{min-height:260px;position:relative}
-.flat .pane{display:block;margin:0 0 22px}.flat .tabbar,.flat .views,.flat .hint,.flat .corner,.flat .flipbtn,.flat .whatis{display:none}
+.flat .pane{display:block;margin:0 0 22px}.flat .bcard{color:var(--fg)}.flat .tabbar,.flat .views,.flat .hint,.flat .corner,.flat .flipbtn,.flat .whatis{display:none}
 .flat .panes{overflow:visible}
 @media print{
   .faces,.face{position:static!important;transform:none!important;height:auto!important}
@@ -181,9 +184,10 @@ details.ctx-section>.md{padding:0 0 16px}
 </head>
 <body>
 <input type="checkbox" id="flip" class="sr" aria-label="Flip the card">
+<input type="checkbox" id="ink" class="sr" aria-label="Switch the card between light and dark">
 <input type="checkbox" id="portrait" class="sr" aria-label="Portrait view">
 <div class="stage">
-  <div class="views"><label for="portrait" class="view" title="Landscape or portrait">▭ ▯</label></div>
+  <div class="views"><label for="ink" class="view" title="Card: light or dark">◐</label><label for="portrait" class="view" title="Landscape or portrait">▭ ▯</label></div>
   <main class="bcard">
     <div class="faces">
       <section class="face front">

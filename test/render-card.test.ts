@@ -82,13 +82,17 @@ test("renderCard: sections collapse by default; expanded opens them all", () => 
   }
 });
 
-test("renderCard: theme option sets data-theme on <html>; auto leaves it off", () => {
+test("renderCard: theme is the CARD's colour (data-theme on <body>); the page follows the OS on its own", () => {
   const { root, cleanup } = fixture();
-  const htmlTag = (s: string) => s.match(/<html[^>]*>/)![0];
+  const bodyTag = (s: string) => s.match(/<body[^>]*>/)![0];
   try {
-    assert.equal(htmlTag(renderCard(root, { theme: "dark" })), '<html lang="en" data-theme="dark">');
-    assert.equal(htmlTag(renderCard(root, { theme: "light" })), '<html lang="en" data-theme="light">');
-    assert.equal(htmlTag(renderCard(root, { theme: "auto" })), '<html lang="en">');
+    assert.equal(bodyTag(renderCard(root, { theme: "dark" })), '<body data-theme="dark">');
+    assert.equal(bodyTag(renderCard(root, { theme: "light" })), '<body data-theme="light">');
+    assert.equal(bodyTag(renderCard(root, { theme: "auto" })), "<body>");
+    const html = renderCard(root);
+    assert.match(html, /<html lang="en">/);
+    assert.match(html, /<label for="ink" class="view"/); // the card's ◐ toggle
+    assert.match(html, /body\{margin:0;background:var\(--page-bg\)/); // page colours are separate
   } finally {
     cleanup();
   }
