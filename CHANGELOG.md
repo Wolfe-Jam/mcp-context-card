@@ -4,7 +4,7 @@ All notable changes to this project. Adheres to [Semantic Versioning](https://se
 
 ## 1.5.0
 
-MCP Server Cards (SEP-2127, Final) and AI Catalog 1.0, and HTTP that is local by default.
+MCP Server Cards (SEP-2127, Final) and the AI Catalog (specVersion 1.0), and HTTP that is local by default.
 
 **Breaking for exposed deploys:** HTTP mode now binds `127.0.0.1`. A container or
 hosted deploy must set `HOST=0.0.0.0` (`examples/Dockerfile` does). Local use is
@@ -21,7 +21,7 @@ unchanged.
   spec's CORS (`Access-Control-Allow-Origin: *`, GET, `Content-Type` and
   `If-None-Match` allowed, `ETag` exposed), `Cache-Control: public,
   max-age=3600`, and an `ETag` answered with `304 Not Modified`.
-- **AI Catalog 1.0.** The Server Card is the first entry. Entries use `type`,
+- **AI Catalog (specVersion 1.0).** The Server Card is the first entry. Entries use `type`,
   custom data sits in `extensions`, and identifiers are
   `urn:air:{domain}:{namespace}:{name}` with the domain taken from the project's
   own `.fafa` (none is ever invented). `/AGENTS.md` is served, so every catalog
