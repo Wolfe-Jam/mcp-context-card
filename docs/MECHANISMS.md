@@ -21,15 +21,22 @@ top‑level `_meta`. So the card is served the two ways a client can consume it:
 
 ```
 resources/read  mcp-context-card://server-card       # in band
-GET /.well-known/mcp/server-card                 # out of band (http transport)
+GET /mcp/server-card                             # out of band (http transport; the 1.x
+                                                 # /.well-known/mcp/server-card still answers)
 ```
 
-Both return:
+Both return the card below (over HTTP it also carries `remotes`, the
+Streamable HTTP endpoint at `<origin>/mcp` and its protocol versions):
 
 ```jsonc
 {
-  "name": "mcp-context-card",
-  "version": "1.4.0",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
+  "name": "io.github.Wolfe-Jam/mcp-context-card",
+  "version": "1.5.0",
+  "title": "MCP Context Card",
+  "description": "MCP server for a project's context (AGENTS.md), memory, and identity — base or drop-in extension.",
+  "websiteUrl": "https://github.com/Wolfe-Jam/mcp-context-card",
+  "repository": { "url": "https://github.com/Wolfe-Jam/mcp-context-card", "source": "github" },
   "_meta": {
     "io.github.Wolfe-Jam.mcp-context-card/context": {
       "source": "AGENTS.md",

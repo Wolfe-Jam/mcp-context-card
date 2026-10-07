@@ -3,7 +3,7 @@
 # mcp-context-card over stateless Streamable HTTP.
 #   docker build -f examples/Dockerfile -t mcp-context-card .
 #   docker run -p 3000:3000 mcp-context-card
-#   curl localhost:3000/.well-known/mcp/server-card
+#   curl localhost:3000/mcp/server-card
 #
 # Serves the bundled AGENTS.md / project.fafm / .well-known/fafa.
 # For a real project, mount it and set MCP_CONTEXT_CARD_ROOT:
@@ -19,7 +19,12 @@ RUN npm run build
 
 FROM node:22-slim
 WORKDIR /app
-ENV NODE_ENV=production PORT=3000
+# HOST=0.0.0.0: a container must listen beyond its own loopback to be reached
+# through -p. The server binds 127.0.0.1 unless told otherwise (MCP transports
+# spec). Exposed means no Host check and no auth: keep the published port local
+# or put it behind your own auth. Memory stays private unless
+# MCP_CONTEXT_CARD_PUBLISH_MEMORY=1.
+ENV NODE_ENV=production PORT=3000 HOST=0.0.0.0
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist

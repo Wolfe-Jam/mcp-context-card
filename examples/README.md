@@ -24,10 +24,16 @@ docker run -p 3000:3000 mcp-context-card
 The three discovery routes need no MCP handshake:
 
 ```console
-$ curl -s localhost:3000/.well-known/mcp/server-card
+$ curl -s localhost:3000/mcp/server-card
 {
-  "name": "mcp-context-card",
-  "version": "1.4.0",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
+  "name": "io.github.Wolfe-Jam/mcp-context-card",
+  "version": "1.5.0",
+  "title": "MCP Context Card",
+  "description": "MCP server for a project's context (AGENTS.md), memory, and identity — base or drop-in extension.",
+  "websiteUrl": "https://github.com/Wolfe-Jam/mcp-context-card",
+  "repository": { "url": "https://github.com/Wolfe-Jam/mcp-context-card", "source": "github" },
+  "remotes": [{ "type": "streamable-http", "url": "http://localhost:3000/mcp", "supportedProtocolVersions": ["2025-11-25", "2025-06-18", "…"] }],
   "_meta": {
     "io.github.Wolfe-Jam.mcp-context-card/context":  { "source": "AGENTS.md",          "mediaType": "text/markdown" },
     "io.github.Wolfe-Jam.mcp-context-card/memory":   { "source": "project.fafm",       "mediaType": "application/vnd.fafm+yaml", "iana": "…", "note": "no de-facto standard for agent memory yet — this is one instantiation" },
@@ -36,8 +42,8 @@ $ curl -s localhost:3000/.well-known/mcp/server-card
 }
 
 $ curl -s localhost:3000/.well-known/ai-catalog.json | jq '.entries[].type'
+"application/mcp-server-card+json"
 "text/markdown"
-"application/vnd.fafm+yaml"
 "application/vnd.fafa+yaml"
 ```
 

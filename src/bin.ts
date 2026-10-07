@@ -164,13 +164,16 @@ if (entryPath && import.meta.url === pathToFileURL(entryPath).href) {
     const { isLoopbackBind } = await import("./transport/guard.js");
     const host = bindHost();
     const local = isLoopbackBind(host);
-    serveHttp({ fetch: httpApp(root, { exposure: local ? "local" : "exposed" }).fetch, port, hostname: host });
-    // stderr, not stdout — stdout is the MCP wire in stdio mode.
-    console.error(
-      `${NAME} · http · ${host.includes(":") ? `[${host}]` : host}:${port}  (POST /mcp · GET /card · GET /.well-known/*)` +
-        (local
-          ? "  · local only (HOST=0.0.0.0 to expose)"
-          : "  · EXPOSED beyond this machine, no authentication: put it behind your own"),
+    // The startup line prints once the socket is listening, so anything waiting
+    // for it (a test, a supervisor) can connect straight away.
+    serveHttp({ fetch: httpApp(root, { exposure: local ? "local" : "exposed" }).fetch, port, hostname: host }, () =>
+      // stderr, not stdout — stdout is the MCP wire in stdio mode.
+      console.error(
+        `${NAME} · http · ${host.includes(":") ? `[${host}]` : host}:${port}  (POST /mcp · GET /card · GET /.well-known/*)` +
+          (local
+            ? "  · local only (HOST=0.0.0.0 to expose)"
+            : "  · EXPOSED beyond this machine, no authentication: put it behind your own"),
+      ),
     );
   } else {
     // stderr so it never touches the JSON-RPC wire on stdout; a bare run at a
