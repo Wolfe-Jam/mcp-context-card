@@ -32,7 +32,7 @@ Streamable HTTP endpoint at `<origin>/mcp` and its protocol versions):
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
   "name": "io.github.Wolfe-Jam/mcp-context-card",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "title": "MCP Context Card",
   "description": "MCP server for a project's context (AGENTS.md), memory, and identity — base or drop-in extension.",
   "websiteUrl": "https://github.com/Wolfe-Jam/mcp-context-card",
@@ -85,7 +85,7 @@ publisher lists artifacts, each entry keyed by its **media type** (`type`).
 GET /.well-known/ai-catalog.json
 ```
 
-Served from `https://ctx.example.com` (1.5.0, this repo's own files):
+Served from `https://ctx.example.com` (1.6.0, this repo's own files):
 
 ```jsonc
 {
