@@ -72,6 +72,7 @@ function cardOptions(args: Record<string, unknown>) {
     theme: (["light", "dark", "auto"].includes(theme) ? theme : "auto") as Theme,
     accent: safeAccent(args.accent as string | undefined),
     expanded: args.expanded === true || args.expanded === "true",
+    layout: (args.layout === "portrait" ? "portrait" : "landscape") as "portrait" | "landscape",
   };
 }
 
@@ -79,6 +80,7 @@ const CARD_ARGS = {
   theme: { type: "string", enum: ["light", "dark", "auto"], description: "default: auto" },
   accent: { type: "string", description: "CSS hex colour, e.g. #FF702D (default: the AAIF palette)" },
   expanded: { type: "boolean", description: "render every AGENTS.md section open (default: collapsed)" },
+  layout: { type: "string", enum: ["landscape", "portrait"], description: "business-card view (default: landscape)" },
 };
 
 /**
@@ -314,7 +316,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
         _meta: { ui: { resourceUri: CARD_UI_URI }, "ui/resourceUri": CARD_UI_URI },
         annotations: { title: "Render Context Card", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
         description:
-          "Render the whole card — identity, AGENTS.md, memory, discovery — as one self-contained HTML page a person can read or screenshot. AGENTS.md sections collapse by default; pass expanded:true for the full render. Also served at GET /card (?expand=all) over the HTTP transport.",
+          "Render the project's business card as one self-contained HTML page a person can read or screenshot. Front: name, title, one-liner. Flip it for the back: About, Skills (when the .fafa lists any), Context (AGENTS.md), Memory, Discovery. layout:\"portrait\" for the tall view; expanded:true renders both faces flat with every section open. Also served at GET /card (?expand=all) over the HTTP transport.",
         inputSchema: { type: "object", properties: CARD_ARGS },
       },
       {

@@ -189,7 +189,7 @@ test("identity: agent.id (urn:air, as faf card init writes it) is read and shown
   try {
     assert.equal(identity(root)?.id, urn);
     assert.ok(whoami(root).endsWith(urn));
-    assert.ok(renderCard(root).includes(`Agent ID <code>${urn}</code>`));
+    assert.ok(renderCard(root).includes(`<th>Agent ID</th><td><code>${urn}</code></td>`));
     assert.ok(renderCardText(root).includes(`Agent ID \`${urn}\``));
   } finally {
     cleanup();
