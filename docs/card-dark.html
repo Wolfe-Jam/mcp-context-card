@@ -99,11 +99,6 @@ h1{margin:0;font-size:2.1rem;line-height:1.15;letter-spacing:-.025em}
 .tabbar label:hover{color:var(--fg)}
 .panes{flex:1;overflow:auto;padding:20px 26px 72px}
 .pane{display:none}
-#t-about:checked~.panes .p-about,#t-skills:checked~.panes .p-skills,#t-context:checked~.panes .p-context,
-#t-memory:checked~.panes .p-memory,#t-discovery:checked~.panes .p-discovery{display:block}
-#t-about:checked~.tabbar label[for=t-about],#t-skills:checked~.tabbar label[for=t-skills],
-#t-context:checked~.tabbar label[for=t-context],#t-memory:checked~.tabbar label[for=t-memory],
-#t-discovery:checked~.tabbar label[for=t-discovery]{color:var(--accent);background:var(--chip)}
 .lead{margin:0 0 14px;font-size:1rem;line-height:1.6}
 .kv{border-collapse:collapse;font-size:.86rem;width:100%}
 .kv th{text-align:left;font-weight:600;color:var(--muted);padding:6px 14px 6px 0;white-space:nowrap;vertical-align:top}
@@ -187,7 +182,7 @@ details.ctx-section>.md{padding:0 0 16px}
 .fetch{margin:14px 0 0;font-size:.82rem;color:var(--muted)}
 .fetch code{background:var(--chip);padding:1px 5px;border-radius:5px}
 .none{color:var(--muted);font-style:italic}
-</style>
+#t-about:checked~.panes .p-about{display:block}#t-about:checked~.tabbar label[for=t-about]{color:var(--accent);background:var(--chip)}#t-context:checked~.panes .p-context{display:block}#t-context:checked~.tabbar label[for=t-context]{color:var(--accent);background:var(--chip)}#t-memory:checked~.panes .p-memory{display:block}#t-memory:checked~.tabbar label[for=t-memory]{color:var(--accent);background:var(--chip)}#t-discovery:checked~.panes .p-discovery{display:block}#t-discovery:checked~.tabbar label[for=t-discovery]{color:var(--accent);background:var(--chip)}</style>
 </head>
 <body data-theme="dark">
 <input type="checkbox" id="flip" class="sr" aria-label="Flip the card">
@@ -200,7 +195,7 @@ details.ctx-section>.md{padding:0 0 16px}
       <section class="face front">
         <div class="logo" aria-hidden="true">MC</div>
         <details class="whatis">
-          <summary class="corner tr" title="About Business Cards for Agents" aria-label="About Business Cards for Agents">i</summary>
+          <summary class="corner tr" title="About this card" aria-label="About this card">i</summary>
           <div class="whatis-panel">
             <p class="whatis-head">Business Cards for Agents</p>
             <p>This is the public card of an AI agent or MCP server: who it is, what it does, where to reach it. Flip it for the detail.</p>
@@ -219,7 +214,7 @@ details.ctx-section>.md{padding:0 0 16px}
       <section class="face back">
         <input type="radio" name="tab" id="t-about" class="sr" checked><input type="radio" name="tab" id="t-context" class="sr"><input type="radio" name="tab" id="t-memory" class="sr"><input type="radio" name="tab" id="t-discovery" class="sr">
         <details class="whatis">
-          <summary class="corner tr" title="About Business Cards for Agents" aria-label="About Business Cards for Agents">i</summary>
+          <summary class="corner tr" title="About this card" aria-label="About this card">i</summary>
           <div class="whatis-panel">
             <p class="whatis-head">Business Cards for Agents</p>
             <p>This is the public card of an AI agent or MCP server: who it is, what it does, where to reach it. Flip it for the detail.</p>

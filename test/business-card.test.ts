@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { cardInitials, cardKind, cardOneLiner, cardTitle, renderCard } from "../src/render-card.js";
+import { cardInitials, cardKind, cardOneLiner, cardTitle, readCard, renderBusinessCard, renderCard } from "../src/render-card.js";
 import { parseFafa } from "../src/faf/parse-fafa.js";
 import { fixture } from "./helpers.js";
 
@@ -149,4 +149,35 @@ test("logo: a monogram from the name's first two words, top-left on the front", 
     const html = renderCard(root);
     assert.match(html, /<div class="logo" aria-hidden="true">XY<\/div>/);
   });
+});
+
+test("read and render are separate: readCard gives a neutral card, renderBusinessCard draws any card", () => {
+  const { root, cleanup } = fixture();
+  try {
+    const card = readCard(root);
+    assert.equal(card.name, "mcp-context-card");
+    assert.equal(card.title, "MCP server · v1.5.0");
+    assert.deepEqual(card.tabs.map((t) => t.key), ["about", "context", "memory", "discovery"]);
+    assert.ok(card.chips.some((c) => c.accent && c.text === "published"));
+    assert.equal(renderCard(root), renderBusinessCard(card)); // renderCard = read, then draw
+  } finally {
+    cleanup();
+  }
+  // A person's card, from nothing but the neutral shape: same renderer, own tabs.
+  const html = renderBusinessCard({
+    name: "Ada Lovelace",
+    title: "Analyst",
+    oneLiner: "Notes on the Analytical Engine.",
+    chips: [{ text: "London" }],
+    tabs: [
+      { key: "about", label: "About", heading: "About", html: "<p>First program.</p>" },
+      { key: "Work!", label: "Work", heading: "Work", html: "<p>Note G.</p>" },
+    ],
+    about: "<p>A person's business card.</p>",
+  });
+  assert.match(html, /<div class="logo" aria-hidden="true">AL<\/div>/);
+  assert.match(html, /<p class="title">Analyst<\/p>/);
+  assert.match(html, /id="t-work"/); // keys are cleaned to [a-z0-9-]
+  assert.match(html, /#t-work:checked~\.panes \.p-work\{display:block\}/); // tab CSS follows the card's own tabs
+  assert.doesNotMatch(html, /t-memory|t-discovery/);
 });
