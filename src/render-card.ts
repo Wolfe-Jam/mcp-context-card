@@ -121,16 +121,14 @@ h1{margin:0;font-size:2.1rem;line-height:1.15;letter-spacing:-.025em}
   transition:transform .2s ease}
 .flipbtn span{font-size:1.3rem;line-height:1;font-weight:700}
 
-.tabbar .flipbtn.back-btn{position:relative;margin:0 0 7px auto;width:32px;height:32px;padding:0;border-radius:50%;
-  color:var(--card);background:var(--fg);box-shadow:none}
+/* the back's button: same spot as the front's, inverted (card fill, ink ring and arrow) */
+.flipbtn.back-btn{color:var(--fg);background:var(--card);box-shadow:inset 0 0 0 2px var(--fg),0 2px 8px rgba(0,0,0,.12)}
 /* fast tooltip: shows at once on hover or keyboard focus (a title tooltip waits ~1 s) */
 .flipbtn[data-tip]::after{content:attr(data-tip);position:absolute;right:0;bottom:calc(100% + 8px);white-space:nowrap;
   font:600 .74rem/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;letter-spacing:0;padding:6px 9px;border-radius:7px;
   color:var(--card);background:var(--fg);opacity:0;transform:translateY(3px);pointer-events:none;transition:opacity .08s,transform .08s}
 .flipbtn[data-tip]:hover::after,#flip:focus-visible~.stage .flipbtn[data-tip]::after{opacity:1;transform:none}
-.tabbar .flipbtn.back-btn::after{bottom:auto;top:calc(100% + 8px)}
 .flipbtn:hover{transform:none}.flipbtn:hover span{transform:rotate(-25deg)}.flipbtn span{transition:transform .2s ease}
-.tabbar .flipbtn.back-btn span{font-size:1.05rem}
 .whatis{position:absolute;top:16px;right:16px;z-index:5}
 .whatis>summary{position:static;list-style:none}
 .whatis>summary::-webkit-details-marker{display:none}
@@ -142,7 +140,7 @@ h1{margin:0;font-size:2.1rem;line-height:1.15;letter-spacing:-.025em}
 .tabbar{display:flex;flex-wrap:wrap;gap:4px;padding:14px 18px 0;border-bottom:1px solid var(--line);border-top:5px solid var(--accent)}
 .tabbar label{cursor:pointer;font-size:.8rem;font-weight:600;color:var(--muted);padding:6px 11px;border-radius:8px 8px 0 0}
 .tabbar label:hover{color:var(--fg)}
-.panes{flex:1;overflow:auto;padding:20px 26px 28px}
+.panes{flex:1;overflow:auto;padding:20px 26px 72px}
 .pane{display:none}
 #t-about:checked~.panes .p-about,#t-skills:checked~.panes .p-skills,#t-context:checked~.panes .p-context,
 #t-memory:checked~.panes .p-memory,#t-discovery:checked~.panes .p-discovery{display:block}
@@ -445,8 +443,9 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
       </section>
       <section class="face back">
         ${radios}
-        <div class="tabbar">${tabbar}<label for="flip" class="flipbtn back-btn" data-tip="Flip back" aria-label="Flip back"><span aria-hidden="true">↺</span></label></div>
+        <div class="tabbar">${tabbar}</div>
         <div class="panes">${panes}</div>
+        <label for="flip" class="flipbtn back-btn" data-tip="Flip back" aria-label="Flip back"><span aria-hidden="true">↺</span></label>
       </section>
     </div>
   </main>
