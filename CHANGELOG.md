@@ -2,6 +2,16 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## 1.6.1
+
+The logo is the first letter.
+
+- The card's monogram is now the first letter of the name, with a second
+  letter only when it's obvious ("GH" for GitHub, "TS" for TypeScript, or
+  the two capitals of a CamelCase name). Generic words such as "mcp",
+  "server" or "agent" are skipped, so mcp-context-card's logo is **C**,
+  not MC.
+
 ## 1.6.0
 
 The card is a business card.
