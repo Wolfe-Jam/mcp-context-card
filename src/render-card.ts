@@ -246,12 +246,25 @@ export function cardTitle(id: AgentIdentity | null): string {
 }
 
 /** The front's logo: the first letters of the name's first two words ("mcp-context-card" → "MC"). */
+/** Words that say what kind of thing it is, not whose: never the logo ("mcp-context-card" → C, not M). */
+const GENERIC_WORDS = new Set(["mcp", "server", "servers", "sdk", "agent", "agents", "api", "cli", "app", "tool", "tools", "plugin", "core", "the"]);
+/** Names whose two-letter mark is obvious. */
+const OBVIOUS_MARKS: Record<string, string> = { github: "GH", gitlab: "GL", typescript: "TS", javascript: "JS" };
+
+/**
+ * The front's logo: the first letter of the name's first meaningful word
+ * (generic words like "mcp", "server", "sdk" skipped), plus a second letter
+ * only when it's obvious: a known name (github → GH, typescript → TS) or a
+ * word written with two capitals (GitHub, TypeScript). Never more than two.
+ */
 export function cardInitials(name: string): string {
   const words = name.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
-  return words
-    .slice(0, 2)
-    .map((w) => Array.from(w)[0].toUpperCase())
-    .join("");
+  const first = words.find((w) => !GENERIC_WORDS.has(w.toLowerCase())) ?? words[0] ?? "";
+  const known = OBVIOUS_MARKS[first.toLowerCase()];
+  if (known) return known;
+  const capitals = first.match(/\p{Lu}/gu) ?? [];
+  if (capitals.length === 2 && /^\p{Lu}/u.test(first) && /\p{Ll}/u.test(first)) return capitals.join("");
+  return (Array.from(first)[0] ?? "").toUpperCase();
 }
 
 /** The front's one-liner: the first sentence of the description. */
