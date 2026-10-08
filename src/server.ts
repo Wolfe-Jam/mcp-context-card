@@ -78,7 +78,7 @@ function cardOptions(args: Record<string, unknown>) {
 
 const CARD_ARGS = {
   theme: { type: "string", enum: ["light", "dark", "auto"], description: "default: auto" },
-  accent: { type: "string", description: "CSS hex colour, e.g. #FF702D (default: the AAIF palette)" },
+  accent: { type: "string", description: "CSS hex colour, e.g. #0066cc (default: the .fafa metadata.cards.accent, else black/white ink)" },
   expanded: { type: "boolean", description: "render every AGENTS.md section open (default: collapsed)" },
   layout: { type: "string", enum: ["landscape", "portrait"], description: "business-card view (default: landscape)" },
 };

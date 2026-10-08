@@ -191,3 +191,30 @@ test("read and render are separate: readCard gives a neutral card, renderBusines
   assert.match(html, /#t-work:checked~\.panes \.p-work\{display:block\}/); // tab CSS follows the card's own tabs
   assert.doesNotMatch(html, /t-memory|t-discovery/);
 });
+
+test("colour: none declared = ink; the owner's .fafa colour; a passed colour wins", () => {
+  const base = `version: "1.0"\nagent:\n  name: "plain"\n`;
+  // nothing declared: no colour is guessed — the card is drawn in ink
+  withFafa(base, (root) => {
+    const html = renderCard(root, { theme: "light" });
+    const accents = new Set(html.match(/--accent:#[0-9a-f]+/gi));
+    assert.deepEqual([...accents], ["--accent:#0a0a0a", "--accent:#fafafa"]);
+    assert.match(html, /\.bcard\{--accent:var\(--fg\)\}/);
+    assert.match(html, /\.logo\{color:var\(--card\)\}/);
+  });
+  // the owner declares it
+  withFafa(`${base}metadata:\n  cards:\n    accent: "#0066cc"\n`, (root) => {
+    assert.equal(readCard(root).accent, "#0066cc");
+    const html = renderCard(root);
+    assert.match(html, /--accent:#0066cc;/);
+    assert.ok(!html.includes(".bcard{--accent:var(--fg)}"));
+    // a colour passed in (CLI --accent, ?accent) wins over the owner's
+    assert.match(renderCard(root, { accent: "#0A7" }), /--accent:#0A7;/);
+  });
+  // a bad owner colour never reaches the stylesheet: ink instead
+  withFafa(`${base}metadata:\n  cards:\n    accent: "red;}</style>"\n`, (root) => {
+    const html = renderCard(root);
+    assert.ok(!html.includes("red;}"));
+    assert.match(html, /\.bcard\{--accent:var\(--fg\)\}/);
+  });
+});

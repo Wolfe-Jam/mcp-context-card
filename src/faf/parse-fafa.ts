@@ -36,7 +36,7 @@ function str(v: unknown): string | undefined {
 }
 
 /** Where it runs, what it can do, and what installs it: `.fafa` fields outside `agent`. */
-function extras(doc: Record<string, unknown>): Pick<AgentIdentity, "endpoints" | "skills" | "packages"> {
+function extras(doc: Record<string, unknown>): Pick<AgentIdentity, "endpoints" | "skills" | "packages" | "accent"> {
   const list = (v: unknown): Record<string, unknown>[] =>
     Array.isArray(v) ? v.filter((x): x is Record<string, unknown> => !!x && typeof x === "object") : [];
   const endpoints = list(doc.endpoints)
@@ -54,5 +54,6 @@ function extras(doc: Record<string, unknown>): Pick<AgentIdentity, "endpoints" |
     ...(endpoints.length ? { endpoints } : {}),
     ...(skills.length ? { skills } : {}),
     ...(packages.length ? { packages } : {}),
+    ...(typeof cards.accent === "string" && cards.accent.trim() ? { accent: cards.accent.trim() } : {}),
   };
 }

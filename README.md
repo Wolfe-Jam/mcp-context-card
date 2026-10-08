@@ -119,11 +119,14 @@ remembers. `detail: "full"` lists every fact whole. The server's
 instructions tell the model to show that rather than paste the HTML into
 the chat.
 
-Light, dark, or auto; the accent defaults to the AAIF palette and takes any hex.
+Light, dark, or auto. The colour is the owner's: set it in the project's
+`.fafa` (`metadata.cards.accent: "#0066cc"`), or pass any hex with `--accent`
+or `?accent`. With none, the card is drawn in ink, black or white; no colour
+is guessed.
 This repo's own card, live: [auto](https://wolfe-jam.github.io/mcp-context-card/) ·
 [light](https://wolfe-jam.github.io/mcp-context-card/card-light.html) ·
 [dark](https://wolfe-jam.github.io/mcp-context-card/card-dark.html)
-(all in the AAIF accent shown here — pass any hex to change it).
+(in the AAIF orange its `.fafa` declares).
 
 ## Add it to your setup
 
@@ -271,7 +274,7 @@ over both transports:
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-209 tests on Linux, macOS, and Windows, coverage‑gated in CI.
+210 tests on Linux, macOS, and Windows, coverage‑gated in CI.
 `npm run wjttc` runs the WJTTC certification suite (seven tiers, from protocol
 and Server Card conformance to stdio/HTTP parity and the shipped package). Two spawn a real
 child process and check a remembered fact survives the restart — one against

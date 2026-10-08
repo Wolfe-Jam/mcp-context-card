@@ -42,4 +42,6 @@ export interface AgentIdentity {
   skills?: { name: string; description?: string }[];
   /** Installable packages (`.fafa` `metadata.cards.packages`), e.g. an npm MCP server. */
   packages?: { registryType: string; identifier: string }[];
+  /** The owner's card colour (`.fafa` `metadata.cards.accent`), a hex. Validated when drawn. */
+  accent?: string;
 }

@@ -23,6 +23,8 @@ agent:
   license: "MIT"
 metadata:
   cards:
+    # The card's colour: AAIF orange. Without one, a card is drawn in ink.
+    accent: "#FF702D"
     packages:
       - registryType: "npm"
         identifier: "mcp-context-card"
