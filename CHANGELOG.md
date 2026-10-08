@@ -2,6 +2,25 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## 1.7.0
+
+A card's colour is the owner's.
+
+- **No colour declared = ink.** A card is drawn in its own ink, black on a
+  light card and white on a dark one, unless a colour is declared. Nothing
+  is guessed. The monogram's letter takes the card colour, so it stays
+  readable. Before, every card defaulted to the AAIF orange.
+- **The owner declares it in the `.fafa`:** `metadata.cards.accent: "#0066cc"`.
+  A colour passed in (`--accent`, `?accent`, the tools' `accent`) still
+  wins.
+- A bad value, passed or declared, is dropped and the card falls back to
+  ink. `safeAccent` now returns `undefined` for anything that isn't a hex
+  (it used to return the AAIF orange).
+- This project's own `.fafa` declares the AAIF orange, so its card looks
+  the same.
+- Docs: Node 22 or newer (README and AGENTS.md said 20; `engines` has
+  required `>=22`).
+
 ## 1.6.1
 
 The logo is the first letter.
