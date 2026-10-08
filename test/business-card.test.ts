@@ -142,15 +142,22 @@ endpoints: [{ protocol: a2a, location: "javascript:alert(3)" }]
   );
 });
 
-test("logo: a monogram from the name's first two words, top-left on the front", () => {
-  assert.equal(cardInitials("mcp-context-card"), "MC");
-  assert.equal(cardInitials("Weather Agent"), "WA");
+test("logo: the first letter, a second only when obvious, never a generic word", () => {
+  // First letter; a second only when obvious; generic words never (not the M of MCP).
+  assert.equal(cardInitials("mcp-context-card"), "C");
+  assert.equal(cardInitials("github-mcp-server"), "GH");
+  assert.equal(cardInitials("typescript-sdk"), "TS");
+  assert.equal(cardInitials("GitHub Copilot"), "GH");
+  assert.equal(cardInitials("playwright-mcp"), "P");
+  assert.equal(cardInitials("Weather Agent"), "W");
+  assert.equal(cardInitials("A2A"), "A");
   assert.equal(cardInitials("faf"), "F");
-  assert.equal(cardInitials("@scope/pkg_name"), "SP");
-  assert.equal(cardInitials("élan vital"), "ÉV");
+  assert.equal(cardInitials("@scope/pkg_name"), "S");
+  assert.equal(cardInitials("élan vital"), "É");
+  assert.equal(cardInitials("mcp"), "M"); // only generic words: still a letter
   withFafa(`agent: { name: "<x> y" }\n`, (root) => {
     const html = renderCard(root);
-    assert.match(html, /<div class="logo" aria-hidden="true">XY<\/div>/);
+    assert.match(html, /<div class="logo" aria-hidden="true">X<\/div>/);
   });
 });
 
@@ -178,7 +185,7 @@ test("read and render are separate: readCard gives a neutral card, renderBusines
     ],
     about: "<p>A person's business card.</p>",
   });
-  assert.match(html, /<div class="logo" aria-hidden="true">AL<\/div>/);
+  assert.match(html, /<div class="logo" aria-hidden="true">A<\/div>/);
   assert.match(html, /<p class="title">Analyst<\/p>/);
   assert.match(html, /id="t-work"/); // keys are cleaned to [a-z0-9-]
   assert.match(html, /#t-work:checked~\.panes \.p-work\{display:block\}/); // tab CSS follows the card's own tabs
