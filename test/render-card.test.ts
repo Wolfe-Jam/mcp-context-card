@@ -5,13 +5,13 @@ import { fixture } from "./helpers.js";
 import { join } from "node:path";
 import { remember } from "../src/memory.js";
 
-test("safeAccent: valid hex passes, anything else falls back to AAIF", () => {
+test("safeAccent: valid hex passes, anything else is dropped", () => {
   assert.equal(safeAccent("#0A7"), "#0A7");
   assert.equal(safeAccent("#0066cc"), "#0066cc");
   assert.equal(safeAccent("#12345678"), "#12345678");
-  assert.equal(safeAccent("red"), AAIF_ACCENT);
-  assert.equal(safeAccent("#fff</style><script>"), AAIF_ACCENT);
-  assert.equal(safeAccent(undefined), AAIF_ACCENT);
+  assert.equal(safeAccent("red"), undefined);
+  assert.equal(safeAccent("#fff</style><script>"), undefined);
+  assert.equal(safeAccent(undefined), undefined);
 });
 
 test("renderCard: a complete, self-contained HTML document", () => {
@@ -25,8 +25,8 @@ test("renderCard: a complete, self-contained HTML document", () => {
     assert.ok(!/<script[^>]+\bsrc=/.test(html), "no external script");
     assert.ok(!/\bhref="https?:|@import|<link\b/.test(html), "no external stylesheet/link");
     assert.ok(!/<img\b|\bsrc="https?:/.test(html), "no external image");
-    // the AAIF accent by default
-    assert.ok(html.includes(AAIF_ACCENT));
+    // this project's own colour, from its .fafa
+    assert.ok(html.includes(`--accent:${AAIF_ACCENT}`));
   } finally {
     cleanup();
   }

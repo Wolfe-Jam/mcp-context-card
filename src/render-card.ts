@@ -22,7 +22,10 @@ export type Theme = "light" | "dark" | "auto";
 
 export interface CardOptions {
   theme?: Theme;
-  /** CSS hex colour for the accent. Validated; invalid falls back to AAIF. */
+  /**
+   * CSS hex colour for the accent. Validated; invalid is ignored. Wins over the
+   * owner's colour; with neither, the card is drawn in ink (black or white).
+   */
   accent?: string;
   /**
    * Render every AGENTS.md section open. Default: sections collapse to their
@@ -39,21 +42,35 @@ export interface CardOptions {
   layout?: "landscape" | "portrait";
 }
 
-/** AAIF brand orange (aaif.io). The default accent. */
+/** AAIF brand orange (aaif.io): this project's own card colour, declared in its `.fafa`. */
 export const AAIF_ACCENT = "#FF702D";
 
 const ACCENT_OK = /^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3}(?:[0-9a-fA-F]{2})?)?$/;
 
-export function safeAccent(a?: string): string {
-  return a && ACCENT_OK.test(a) ? a : AAIF_ACCENT;
+/** A valid hex colour, or undefined. Nothing else ever reaches the stylesheet. */
+export function safeAccent(a?: string): string | undefined {
+  return a && ACCENT_OK.test(a) ? a : undefined;
 }
 
-const CSS = (accent: string) => `
+/*
+ * No colour = ink. A card's colour is the owner's to declare (or the reader's
+ * to pass); nothing is guessed. Without one the accent is the card's own ink:
+ * black on a light card, white on a dark one, and the monogram's letter takes
+ * the card colour so it stays readable.
+ */
+const INK_CSS = `
+:root{--accent:#0a0a0a}
+@media (prefers-color-scheme:dark){:root{--accent:#fafafa}}
+.bcard{--accent:var(--fg)}
+.logo{color:var(--card)}
+`;
+
+const CSS = (accent: string | undefined) => `
 /* The page and the card are themed independently. The page follows the
    viewer's OS. The card is the owner's choice: body[data-theme] (light | dark;
    none = follow the OS), and the reader can switch it with the ◐ toggle (#ink). */
 :root{
-  --accent:${accent};
+  ${accent ? `--accent:${accent};` : ""}
   --page-bg:#f4f4f5;--page-muted:#6b6b70;--page-line:rgba(0,0,0,.09);--page-chip:rgba(0,0,0,.05);
 }
 @media (prefers-color-scheme:dark){
@@ -298,6 +315,8 @@ export interface BusinessCard {
   tabs: { key: string; label: string; heading: string; html: string }[];
   /** The (i) panel, as already-safe markup. */
   about: string;
+  /** The owner's colour, a hex. None = ink (black or white). */
+  accent?: string;
 }
 
 /** How to draw a card: the owner's colour and accent, the view, and the flat (print) layout. */
@@ -446,13 +465,14 @@ export function readCard(root: string, opts: Pick<CardOptions, "expanded" | "mem
     chips,
     tabs: tabs.map(([key, label, heading, html]) => ({ key, label, heading, html })),
     about: AGENT_ABOUT,
+    ...(id?.accent ? { accent: id.accent } : {}),
   };
 }
 
 /** Draw any business card as one self-contained HTML page. */
 export function renderBusinessCard(card: BusinessCard, opts: RenderOptions = {}): string {
   const theme: Theme = opts.theme ?? "auto";
-  const accent = safeAccent(opts.accent);
+  const accent = safeAccent(opts.accent) ?? safeAccent(card.accent);
   const portrait = opts.layout === "portrait";
   const flat = !!opts.expanded;
   const { name, title, oneLiner, domain } = card;
@@ -490,7 +510,7 @@ export function renderBusinessCard(card: BusinessCard, opts: RenderOptions = {})
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escapeHtml(name)} — business card</title>
-<style>${CSS(accent)}${tabCss}</style>
+<style>${CSS(accent)}${accent ? "" : INK_CSS}${tabCss}</style>
 </head>
 <body${flat ? ` class="flat"` : ""}${htmlAttr(theme)}>
 <input type="checkbox" id="flip" class="sr" aria-label="Flip the card">
