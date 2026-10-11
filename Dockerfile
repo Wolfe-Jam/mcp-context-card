@@ -13,5 +13,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build --chown=node:node /app /app
 USER node
-# stdio by default; set PORT (or pass --http) for Streamable HTTP.
+# stdio by default. For Streamable HTTP from outside the container, set both
+# PORT and HOST=0.0.0.0 (the server binds 127.0.0.1 otherwise), e.g.
+#   docker run -e PORT=3000 -e HOST=0.0.0.0 -p 3000:3000 mcp-context-card
+# See --help for the allowed hosts and origins.
 CMD ["node", "dist/bin.js"]
