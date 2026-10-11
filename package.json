@@ -66,6 +66,7 @@
   "dependencies": {
     "@hono/node-server": "^1.19.17",
     "@modelcontextprotocol/sdk": "^1.31.0",
+    "agent-business-card": "^0.1.0",
     "agents-md-facts": "^0.1.0",
     "hono": "^4.13.7",
     "yaml": "^2.9.0"

@@ -292,7 +292,7 @@ transport security against the specs, one MUST or SHOULD at a time.
 | `src/agents-md.ts` | reads and section‑splits `AGENTS.md` |
 | `src/author.ts` | `author_agents_md` — BETTER via [`agents-md-facts`](https://github.com/Wolfe-Jam/agents-md-facts), BEST when `project.faf` exists |
 | `src/md.ts` | a minimal dependency‑free Markdown → HTML renderer |
-| `src/render-card.ts` | the card — identity + `AGENTS.md` + memory + discovery, as one HTML page |
+| `src/render-card.ts` | the card — reads identity + `AGENTS.md` + memory + discovery into a card; [`agent-business-card`](https://github.com/Wolfe-Jam/agent-business-card) draws it as one HTML page |
 | `src/memory.ts` | file‑backed `remember` / `recall` / `forget` |
 | `src/identity.ts` | `whoami` (`.fafa` → `package.json` fallback) + the `_meta` block |
 | `src/server-card.ts` | the MCP Server Card (SEP-2127, schema v1) |
