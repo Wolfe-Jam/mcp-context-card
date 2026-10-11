@@ -2,6 +2,17 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## 1.7.1
+
+The card renderer is now its own package.
+
+- The business card is drawn by
+  [agent-business-card](https://www.npmjs.com/package/agent-business-card),
+  a new dependency. It is the same code, moved unchanged, and the cards are
+  byte-identical to 1.7.0.
+- `renderBusinessCard`, `cardInitials`, `safeAccent` and the card types are
+  still exported from `render-card`, so nothing changes for callers.
+
 ## 1.7.0
 
 A card's colour is the owner's.
