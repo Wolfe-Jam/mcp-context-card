@@ -66,3 +66,23 @@ jobs:
       # Non-blocking: warn if a PR moved the code's shape but not project.faf.
       - run: npm run faf:nudge -- "origin/${{ github.base_ref }}"
         if: github.event_name == 'pull_request' && runner.os == 'Linux'
+
+  # The Dockerfile is what directories such as Glama build. Build it here and
+  # check the server answers over stdio, so a broken image shows up on the PR.
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: docker build -t mcp-context-card .
+      - name: Server answers initialize + tools/list over stdio
+        shell: bash
+        run: |
+          OUT=$( {
+            echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}'
+            echo '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+            echo '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
+            sleep 3
+          } | timeout 30 docker run -i --rm mcp-context-card || true )
+          echo "$OUT" | head -c 400; echo
+          echo "$OUT" | grep -q '"id":2' || { echo "::error::no tools/list response from the image"; exit 1; }
+          echo "$OUT" | grep -q '"tools":\[{' || { echo "::error::tools/list came back empty"; exit 1; }
