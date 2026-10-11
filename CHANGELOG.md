@@ -4,12 +4,15 @@ All notable changes to this project. Adheres to [Semantic Versioning](https://se
 
 ## 1.7.1
 
-The card renderer is now its own package.
+The business card printer is now its own package.
 
-- The business card is drawn by
-  [agent-business-card](https://www.npmjs.com/package/agent-business-card),
-  a new dependency. It is the same code, moved unchanged, and the cards are
-  byte-identical to 1.7.0.
+- [agent-business-card](https://www.npmjs.com/package/agent-business-card)
+  renders the card and prints it to screen. It is a new dependency.
+  Printing a card no longer needs an MCP server: the renderer has no
+  dependencies and runs in the browser, so any page or tool can print the
+  same card from its own facts (an A2A Agent Card, an MCP Server Card, a
+  `.fafa`). mcp-context-card is one reader that supplies them.
+- Same code, moved unchanged. The cards are byte-identical to 1.7.0.
 - `renderBusinessCard`, `cardInitials`, `safeAccent` and the card types are
   still exported from `render-card`, so nothing changes for callers.
 
