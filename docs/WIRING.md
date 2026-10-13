@@ -118,5 +118,11 @@ To serve *your* artifacts:
    a registered type.
 4. `npm run catalog` to regenerate, `npm run demo` to confirm all three still
    round‑trip, `npm test` for the suite.
+5. **The business card has two parts.** `src/render-card.ts` is the reader:
+   it gathers the fields from identity, `AGENTS.md`, memory and discovery. The
+   printer is a dependency, [`agent-business-card`](https://github.com/Wolfe-Jam/agent-business-card)
+   (browser-safe, no dependencies of its own). To change what the business
+   card says, change the reader here. To change how it looks, that's the
+   printer, and every reader that uses it changes with it.
 
 ---
