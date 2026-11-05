@@ -1,30 +1,6 @@
-/**
- * mcp-context-card server — makes a project's context, memory, and identity
- * discoverable to any MCP client.
- *
- *   context   — read_agents_md · list_agents_md_sections · author_agents_md   (this project's AGENTS.md)
- *   memory    — remember · recall · forget                                    (a .fafm file)
- *   identity  — whoami                                                        (this server's .fafa)
- *   discovery — list_context_sources · render_context_card · save_context_card (what's published, and how)
- *
- * ...exposed through the two mechanisms already in the ecosystem:
- *
- *   1. Server Card `_meta` — the `mcp-context-card://server-card` resource (in band)
- *      and `GET /.well-known/mcp/server-card` (out of band, http transport).
- *   2. ai-catalog — `GET /.well-known/ai-catalog.json`, three sibling entries
- *      keyed by media type (see catalog-gen.ts).
- */
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  CallToolRequestSchema,
-  ListResourcesRequestSchema,
-  ListResourceTemplatesRequestSchema,
-  ListToolsRequestSchema,
-  ReadResourceRequestSchema,
-  RootsListChangedNotificationSchema,
-} from "@modelcontextprotocol/sdk/types.js";
-import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
+import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
+import { Server } from "@modelcontextprotocol/server";
+import type { ListToolsResult, Transport } from "@modelcontextprotocol/server";
 import { existsSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -120,7 +96,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
   // it has connected, and they can change (goose sends its session's working
   // directory, and notifies when it moves).
   let found: { root: string; from: ProjectFrom } | undefined;
-  server.setNotificationHandler(RootsListChangedNotificationSchema, async () => {
+  server.setNotificationHandler('notifications/roots/list_changed', async () => {
     found = undefined;
   });
   const isDir = (p: string) => {
@@ -162,7 +138,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
   });
 
   // ── Mechanism 1: the Server Card resource + its _meta context block ───
-  server.setRequestHandler(ListResourcesRequestSchema, async () => ({
+  server.setRequestHandler('resources/list', async () => ({
     resources: [
       {
         uri: SERVER_CARD_URI,
@@ -178,7 +154,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
       },
     ],
   }));
-  server.setRequestHandler(ReadResourceRequestSchema, async (req) => {
+  server.setRequestHandler('resources/read', async (req) => {
     if (req.params.uri === CARD_UI_URI) {
       // Rendered at read time from the project's own files. The card is
       // self-contained (inline CSS, no external requests), and its one script
@@ -200,12 +176,12 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
   // templated resources here (the Server Card URI is fixed), but answer with an
   // empty list rather than -32601 — a client shouldn't get method-not-found for
   // something the declared capability covers.
-  server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => ({
+  server.setRequestHandler('resources/templates/list', async () => ({
     resourceTemplates: [],
   }));
 
   // ── Tools ───────────────────────────────────────────────────────────
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({
+  server.setRequestHandler('tools/list', async (): Promise<ListToolsResult> => ({
     tools: [
       {
         name: "read_agents_md",
@@ -344,7 +320,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
     ],
   }));
 
-  server.setRequestHandler(CallToolRequestSchema, async (req) => {
+  server.setRequestHandler('tools/call', async (req) => {
     const args = (req.params.arguments ?? {}) as Record<string, string>;
     const { root, from } = await project();
     const { AGENTS, FAFM } = files(root);

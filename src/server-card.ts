@@ -10,7 +10,7 @@
  * `name`, `title` and `version` are the same values the live connection reports
  * in `serverInfo`, so the card never contradicts runtime.
  */
-import { SUPPORTED_PROTOCOL_VERSIONS } from "@modelcontextprotocol/sdk/types.js";
+import { SUPPORTED_PROTOCOL_VERSIONS } from "@modelcontextprotocol/server";
 import {
   DESCRIPTION,
   MCP_PATH,

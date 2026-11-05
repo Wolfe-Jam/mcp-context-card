@@ -9,8 +9,8 @@
  *   4. DISCOVERY  — list_context_sources(), then the same server over
  *      stateless Streamable HTTP with its .well-known routes and /card.
  */
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
+import { Client } from "@modelcontextprotocol/client";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -97,7 +97,7 @@ console.log(`\n${line}\n4. DISCOVERY — list_context_sources(), then the same s
   const { serve } = await import("@hono/node-server");
   const { httpApp } = await import("./src/transport/http.js");
   const { StreamableHTTPClientTransport } = await import(
-    "@modelcontextprotocol/sdk/client/streamableHttp.js"
+    "@modelcontextprotocol/client"
   );
   const srv = serve({ fetch: httpApp(here).fetch, port: 0 });
   await new Promise((r) => setTimeout(r, 50));

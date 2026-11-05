@@ -36,7 +36,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
-import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/server";
 import { buildCatalog } from "../catalog-gen.js";
 import { fafaFile } from "../identity.js";
 import { createServer, NAME, ROOT, VERSION, serverCard } from "../server.js";

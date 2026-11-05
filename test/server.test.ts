@@ -1,7 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import { createServer, SERVER_CARD_URI } from "../src/server.js";
 import { CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION } from "../src/constants.js";
 import { TOOLS, fixture } from "./helpers.js";
