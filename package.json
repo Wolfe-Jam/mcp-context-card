@@ -64,7 +64,7 @@
     "wjttc": "node --import tsx --test --test-reporter=spec test/wjttc.test.ts"
   },
   "dependencies": {
-    "@hono/node-server": "^1.19.17",
+    "@hono/node-server": "^2.1.6",
     "@modelcontextprotocol/sdk": "^1.31.0",
     "agent-business-card": "^0.1.0",
     "agents-md-facts": "^0.1.0",
