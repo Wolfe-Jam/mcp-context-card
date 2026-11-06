@@ -108,7 +108,8 @@ kind · version, one line, and a strip of counts (sections · facts ·
 identity), with one action, "Open full card". It shows when the host's
 display mode is inline (or picture-in-picture). Fullscreen, and any page
 with no host, is the full card. "Open full card" asks the host for
-fullscreen; a host that stays smaller offers the saved `context-card.html`.
+fullscreen; a host that stays smaller points to `save_context_card`, which
+writes the full card to `context-card.html`.
 `--expanded` / `?expand=all` renders both faces flat, every section open,
 for a screenshot or print.
 

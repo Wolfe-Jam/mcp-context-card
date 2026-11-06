@@ -6,7 +6,8 @@
  * a URL. The saved file, GET /card and the CLI do not include this script.
  * With no host, window.parent is the page itself and this does nothing.
  *
- * Inside a host, App.connect() runs ui/initialize and, with autoResize,
+ * Inside a host, App.connect() runs ui/initialize, declaring the display
+ * modes the card supports (inline, pip, fullscreen), and, with autoResize,
  * sends ui/notifications/size-changed when the document's size changes.
  * The host context (McpUiHostContext) says where the card is:
  * displayMode "inline" or "pip" shows the inline view; "fullscreen" shows
@@ -77,9 +78,11 @@ async function openFull(app: App): Promise<void> {
 
 const parent = window.parent;
 if (parent !== window) {
+  // The MCP Apps spec: a View MUST declare the display modes it supports, and
+  // a host MAY refuse a request for one it didn't declare.
   const app = new App(
     { name: "mcp-context-card", version: __CARD_APP_VERSION__ },
-    {},
+    { availableDisplayModes: ["inline", "pip", "fullscreen"] },
     { autoResize: true },
   );
   // Register before connect(), or a host-context notification can be missed.

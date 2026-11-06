@@ -186,6 +186,8 @@ test("stub host: initialize, then a size-changed message", async () => {
     assert.ok(await until(() => host.messages.some((m) => m.method === "ui/initialize")), "no ui/initialize");
     const init = host.messages.find((m) => m.method === "ui/initialize")!;
     assert.equal(init.params?.appInfo && (init.params.appInfo as { name: string }).name, "mcp-context-card");
+    // the spec: a View MUST declare every display mode it supports
+    assert.deepEqual([...((init.params?.appCapabilities as { availableDisplayModes?: string[] })?.availableDisplayModes ?? [])], ["inline", "pip", "fullscreen"]);
     host.reply({
       jsonrpc: "2.0",
       id: init.id,

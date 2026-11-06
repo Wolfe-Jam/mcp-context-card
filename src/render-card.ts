@@ -151,7 +151,7 @@ html[data-view="inline"] body>:not(#inline-view){display:none}
 ${line}
 <p class="counts">${strip}</p>
 <button type="button" id="open-full-card" class="open">Open full card</button>
-<p id="inline-saved" class="saved" hidden>This host keeps the inline view. The full card is <code>context-card.html</code>.</p>`;
+<p id="inline-saved" class="saved" hidden>This host keeps the inline view. Ask for <code>save_context_card</code> to write the full card to <code>context-card.html</code>.</p>`;
 }
 
 /** Drop the hidden inline view at the top of <body>. The full card stays the page. */

@@ -66,7 +66,10 @@ the full card. No `displayMode`, and no host at all, show the full card.
 `ui/request-display-mode` — only when `availableDisplayModes` includes
 `fullscreen`, matching the helper's own example. The result's `mode` is
 what the host actually set. Anything other than `fullscreen` leaves the
-inline view up and offers the saved `context-card.html`.
+inline view up and points to `save_context_card`, which writes the full
+card to `context-card.html`. On `ui/initialize` the card declares the modes
+it supports (`appCapabilities.availableDisplayModes`: `inline`, `pip`,
+`fullscreen`), as the spec requires of a View.
 
 ## stdio
 
