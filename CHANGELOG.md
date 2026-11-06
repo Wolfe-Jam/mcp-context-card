@@ -14,7 +14,9 @@ Speaks MCP 2026-07-28 as well as 2025, on the MCP SDK v2. The card reports its s
   into the HTML at build time (`scripts/bundle-card-app.mjs`) so the sandbox
   still has no CDN and no external request. With no host — the saved
   `context-card.html`, `GET /card`, the CLI — the script does not open the
-  exchange. The card still works with the script off.
+  exchange. The card still works with the script off. `card --stdout`
+  exits 0 when the reader closes the pipe early (`head`): the bundled card
+  is larger than a pipe buffer, and that `EPIPE` is the reader finishing.
 
 - **Both protocol eras, both transports.** A client that opens with
   `server/discover` (Claude Code, goose) connects on 2026-07-28; a client

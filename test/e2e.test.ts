@@ -169,6 +169,26 @@ describe("e2e — real child process", () => {
     }
   });
 
+  test("card --stdout: a reader that closes early is not a crash", { timeout: 20_000 }, async () => {
+    const fx = fixture();
+    const child = spawn(runner.command, [...runner.base, "card", "--stdout"], {
+      env: { ...process.env, MCP_CONTEXT_CARD_ROOT: fx.root },
+      stdio: ["ignore", "pipe", "inherit"],
+    });
+    let got = "";
+    child.stdout!.on("data", (chunk: Buffer) => {
+      got += chunk.toString("utf8");
+      if (got.length >= 15) child.stdout!.destroy();
+    });
+    try {
+      const [code] = (await once(child, "exit")) as [number | null];
+      assert.equal(code, 0);
+      assert.match(got, /^<!doctype html>/);
+    } finally {
+      fx.cleanup();
+    }
+  });
+
 
   test("stdio child, no MCP_CONTEXT_CARD_ROOT: reads the project the host's roots point at", async () => {
     const proj = mkdtempSync(join(tmpdir(), "mcp-cc-e2e-roots-"));
