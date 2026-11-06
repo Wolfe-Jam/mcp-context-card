@@ -73,11 +73,11 @@
   },
   "devDependencies": {
     "@modelcontextprotocol/client": "^2.4.0",
-    "@modelcontextprotocol/ext-apps": "^2.0.4",
+    "@modelcontextprotocol/ext-apps": "2.0.4",
     "@types/node": "^26.2.0",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
-    "esbuild": "^0.28.2",
+    "esbuild": "0.28.2",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   },

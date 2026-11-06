@@ -45,15 +45,23 @@ export const CARD_APP_ENV = "MCP_CONTEXT_CARD_APP";
 export type CardApp = "helper" | "plain";
 const CARD_APP_VALUES: readonly CardApp[] = ["helper", "plain"];
 const warnedCardApp = new Set<string>();
-/** Unset or empty = `helper`. Any other value: one stderr line per distinct
- *  value (a server builds an instance per HTTP request; warn once), then `helper`. */
+/** A setting value as a CardApp: trimmed, any case. Anything else: undefined. */
+export function toCardApp(value: unknown): CardApp | undefined {
+  if (typeof value !== "string") return undefined;
+  const v = value.trim().toLowerCase();
+  return (CARD_APP_VALUES as readonly string[]).includes(v) ? (v as CardApp) : undefined;
+}
+/** Unset or empty = `helper`. `plain`/`helper` in any case. Any other value:
+ *  one stderr line per distinct value (a server builds an instance per HTTP
+ *  request; warn once), then `helper`. */
 export function cardAppFromEnv(
   env: NodeJS.ProcessEnv = process.env,
   warn: (line: string) => void = (line) => console.error(line),
 ): CardApp {
   const raw = env[CARD_APP_ENV]?.trim();
   if (!raw) return "helper";
-  if ((CARD_APP_VALUES as readonly string[]).includes(raw)) return raw as CardApp;
+  const known = toCardApp(raw);
+  if (known) return known;
   if (!warnedCardApp.has(raw)) {
     warnedCardApp.add(raw);
     warn(`${NAME} · ${CARD_APP_ENV}="${raw}" is not one of ${CARD_APP_VALUES.join(", ")}; using helper`);

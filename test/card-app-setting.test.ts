@@ -4,6 +4,7 @@
  * (~700 KB). `plain`: the plain card (~30 KB), no MCP Apps messages. Only the
  * ui:// resource changes; every other surface is the plain card either way.
  */
+import { randomUUID } from "node:crypto";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
@@ -49,16 +50,20 @@ test("cardAppFromEnv: unset or empty is helper; helper and plain are read as giv
   assert.equal(cardAppFromEnv({ [CARD_APP_ENV]: "helper" }, warn), "helper");
   assert.equal(cardAppFromEnv({ [CARD_APP_ENV]: "plain" }, warn), "plain");
   assert.equal(cardAppFromEnv({ [CARD_APP_ENV]: " plain " }, warn), "plain");
+  assert.equal(cardAppFromEnv({ [CARD_APP_ENV]: "PLAIN" }, warn), "plain");
+  assert.equal(cardAppFromEnv({ [CARD_APP_ENV]: "Helper" }, warn), "helper");
   assert.deepEqual(none, [], "valid values never warn");
 });
 
 test("cardAppFromEnv: a bad value warns once, names the valid ones, and uses helper", () => {
   const lines: string[] = [];
   const warn = (l: string) => lines.push(l);
-  assert.equal(cardAppFromEnv({ [CARD_APP_ENV]: "minimal-xyz" }, warn), "helper");
-  assert.equal(cardAppFromEnv({ [CARD_APP_ENV]: "minimal-xyz" }, warn), "helper");
+  // A value no other test uses: the warned set lives for the whole process.
+  const bad = `minimal-${randomUUID()}`;
+  assert.equal(cardAppFromEnv({ [CARD_APP_ENV]: bad }, warn), "helper");
+  assert.equal(cardAppFromEnv({ [CARD_APP_ENV]: bad }, warn), "helper");
   assert.equal(lines.length, 1, "one line per distinct bad value, not per server instance");
-  assert.match(lines[0], /MCP_CONTEXT_CARD_APP="minimal-xyz"/);
+  assert.ok(lines[0].includes(`MCP_CONTEXT_CARD_APP="${bad}"`), lines[0]);
   assert.match(lines[0], /helper, plain/);
 });
 
@@ -122,6 +127,23 @@ test("ServerOptions.cardApp wins over the environment", async () => {
       return t;
     });
     assert.ok(text.includes(HELPER_MARK), "option helper, env plain: helper");
+  } finally {
+    cleanup();
+  }
+});
+
+test("ServerOptions.cardApp from a JS caller: any case is read; an unknown value falls back to the environment", async () => {
+  const { root, cleanup } = fixture();
+  const reported = async (opt: string) => {
+    const c = await connect(root, opt as CardApp);
+    const r = (await c.callTool({ name: "list_context_sources", arguments: {} })) as { content: Array<{ text: string }> };
+    await c.close();
+    return JSON.parse(r.content[0].text).surfaces.mcp.cardApp;
+  };
+  try {
+    assert.equal(await reported("Plain"), "plain");
+    assert.equal(await withEnv("plain", () => reported("bogus")), "plain", "unknown option: the environment decides");
+    assert.equal(await withEnv(undefined, () => reported("bogus")), "helper");
   } finally {
     cleanup();
   }
