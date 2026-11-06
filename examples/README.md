@@ -28,12 +28,12 @@ $ curl -s localhost:3000/mcp/server-card
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
   "name": "io.github.Wolfe-Jam/mcp-context-card",
-  "version": "1.7.1",
+  "version": "1.8.0",
   "title": "MCP Context Card",
   "description": "MCP server for a project's context (AGENTS.md), memory, and identity — base or drop-in extension.",
   "websiteUrl": "https://github.com/Wolfe-Jam/mcp-context-card",
   "repository": { "url": "https://github.com/Wolfe-Jam/mcp-context-card", "source": "github" },
-  "remotes": [{ "type": "streamable-http", "url": "http://localhost:3000/mcp", "supportedProtocolVersions": ["2025-11-25", "2025-06-18", "…"] }],
+  "remotes": [{ "type": "streamable-http", "url": "http://localhost:3000/mcp", "supportedProtocolVersions": ["2026-07-28", "2025-11-25", "…"] }],
   "_meta": {
     "io.github.Wolfe-Jam.mcp-context-card/context":  { "source": "AGENTS.md",          "mediaType": "text/markdown" },
     "io.github.Wolfe-Jam.mcp-context-card/memory":   { "source": "project.fafm",       "mediaType": "application/vnd.fafm+yaml", "iana": "…", "note": "no de-facto standard for agent memory yet — this is one instantiation" },
