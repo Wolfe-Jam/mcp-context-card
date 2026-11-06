@@ -93,13 +93,16 @@ export function plainCardExceedsLimit(html: string): boolean {
 }
 
 /**
- * Drop the bundled helper inside the card's one inline script. The page is
- * already the full card; the helper is only for an MCP Apps host.
+ * Add the bundled helper as its own inline script, after the card's script.
+ * Its own element, so an error in the card's script (a malformed URL hash)
+ * can't stop the helper. The page is already the full card; the helper is
+ * only for an MCP Apps host.
  */
 function withCardApp(html: string): string {
   const close = html.lastIndexOf("</script>");
   if (close === -1) return html;
-  return `${html.slice(0, close)}\n${CARD_APP_JS}\n${html.slice(close)}`;
+  const end = close + "</script>".length;
+  return `${html.slice(0, end)}\n<script data-card-app>\n${CARD_APP_JS}\n</script>${html.slice(end)}`;
 }
 
 /** The project's card: read its files and draw. No MCP Apps helper. */

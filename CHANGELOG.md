@@ -17,7 +17,8 @@ Speaks MCP 2026-07-28 as well as 2025, on the MCP SDK v2. The card reports its s
   client without MCP Apps, `save_context_card`, `GET /card`, and the CLI
   are the plain card, without that script. `card:check` fails if a plain
   card exceeds 64 KB. The card still works with the script off.
-  `card --stdout` exits 0 when the reader closes the pipe early.
+  `card --stdout` exits 0 when the reader closes the pipe early, and exits
+  1 with a message on any other failed write.
 - **You choose whether the host's card carries the helper.**
   `MCP_CONTEXT_CARD_APP=helper` (the default) or `plain`. `plain` makes the
   `ui://` card the plain card (~30 KB, no MCP Apps messages) for hosts where
