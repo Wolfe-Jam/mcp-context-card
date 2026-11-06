@@ -26,6 +26,19 @@ Speaks MCP 2026-07-28 as well as 2025, on the MCP SDK v2. The card reports its s
   `list_context_sources` reports the active value; an unknown value warns
   once on stderr and uses `helper`.
 
+- **An inline view for chat panels.** Inside an MCP Apps host, display mode
+  `inline` or `pip` (`McpUiHostContext.displayMode`) shows a mini card:
+  monogram, name, kind · version, one line, and a counts strip (sections ·
+  facts · identity). One action, "Open full card", calls
+  `requestDisplayMode({ mode: "fullscreen" })` when `availableDisplayModes`
+  includes `fullscreen`. The full card shows when the host is fullscreen, or
+  when there is no host. A host that stays smaller points to
+  `save_context_card`, which writes the full card to `context-card.html`.
+  The card declares the display modes it supports (inline, pip,
+  fullscreen) when it starts, as the MCP Apps spec requires. The mini card is part of the `ui://` resource only,
+  hidden until the host says the panel is inline. The plain card does not
+  include it, and the script off still shows the full card.
+
 - **Both protocol eras, both transports.** A client that opens with
   `server/discover` (Claude Code, goose) connects on 2026-07-28; a client
   that opens with `initialize` gets 2025, unchanged. The Server Card lists

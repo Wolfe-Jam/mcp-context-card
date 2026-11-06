@@ -97,11 +97,21 @@ people: read it, screenshot it, drop it in a PR, put it on a status page.
 Flip, tabs and the view switch are plain CSS, so they work with scripts off.
 The one small inline script adds Expand all, opens a `#section` link on the
 back, and opens every section for printing. Hosts that support MCP Apps read
-`ui://mcp-context-card/card.html`: this same page with the helper bundled in
-(`scripts/bundle-card-app.mjs`), so the host can fit its frame. Nothing is
-loaded from the network. The saved `context-card.html`, `GET /card`, and the
-CLI are the plain page, without that helper. `--expanded` / `?expand=all`
-renders both faces flat, every section open, for a screenshot or print.
+`ui://mcp-context-card/card.html`: this same page, plus a hidden inline view
+and the helper bundled in (`scripts/bundle-card-app.mjs`), so the host can
+fit its frame. Nothing is loaded from the network. The saved
+`context-card.html`, `GET /card`, and the CLI are the plain page, without
+that helper and without the inline view.
+
+In a host, the inline view is a mini card for the panel: monogram, name,
+kind · version, one line, and a strip of counts (sections · facts ·
+identity), with one action, "Open full card". It shows when the host's
+display mode is inline (or picture-in-picture). Fullscreen, and any page
+with no host, is the full card. "Open full card" asks the host for
+fullscreen; a host that stays smaller points to `save_context_card`, which
+writes the full card to `context-card.html`.
+`--expanded` / `?expand=all` renders both faces flat, every section open,
+for a screenshot or print.
 
 ```
 npx mcp-context-card card            # at a terminal: writes context-card.html and opens it
@@ -286,7 +296,7 @@ over both transports:
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-241 tests on Linux, macOS, and Windows, coverage‑gated in CI.
+245 tests on Linux, macOS, and Windows, coverage‑gated in CI.
 `npm run wjttc` runs the WJTTC certification suite (seven tiers, from protocol
 and Server Card conformance to stdio/HTTP parity and the shipped package). Two spawn a real
 child process and check a remembered fact survives the restart — one against

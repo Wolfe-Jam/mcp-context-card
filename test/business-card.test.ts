@@ -169,11 +169,12 @@ test("read and render are separate: readCard gives a neutral card, renderBusines
     assert.equal(card.title, `MCP server · v${VERSION}`);
     assert.deepEqual(card.tabs.map((t) => t.key), ["about", "context", "memory", "discovery"]);
     assert.ok(card.chips.some((c) => c.accent && c.text === "published"));
-    // renderCard = read, then draw. The MCP Apps bundle is not part of it.
+    // renderCard = read, then draw. The helper and the inline view are not part of it.
     const drawn = renderBusinessCard(card);
     const html = renderCard(root);
     assert.equal(html, drawn);
     assert.doesNotMatch(html, /ui\/notifications\/size-changed/);
+    assert.doesNotMatch(html, /id="inline-view"/);
   } finally {
     cleanup();
   }

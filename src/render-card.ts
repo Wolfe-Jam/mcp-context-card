@@ -7,10 +7,10 @@
  * ai-catalog; this is the view for people.
  *
  * Self-contained: inline CSS, no external fonts or resources. The only script
- * in the plain card is the expand-all / print helper. The MCP Apps helper
- * (src/card-app.bundle.js) is added by renderAppsCard, and only the
- * ui://mcp-context-card/card.html resource uses that. Tool text, the saved
- * file, GET /card and the CLI stay on renderCard. Renders anywhere.
+ * in the plain card is the expand-all / print helper. renderAppsCard adds the
+ * MCP Apps helper (src/card-app.bundle.js) and the hidden inline view, and
+ * only ui://mcp-context-card/card.html uses that. Tool text, the saved file,
+ * GET /card and the CLI stay on renderCard. Renders anywhere.
  */
 import { readFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
@@ -21,7 +21,7 @@ import { resolveIdentity, serverCardMeta, META_NS } from "./identity.js";
 import type { AgentIdentity } from "./faf/types.js";
 import { PUBLISH_MEMORY_ENV, SERVER_CARD_URI } from "./constants.js";
 import { escapeHtml, renderInline, renderMarkdown, slug } from "./md.js";
-import { renderBusinessCard, type BusinessCard, type RenderOptions, type Theme } from "agent-business-card";
+import { cardInitials, renderBusinessCard, type BusinessCard, type RenderOptions, type Theme } from "agent-business-card";
 
 // The renderer lives in agent-business-card; these readers build the card from a project's files.
 export { cardInitials, renderBusinessCard, safeAccent } from "agent-business-card";
@@ -105,17 +105,76 @@ function withCardApp(html: string): string {
   return `${html.slice(0, end)}\n<script data-card-app>\n${CARD_APP_JS}\n</script>${html.slice(end)}`;
 }
 
-/** The project's card: read its files and draw. No MCP Apps helper. */
+/** The same sections, facts and identity the full card is built from. */
+function inlineCounts(root: string): { sections: number; facts: number; identity: boolean } {
+  const agents = parseAgentsMd(join(root, "AGENTS.md"));
+  const mem = parseFafm(join(root, "project.fafm"));
+  const id = resolveIdentity(root);
+  return {
+    sections: agents?.sections.filter((s) => s.level > 1).length ?? 0,
+    facts: mem.facts.length,
+    identity: id !== null,
+  };
+}
+
+function countLabel(n: number, word: string): string {
+  return `${n} ${word}${n === 1 ? "" : "s"}`;
+}
+
+/**
+ * The inline view: monogram, name, kind · version, one line, a counts strip,
+ * and one action. Hidden until a host's display mode is inline or pip.
+ * No host, and the script off, keep the full card.
+ */
+function inlineView(card: BusinessCard, counts: { sections: number; facts: number; identity: boolean }): string {
+  const kind = card.title ? `<p class="kind">${escapeHtml(card.title)}</p>` : "";
+  const line = card.oneLiner ? `<p class="line">${escapeHtml(card.oneLiner)}</p>` : "";
+  const strip = `${countLabel(counts.sections, "section")} · ${countLabel(counts.facts, "fact")} · ${
+    counts.identity ? "identity" : "no identity"
+  }`;
+  return `<style>
+#inline-view{--iv-fg:#0a0a0a;--iv-bg:#fff;--iv-muted:#6b6b70;--iv-line:rgba(0,0,0,.12);color:var(--iv-fg);background:var(--iv-bg);border:1px solid var(--iv-line);border-top:4px solid var(--accent,#FF702D);border-radius:14px;padding:12px 14px;font:14px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+body[data-theme="dark"] #inline-view{--iv-fg:#fafafa;--iv-bg:#0d0d0d;--iv-muted:#9a9aa0;--iv-line:rgba(255,255,255,.16)}
+@media (prefers-color-scheme:dark){body:not([data-theme]) #inline-view{--iv-fg:#fafafa;--iv-bg:#0d0d0d;--iv-muted:#9a9aa0;--iv-line:rgba(255,255,255,.16)}}
+#inline-view .row{display:flex;gap:12px;align-items:center}
+#inline-view .mark{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:none;color:#fff;font-weight:800;background:var(--accent,#FF702D)}
+#inline-view h2{margin:0;font-size:1.05rem;line-height:1.2;letter-spacing:-.02em}
+#inline-view .kind{margin:2px 0 0;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent,#FF702D)}
+#inline-view .line{margin:8px 0 0;color:var(--iv-muted)}
+#inline-view .counts{margin:8px 0 0;font-size:.78rem;color:var(--iv-muted)}
+#inline-view .open{margin-top:10px;font:inherit;font-size:.85rem;font-weight:650;padding:6px 12px;border-radius:999px;border:1px solid var(--accent,#FF702D);background:transparent;color:var(--accent,#FF702D);cursor:pointer}
+#inline-view .saved{margin:8px 0 0;font-size:.8rem;color:var(--iv-muted)}
+html[data-view="inline"] body{padding:8px;background:transparent}
+html[data-view="inline"] body>:not(#inline-view){display:none}
+</style>
+<div class="row"><div class="mark" aria-hidden="true">${escapeHtml(cardInitials(card.name))}</div><div><h2>${escapeHtml(card.name)}</h2>${kind}</div></div>
+${line}
+<p class="counts">${strip}</p>
+<button type="button" id="open-full-card" class="open">Open full card</button>
+<p id="inline-saved" class="saved" hidden>This host keeps the inline view. Ask for <code>save_context_card</code> to write the full card to <code>context-card.html</code>.</p>`;
+}
+
+/** Drop the hidden inline view at the top of <body>. The full card stays the page. */
+function withInlineView(html: string, block: string): string {
+  const body = /<body[^>]*>/.exec(html);
+  if (!body || body.index === undefined) return html;
+  const at = body.index + body[0].length;
+  return `${html.slice(0, at)}\n<!-- inline-view -->\n<div id="inline-view" hidden>\n${block}\n</div>\n<!-- /inline-view -->${html.slice(at)}`;
+}
+
+/** The project's card: read its files and draw. No helper, no inline view. */
 export function renderCard(root: string, opts: CardOptions = {}): string {
   return renderBusinessCard(readCard(root, opts), opts);
 }
 
 /**
- * ui://mcp-context-card/card.html — the same card, with the bundled MCP Apps
- * helper inside its one script. Nothing else calls this.
+ * ui://mcp-context-card/card.html — the same card, plus the hidden inline
+ * view and the bundled MCP Apps helper. Nothing else calls this.
  */
 export function renderAppsCard(root: string, opts: CardOptions = {}): string {
-  return withCardApp(renderCard(root, opts));
+  const card = readCard(root, opts);
+  const drawn = withInlineView(renderBusinessCard(card, opts), inlineView(card, inlineCounts(root)));
+  return withCardApp(drawn);
 }
 
 /** The (i) panel for an agent or server card. */
