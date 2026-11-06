@@ -34,6 +34,22 @@ itself, so a client that declares `roots` but can't answer (no handler, or an
 error) fails the tool call on 2026-07-28 instead of falling back. Host
 authors: either answer roots or don't declare the capability.
 
+## The card in an MCP Apps host
+
+Hosts that support MCP Apps read `ui://mcp-context-card/card.html`
+(`text/html;profile=mcp-app`). That resource is the card plus one script.
+Inside a host, the script uses `@modelcontextprotocol/ext-apps`
+`App.connect()` (the default transport is `PostMessageTransport` to
+`window.parent`). `autoResize: true` (the helper's default, set explicitly
+here) sends `ui/notifications/size-changed` with `{ width, height }` when
+the document's size changes. The helper is bundled into that resource at
+build time; it makes no network request. A page with no host
+(`window.parent === window`) does not start the exchange.
+
+`render_context_card` for a client without MCP Apps, `save_context_card`,
+`GET /card`, and `mcp-context-card card` return the plain card. That page
+does not include the helper. `card:check` fails if it exceeds 64 KB.
+
 ## stdio
 
 `serveStdio` from the MCP SDK — one process, one client, JSON-RPC over
@@ -135,6 +151,7 @@ they carry no private data.
 | `MCP_CONTEXT_CARD_ALLOWED_HOSTS=ctx.example.com` | extra Host names to accept, e.g. a reverse proxy's public name in front of a local bind |
 | `MCP_CONTEXT_CARD_ALLOWED_ORIGINS=https://app.example.com` | browser origins allowed to call the server |
 | `MCP_CONTEXT_CARD_PUBLISH_MEMORY=1` | serve `project.fafm`, list it in the AI Catalog, and show memory facts on an exposed `/card` |
+| `MCP_CONTEXT_CARD_APP=plain` | the `ui://mcp-context-card/card.html` card an MCP Apps host reads is the plain card (~30 KB, no MCP Apps messages, the host's default frame) instead of the card with the MCP Apps helper (`helper`, the default, ~700 KB). Tool text, `save_context_card`, `GET /card` and the CLI are the plain card either way. Any case is read (`PLAIN` is `plain`); any other value prints one line to stderr and uses `helper`. `list_context_sources` reports the active value (`surfaces.mcp.cardApp`). |
 
 ### Where memory shows
 

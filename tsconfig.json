@@ -9,5 +9,6 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["src", "test", "demo.ts"]
+  "include": ["src", "test", "demo.ts"],
+  "exclude": ["src/browser"]
 }

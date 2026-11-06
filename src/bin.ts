@@ -148,6 +148,15 @@ if (entryPath && import.meta.url === pathToFileURL(entryPath).href) {
     // Piped / redirected (or --stdout) → raw HTML on stdout, unchanged.
     // A bare run at a terminal → the HTML is noise; write a file and open it.
     if (!process.stdout.isTTY || argv.includes("--stdout")) {
+      // A large project's card can be bigger than a pipe buffer. `head` closes
+      // after the first bytes; the rest of the write is EPIPE, which is the
+      // reader finishing. Any other error (disk full, bad descriptor) is a
+      // failed write: say so and exit 1.
+      process.stdout.on("error", (err: NodeJS.ErrnoException) => {
+        if (err.code === "EPIPE") process.exit(0);
+        process.stderr.write(`${NAME} · card --stdout: ${err.message}\n`);
+        process.exit(1);
+      });
       process.stdout.write(html);
     } else {
       const { writeFileSync } = await import("node:fs");

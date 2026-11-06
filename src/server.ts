@@ -34,10 +34,10 @@ import { findSection, parseAgentsMd } from "./agents-md.js";
 import { authorAgentsMd } from "./author.js";
 import { forget, parseFafm, recall, remember } from "./memory.js";
 import { identity, resolveIdentity, whoami } from "./identity.js";
-import { renderCard, renderCardText, safeAccent, type Theme } from "./render-card.js";
+import { renderAppsCard, renderCard, renderCardText, safeAccent, type Theme } from "./render-card.js";
 
 export { NAME, VERSION, SERVER_CARD_URI } from "./constants.js";
-import { NAME, VERSION, SERVER_CARD_URI, CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION, REGISTRY_NAME, TITLE, SERVER_CARD_MEDIA_TYPE } from "./constants.js";
+import { NAME, VERSION, SERVER_CARD_URI, CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION, REGISTRY_NAME, TITLE, SERVER_CARD_MEDIA_TYPE, cardAppFromEnv, toCardApp, type CardApp } from "./constants.js";
 import { serverCard } from "./server-card.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -117,6 +117,9 @@ export interface ServerOptions {
   detectRoot?: boolean;
   /** The directory the server was started in (default: process.cwd()). */
   cwd?: string;
+  /** What the ui:// card carries: `helper` (MCP Apps helper, the default) or
+   *  `plain`. Default: MCP_CONTEXT_CARD_APP, else `helper`. */
+  cardApp?: CardApp;
   /** The protocol era this instance serves, set by the stdio/HTTP factory:
    *  "modern" = 2026-07-28, "legacy" = 2024-10-07 … 2025-11-25 (the default). */
   era?: ProtocolEra;
@@ -126,6 +129,8 @@ export interface ServerOptions {
 type ProjectFrom = "configured" | "client roots" | "start directory" | "package";
 
 export function createServer(root: string = ROOT, opts: ServerOptions = {}): Server {
+  // A JS caller can pass any string: normalise it; an unknown value falls back to the environment.
+  const cardApp: CardApp = toCardApp(opts.cardApp) ?? cardAppFromEnv();
   const server = new Server(
     { name: REGISTRY_NAME, title: TITLE, version: VERSION },
     { capabilities: { tools: {}, resources: {} }, instructions: INSTRUCTIONS },
@@ -215,11 +220,14 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
     if (req.params.uri === CARD_UI_URI) {
       const p = await project(ctx);
       if (isInputRequiredResult(p)) return p;
-      // Rendered at read time from the project's own files. The card is
-      // self-contained (inline CSS, no external requests), and its one script
-      // is progressive enhancement, so it still works in a strict sandbox.
+      // Rendered at read time from the project's own files. This is the only
+      // card that includes the MCP Apps helper: tool text, save_context_card,
+      // GET /card and the CLI stay on renderCard. Inline CSS, no external
+      // requests. The helper reports the card's size inside a host sandbox.
+      // MCP_CONTEXT_CARD_APP=plain: the plain card here too (no helper).
+      const render = cardApp === "plain" ? renderCard : renderAppsCard;
       return {
-        contents: [{ uri: CARD_UI_URI, mimeType: MCP_APP_MIME, text: renderCard(p.root, { theme: "auto" }) }],
+        contents: [{ uri: CARD_UI_URI, mimeType: MCP_APP_MIME, text: render(p.root, { theme: "auto" }) }],
       };
     }
     if (req.params.uri !== SERVER_CARD_URI) {
@@ -497,6 +505,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
                 mcp: {
                   serverCard: `resource ${SERVER_CARD_URI}`,
                   card: `resource ${CARD_UI_URI} (MCP App, ${MCP_APP_MIME})`,
+                  cardApp,
                 },
                 http: {
                   serverCard: "GET /mcp/server-card",

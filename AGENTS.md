@@ -20,7 +20,7 @@ Node 22 or newer. No other system dependencies.
 ## Build
 
 ```bash
-npm run build       # tsc -p tsconfig.build.json  →  dist/
+npm run build       # tsc -p tsconfig.build.json, then copy the bundled card script → dist/
 npm run typecheck   # tsc --noEmit over src/ + test/
 ```
 
@@ -50,6 +50,8 @@ code's shape moved without `project.faf`) on Linux.
 | `src/author.ts` | `author_agents_md` — BETTER via `agents-md-facts`, BEST when `project.faf` exists |
 | `src/md.ts` | a minimal dependency-free Markdown → HTML renderer |
 | `src/render-card.ts` | the card — identity + this file + memory + discovery, as one HTML page |
+| `src/browser/card-app.ts` | the card's MCP Apps script (size), inlined only into the `ui://` resource |
+| `scripts/bundle-card-app.mjs` | bundles the script so the sandbox loads nothing from the network |
 | `src/memory.ts` → `src/faf/parse-fafm.ts` | file-backed `remember` / `recall` / `forget` |
 | `src/identity.ts` | `whoami` (`.fafa` → `package.json` fallback) + the `_meta` context block |
 | `src/catalog-gen.ts` | writes `.well-known/ai-catalog.json` from the same three sources |
@@ -70,7 +72,7 @@ code's shape moved without `project.faf`) on Linux.
 the **same three sources**: this file, `project.fafm`, `.well-known/fafa`.
 Change what one exposes and you must change the others. `npm run catalog:check`
 and `npm run card:check` enforce it in CI — each regenerates its surface and
-fails on any diff.
+fails on any diff. `card:check` also fails if a plain card exceeds 64 KB.
 
 ## Safety
 

@@ -36,6 +36,39 @@ export const ALLOWED_HOSTS_ENV = "MCP_CONTEXT_CARD_ALLOWED_HOSTS";
 export const ALLOWED_ORIGINS_ENV = "MCP_CONTEXT_CARD_ALLOWED_ORIGINS";
 export const publishMemoryFromEnv = (env: NodeJS.ProcessEnv = process.env) => env[PUBLISH_MEMORY_ENV] === "1";
 
+/** What the ui:// card carries for an MCP Apps host. `helper` (the default):
+ *  the official MCP Apps helper, so the card reports its size (~700 KB).
+ *  `plain`: the plain card (~30 KB), no MCP Apps messages; the host's default
+ *  frame. Only the ui:// resource changes: tool text, save_context_card,
+ *  GET /card and the CLI are always the plain card. */
+export const CARD_APP_ENV = "MCP_CONTEXT_CARD_APP";
+export type CardApp = "helper" | "plain";
+const CARD_APP_VALUES: readonly CardApp[] = ["helper", "plain"];
+const warnedCardApp = new Set<string>();
+/** A setting value as a CardApp: trimmed, any case. Anything else: undefined. */
+export function toCardApp(value: unknown): CardApp | undefined {
+  if (typeof value !== "string") return undefined;
+  const v = value.trim().toLowerCase();
+  return (CARD_APP_VALUES as readonly string[]).includes(v) ? (v as CardApp) : undefined;
+}
+/** Unset or empty = `helper`. `plain`/`helper` in any case. Any other value:
+ *  one stderr line per distinct value (a server builds an instance per HTTP
+ *  request; warn once), then `helper`. */
+export function cardAppFromEnv(
+  env: NodeJS.ProcessEnv = process.env,
+  warn: (line: string) => void = (line) => console.error(line),
+): CardApp {
+  const raw = env[CARD_APP_ENV]?.trim();
+  if (!raw) return "helper";
+  const known = toCardApp(raw);
+  if (known) return known;
+  if (!warnedCardApp.has(raw)) {
+    warnedCardApp.add(raw);
+    warn(`${NAME} · ${CARD_APP_ENV}="${raw}" is not one of ${CARD_APP_VALUES.join(", ")}; using helper`);
+  }
+  return "helper";
+}
+
 /** MCP Apps (io.modelcontextprotocol/ui): the card as an inline UI resource.
  *  A host that supports MCP Apps fetches this resource and renders it in a
  *  sandboxed iframe next to the conversation. */

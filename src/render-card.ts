@@ -7,10 +7,14 @@
  * ai-catalog; this is the view for people.
  *
  * Self-contained: inline CSS, no external fonts or resources. The only script
- * is the expand-all / print helper (TOGGLE_SCRIPT) — a progressive enhancement;
- * every section still opens on its own without it. Renders anywhere.
+ * in the plain card is the expand-all / print helper. The MCP Apps helper
+ * (src/card-app.bundle.js) is added by renderAppsCard, and only the
+ * ui://mcp-context-card/card.html resource uses that. Tool text, the saved
+ * file, GET /card and the CLI stay on renderCard. Renders anywhere.
  */
-import { basename, join, resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseAgentsMd } from "./agents-md.js";
 import { parseFafm } from "./memory.js";
 import { resolveIdentity, serverCardMeta, META_NS } from "./identity.js";
@@ -74,9 +78,44 @@ export function cardOneLiner(id: AgentIdentity | null, max = 140): string {
   return pause && pause.index >= 40 && pause.index <= max ? d.slice(0, pause.index).trim() : first;
 }
 
-/** The project's card: read its files, then draw. */
+/** MCP Apps helper, bundled at build time. Same bytes in src/ and, after build, dist/. */
+const CARD_APP_JS = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "card-app.bundle.js"), "utf8");
+
+/**
+ * A plain card (tool text, the saved file, GET /card, the CLI, docs/) must
+ * not exceed this. The ui:// resource is separate and is not checked here.
+ */
+export const PLAIN_CARD_LIMIT_BYTES = 64 * 1024;
+
+/** True when a plain card exceeds 64 KB. card:check fails on that. */
+export function plainCardExceedsLimit(html: string): boolean {
+  return Buffer.byteLength(html) > PLAIN_CARD_LIMIT_BYTES;
+}
+
+/**
+ * Add the bundled helper as its own inline script, after the card's script.
+ * Its own element, so an error in the card's script (a malformed URL hash)
+ * can't stop the helper. The page is already the full card; the helper is
+ * only for an MCP Apps host.
+ */
+function withCardApp(html: string): string {
+  const close = html.lastIndexOf("</script>");
+  if (close === -1) return html;
+  const end = close + "</script>".length;
+  return `${html.slice(0, end)}\n<script data-card-app>\n${CARD_APP_JS}\n</script>${html.slice(end)}`;
+}
+
+/** The project's card: read its files and draw. No MCP Apps helper. */
 export function renderCard(root: string, opts: CardOptions = {}): string {
   return renderBusinessCard(readCard(root, opts), opts);
+}
+
+/**
+ * ui://mcp-context-card/card.html — the same card, with the bundled MCP Apps
+ * helper inside its one script. Nothing else calls this.
+ */
+export function renderAppsCard(root: string, opts: CardOptions = {}): string {
+  return withCardApp(renderCard(root, opts));
 }
 
 /** The (i) panel for an agent or server card. */

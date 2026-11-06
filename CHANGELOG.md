@@ -4,7 +4,27 @@ All notable changes to this project. Adheres to [Semantic Versioning](https://se
 
 ## Unreleased
 
-Speaks MCP 2026-07-28 as well as 2025, on the MCP SDK v2.
+Speaks MCP 2026-07-28 as well as 2025, on the MCP SDK v2. The card reports its size to an MCP Apps host.
+
+- **The card tells the host how big it is.** Hosts that support MCP Apps
+  read `ui://mcp-context-card/card.html`. That resource is the card plus
+  the start-up exchange (`ui/initialize`, then
+  `ui/notifications/initialized`) and `ui/notifications/size-changed`
+  when the document's size changes. The helper is
+  `@modelcontextprotocol/ext-apps` `App` with `autoResize: true`, bundled
+  at build time (`scripts/bundle-card-app.mjs`) into that resource only, so
+  the sandbox still has no CDN and no external request. The tool text for a
+  client without MCP Apps, `save_context_card`, `GET /card`, and the CLI
+  are the plain card, without that script. `card:check` fails if a plain
+  card exceeds 64 KB. The card still works with the script off.
+  `card --stdout` exits 0 when the reader closes the pipe early, and exits
+  1 with a message on any other failed write.
+- **You choose whether the host's card carries the helper.**
+  `MCP_CONTEXT_CARD_APP=helper` (the default) or `plain`. `plain` makes the
+  `ui://` card the plain card (~30 KB, no MCP Apps messages) for hosts where
+  the ~700 KB helper isn't worth it. Only that resource changes.
+  `list_context_sources` reports the active value; an unknown value warns
+  once on stderr and uses `helper`.
 
 - **Both protocol eras, both transports.** A client that opens with
   `server/discover` (Claude Code, goose) connects on 2026-07-28; a client

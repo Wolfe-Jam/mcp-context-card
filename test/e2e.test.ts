@@ -8,7 +8,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { spawn, execFileSync } from "node:child_process";
 import { once } from "node:events";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, closeSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import type { AddressInfo } from "node:net";
 import { createServer as createNetServer } from "node:net";
 import { tmpdir } from "node:os";
@@ -164,11 +164,58 @@ describe("e2e — real child process", () => {
       assert.match(out, /^<!doctype html>/);
       assert.match(out, /data-theme="dark"/);
       assert.match(out, /Context — AGENTS\.md/);
+      assert.doesNotMatch(out, /ui\/notifications\/size-changed/);
+      assert.ok(Buffer.byteLength(out) < 64 * 1024, `CLI card is ${Buffer.byteLength(out)} bytes`);
     } finally {
       fx.cleanup();
     }
   });
 
+  test("card --stdout: a reader that closes early is not a crash", { timeout: 20_000 }, async () => {
+    const fx = fixture();
+    // A card bigger than any pipe buffer, so the write really hits EPIPE.
+    appendFileSync(join(fx.root, "AGENTS.md"), "\n## Bulk\n\n" + "A line of project notes to make the card large.\n\n".repeat(8000));
+    const child = spawn(runner.command, [...runner.base, "card", "--stdout"], {
+      env: { ...process.env, MCP_CONTEXT_CARD_ROOT: fx.root },
+      stdio: ["ignore", "pipe", "inherit"],
+    });
+    let got = "";
+    child.stdout!.on("data", (chunk: Buffer) => {
+      got += chunk.toString("utf8");
+      if (got.length >= 15) child.stdout!.destroy();
+    });
+    try {
+      const [code] = (await once(child, "exit")) as [number | null];
+      assert.equal(code, 0);
+      assert.match(got, /^<!doctype html>/);
+    } finally {
+      fx.cleanup();
+    }
+  });
+
+
+  test("card --stdout: a failed write is an error, exit 1", { timeout: 20_000, skip: process.platform === "win32" }, async () => {
+    const fx = fixture();
+    // stdout opened read-only: every write fails (EBADF), and it isn't EPIPE.
+    const target = join(fx.root, "out.html");
+    writeFileSync(target, "");
+    const fd = openSync(target, "r");
+    try {
+      const child = spawn(runner.command, [...runner.base, "card", "--stdout"], {
+        env: { ...process.env, MCP_CONTEXT_CARD_ROOT: fx.root },
+        stdio: ["ignore", fd, "pipe"],
+      });
+      let err = "";
+      child.stderr!.on("data", (c: Buffer) => (err += c.toString("utf8")));
+      const [code] = (await once(child, "exit")) as [number | null];
+      assert.equal(code, 1);
+      assert.match(err, /card --stdout:/);
+      assert.equal(readFileSync(target, "utf8"), "");
+    } finally {
+      closeSync(fd);
+      fx.cleanup();
+    }
+  });
 
   test("stdio child, no MCP_CONTEXT_CARD_ROOT: reads the project the host's roots point at", async () => {
     const proj = mkdtempSync(join(tmpdir(), "mcp-cc-e2e-roots-"));
