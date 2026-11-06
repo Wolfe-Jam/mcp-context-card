@@ -37,7 +37,7 @@ import { identity, resolveIdentity, whoami } from "./identity.js";
 import { renderAppsCard, renderCard, renderCardText, safeAccent, type Theme } from "./render-card.js";
 
 export { NAME, VERSION, SERVER_CARD_URI } from "./constants.js";
-import { NAME, VERSION, SERVER_CARD_URI, CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION, REGISTRY_NAME, TITLE, SERVER_CARD_MEDIA_TYPE } from "./constants.js";
+import { NAME, VERSION, SERVER_CARD_URI, CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION, REGISTRY_NAME, TITLE, SERVER_CARD_MEDIA_TYPE, cardAppFromEnv, type CardApp } from "./constants.js";
 import { serverCard } from "./server-card.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -117,6 +117,9 @@ export interface ServerOptions {
   detectRoot?: boolean;
   /** The directory the server was started in (default: process.cwd()). */
   cwd?: string;
+  /** What the ui:// card carries: `helper` (MCP Apps helper, the default) or
+   *  `plain`. Default: MCP_CONTEXT_CARD_APP, else `helper`. */
+  cardApp?: CardApp;
   /** The protocol era this instance serves, set by the stdio/HTTP factory:
    *  "modern" = 2026-07-28, "legacy" = 2024-10-07 … 2025-11-25 (the default). */
   era?: ProtocolEra;
@@ -126,6 +129,7 @@ export interface ServerOptions {
 type ProjectFrom = "configured" | "client roots" | "start directory" | "package";
 
 export function createServer(root: string = ROOT, opts: ServerOptions = {}): Server {
+  const cardApp: CardApp = opts.cardApp ?? cardAppFromEnv();
   const server = new Server(
     { name: REGISTRY_NAME, title: TITLE, version: VERSION },
     { capabilities: { tools: {}, resources: {} }, instructions: INSTRUCTIONS },
@@ -220,8 +224,11 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
       // save_context_card, GET /card and the CLI stay on renderCard. Inline
       // CSS, no external requests. The helper reports the card's size and,
       // in a host panel, shows the inline view.
+      // MCP_CONTEXT_CARD_APP=plain: the plain card here too (no helper, so
+      // no inline view: the full card in the host's default frame).
+      const render = cardApp === "plain" ? renderCard : renderAppsCard;
       return {
-        contents: [{ uri: CARD_UI_URI, mimeType: MCP_APP_MIME, text: renderAppsCard(p.root, { theme: "auto" }) }],
+        contents: [{ uri: CARD_UI_URI, mimeType: MCP_APP_MIME, text: render(p.root, { theme: "auto" }) }],
       };
     }
     if (req.params.uri !== SERVER_CARD_URI) {
@@ -499,6 +506,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
                 mcp: {
                   serverCard: `resource ${SERVER_CARD_URI}`,
                   card: `resource ${CARD_UI_URI} (MCP App, ${MCP_APP_MIME})`,
+                  cardApp,
                 },
                 http: {
                   serverCard: "GET /mcp/server-card",

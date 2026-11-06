@@ -206,6 +206,13 @@ never serves or lists `project.fafm`, unless you set
 `MCP_CONTEXT_CARD_PUBLISH_MEMORY=1`. Details:
 [docs/TRANSPORT.md](./docs/TRANSPORT.md#security-local-by-default).
 
+In a host that shows MCP Apps (goose, for one), the card comes with the
+official MCP Apps helper, so it reports its size and fits its frame (about
+700 KB, loaded by the host, not the model). For the plain card instead
+(about 30 KB, the host's default frame), set
+`"env": { "MCP_CONTEXT_CARD_APP": "plain" }`. Everywhere else the card is
+plain either way.
+
 If `command: "npx"` fails to spawn (`spawn npx ENOENT` — seen on Cursor, whose
 host process doesn't inherit a shell `PATH`), point `command` at `node` and
 the installed `dist/bin.js` instead — see
@@ -288,7 +295,7 @@ over both transports:
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-234 tests on Linux, macOS, and Windows, coverage‑gated in CI.
+241 tests on Linux, macOS, and Windows, coverage‑gated in CI.
 `npm run wjttc` runs the WJTTC certification suite (seven tiers, from protocol
 and Server Card conformance to stdio/HTTP parity and the shipped package). Two spawn a real
 child process and check a remembered fact survives the restart — one against
