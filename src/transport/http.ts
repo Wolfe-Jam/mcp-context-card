@@ -1,10 +1,11 @@
 /**
- * http — the stateless Streamable HTTP transport (MCP 2026-03-26+).
+ * http — the stateless Streamable HTTP transport, both MCP protocol eras.
  *
  * A Hono app. `POST /mcp` is the MCP endpoint, run **stateless**: a fresh
- * server + transport per request, `sessionIdGenerator: undefined`, and
- * `enableJsonResponse` so every response is a complete JSON body (no SSE
- * stream, nothing to keep open). That's the right default here — it scales
+ * server per request and a complete JSON body per response (no SSE stream,
+ * nothing to keep open). 2026-07-28 requests go to the SDK's
+ * `createMcpHandler`; 2025 requests to a per-request transport with
+ * `sessionIdGenerator: undefined` and `enableJsonResponse`, as in 1.x. That's the right default here — it scales
  * horizontally, needs no sticky sessions, and there's no per-connection
  * state to leak. A server that needs server-streamed
  * notifications or resumability would set a `sessionIdGenerator` and hold
@@ -125,7 +126,9 @@ export function httpApp(root: string = ROOT, opts: HttpAppOptions = {}): Hono {
   // server + transport per request, complete JSON bodies (the handler's own
   // legacy leg would answer them as SSE). Neither checks Host/Origin; the
   // guards above do.
-  const modern = createMcpHandler(({ era }) => createServer(root, { era }), { legacy: "reject", responseMode: "json" });
+  // responseMode stays "auto": one JSON body unless a tool emits a notification
+  // before its result, and ours never do ("json" would warn on every start).
+  const modern = createMcpHandler(({ era }) => createServer(root, { era }), { legacy: "reject" });
   const legacy = async (request: Request): Promise<Response> => {
     const server = createServer(root, { era: "legacy" });
     const transport = new WebStandardStreamableHTTPServerTransport({
@@ -142,8 +145,8 @@ export function httpApp(root: string = ROOT, opts: HttpAppOptions = {}): Hono {
   };
   app.all(MCP_PATH, async (c) => {
     const request = c.req.raw;
-    // The predicate reads the body, so it gets a copy; the chosen leg reads the original.
-    return (await isLegacyRequest(request.clone())) ? legacy(request) : modern.fetch(request);
+    // isLegacyRequest clones a POST body itself, so the chosen leg still reads the original.
+    return (await isLegacyRequest(request)) ? legacy(request) : modern.fetch(request);
   });
 
   // ── Discovery documents ─────────────────────────────────────────────

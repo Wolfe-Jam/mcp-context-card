@@ -12,7 +12,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { serve } from "@hono/node-server";
-import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
+import { Client, StreamableHTTPClientTransport, SUPPORTED_PROTOCOL_VERSIONS } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import { MCP_APP_MIME, UI_EXTENSION } from "../src/constants.js";
 import { httpApp } from "../src/transport/http.js";
@@ -111,11 +111,65 @@ describe("http: both eras on one /mcp", () => {
     }
   });
 
-  test("the Server Card advertises 2026-07-28 beside the 2025 revisions", async () => {
+  test("the Server Card lists exactly what the server answers: server/discover's versions, then the 2025 ones", async () => {
     const card = await (await fetch(new URL("/mcp/server-card", url))).json();
     const versions: string[] = card.remotes[0].supportedProtocolVersions;
-    assert.equal(versions[0], "2026-07-28");
-    assert.ok(versions.includes("2025-11-25"));
+    const c = client(MODERN);
+    await c.connect(new StreamableHTTPClientTransport(url));
+    try {
+      // An SDK update that adds a revision changes discover's list; this fails until the card follows.
+      const modern = c.getDiscoverResult()?.supportedVersions ?? [];
+      assert.ok(modern.length > 0, "server/discover must name its versions");
+      assert.deepEqual(versions, [...modern, ...SUPPORTED_PROTOCOL_VERSIONS]);
+    } finally {
+      await c.close();
+    }
+  });
+
+  test("a 2026-07-28 answer is one JSON body too", async () => {
+    // The handler's default ("auto") streams only when a tool emits a notification first; ours never do.
+    const c = client(MODERN);
+    let contentType = "";
+    const transport = new StreamableHTTPClientTransport(url, {
+      fetch: async (input, init) => {
+        const res = await fetch(input, init);
+        if (init?.method === "POST") contentType = res.headers.get("content-type") ?? "";
+        return res;
+      },
+    });
+    await c.connect(transport);
+    try {
+      await c.callTool({ name: "list_agents_md_sections", arguments: {} });
+      assert.match(contentType, /application\/json/);
+    } finally {
+      await c.close();
+    }
+  });
+
+  test("2025 requests ignore 2026 envelope keys in _meta (capabilities come from initialize)", async () => {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        accept: "application/json, text/event-stream",
+        "mcp-protocol-version": "2025-11-25",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "tools/call",
+        params: {
+          name: "render_context_card",
+          arguments: {},
+          _meta: {
+            "io.modelcontextprotocol/clientCapabilities": { extensions: { [UI_EXTENSION]: { mimeTypes: [MCP_APP_MIME] } } },
+          },
+        },
+      }),
+    });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.match(body.result.content[0].text, /<html/i, "a 2025 request must not switch to the MCP Apps summary");
   });
 });
 

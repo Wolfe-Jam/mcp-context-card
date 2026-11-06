@@ -1,3 +1,22 @@
+/**
+ * mcp-context-card server — makes a project's context, memory, and identity
+ * discoverable to any MCP client.
+ *
+ *   context   — read_agents_md · list_agents_md_sections · author_agents_md   (this project's AGENTS.md)
+ *   memory    — remember · recall · forget                                    (a .fafm file)
+ *   identity  — whoami                                                        (this server's .fafa)
+ *   discovery — list_context_sources · render_context_card · save_context_card (what's published, and how)
+ *
+ * ...exposed through the two mechanisms already in the ecosystem:
+ *
+ *   1. Server Card `_meta` — the `mcp-context-card://server-card` resource (in band)
+ *      and `GET /.well-known/mcp/server-card` (out of band, http transport).
+ *   2. ai-catalog — `GET /.well-known/ai-catalog.json`, three sibling entries
+ *      keyed by media type (see catalog-gen.ts).
+ *
+ * Both protocol eras are served: 2026-07-28 (`server/discover`, a `_meta`
+ * envelope on every request) and 2025 (`initialize`). See docs/TRANSPORT.md.
+ */
 import { serveStdio, type StdioServerHandle } from "@modelcontextprotocol/server/stdio";
 import { CLIENT_CAPABILITIES_META_KEY, inputRequired, inputResponse, isInputRequiredResult, Server } from "@modelcontextprotocol/server";
 import type {
@@ -73,18 +92,19 @@ const CARD_ARGS = {
  */
 /** The client's declared capabilities. 2026-07-28 requests carry them in their
  *  own `_meta` envelope (there is no `initialize`); 2025-era connections
- *  declared them once, at `initialize`. */
-function clientCaps(server: Server, ctx?: ServerContext): ClientCapabilities | undefined {
+ *  declared them once, at `initialize`, and envelope keys a 2025 request
+ *  happens to carry are ignored. */
+function clientCaps(server: Server, ctx: ServerContext | undefined, era: ProtocolEra | undefined): ClientCapabilities | undefined {
+  if (era !== "modern") return server.getClientCapabilities();
   // The SDK publishes the envelope as `{}`; it is keyed by the meta-key constants.
   const envelope = ctx?.mcpReq?.envelope as Record<string, unknown> | undefined;
-  const fromEnvelope = envelope?.[CLIENT_CAPABILITIES_META_KEY] as ClientCapabilities | undefined;
-  return fromEnvelope ?? server.getClientCapabilities();
+  return (envelope?.[CLIENT_CAPABILITIES_META_KEY] as ClientCapabilities | undefined) ?? server.getClientCapabilities();
 }
 
 /** True when the client declared MCP Apps support
  *  (capabilities.extensions["io.modelcontextprotocol/ui"].mimeTypes). */
-function hostRendersApps(server: Server, ctx?: ServerContext): boolean {
-  const ext = clientCaps(server, ctx)?.extensions?.[UI_EXTENSION] as { mimeTypes?: unknown } | undefined;
+function hostRendersApps(server: Server, ctx: ServerContext | undefined, era: ProtocolEra | undefined): boolean {
+  const ext = clientCaps(server, ctx, era)?.extensions?.[UI_EXTENSION] as { mimeTypes?: unknown } | undefined;
   return Array.isArray(ext?.mimeTypes) && ext.mimeTypes.includes(MCP_APP_MIME);
 }
 
@@ -135,7 +155,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
     return undefined;
   };
   async function fromClientRoots(ctx?: ServerContext): Promise<string | undefined | InputRequiredResult> {
-    if (!clientCaps(server, ctx)?.roots) return undefined;
+    if (!clientCaps(server, ctx, opts.era)?.roots) return undefined;
     if (opts.era === "modern") {
       // 2026-07-28 has no server→client requests: ask for the roots in-band.
       // The client answers by retrying this same call with the roots attached.
@@ -408,7 +428,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
       case "whoami":
         return text(whoami(root));
       case "render_context_card": {
-        if (hostRendersApps(server, ctx)) {
+        if (hostRendersApps(server, ctx, opts.era)) {
           // The host renders the card itself from CARD_UI_URI, so the model
           // gets a short summary instead of a whole HTML page.
           const doc = parseAgentsMd(AGENTS);
