@@ -1,10 +1,11 @@
 /**
- * http — the stateless Streamable HTTP transport (MCP 2026-03-26+).
+ * http — the stateless Streamable HTTP transport, both MCP protocol eras.
  *
  * A Hono app. `POST /mcp` is the MCP endpoint, run **stateless**: a fresh
- * server + transport per request, `sessionIdGenerator: undefined`, and
- * `enableJsonResponse` so every response is a complete JSON body (no SSE
- * stream, nothing to keep open). That's the right default here — it scales
+ * server per request and a complete JSON body per response (no SSE stream,
+ * nothing to keep open). 2026-07-28 requests go to the SDK's
+ * `createMcpHandler`; 2025 requests to a per-request transport with
+ * `sessionIdGenerator: undefined` and `enableJsonResponse`, as in 1.x. That's the right default here — it scales
  * horizontally, needs no sticky sessions, and there's no per-connection
  * state to leak. A server that needs server-streamed
  * notifications or resumability would set a `sessionIdGenerator` and hold
@@ -36,7 +37,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
-import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { createMcpHandler, isLegacyRequest, WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/server";
 import { buildCatalog } from "../catalog-gen.js";
 import { fafaFile } from "../identity.js";
 import { createServer, NAME, ROOT, VERSION, serverCard } from "../server.js";
@@ -119,20 +120,33 @@ export function httpApp(root: string = ROOT, opts: HttpAppOptions = {}): Hono {
   app.use("/card", cors());
   app.use("/", cors());
 
-  // ── MCP endpoint — stateless ────────────────────────────────────────
-  app.all(MCP_PATH, async (c) => {
-    const server = createServer(root);
+  // ── MCP endpoint — stateless, both protocol eras ────────────────────
+  // 2026-07-28 requests (per-request `_meta` envelope) go to the SDK's
+  // createMcpHandler. 2025 requests keep the 1.x wiring byte for byte: a fresh
+  // server + transport per request, complete JSON bodies (the handler's own
+  // legacy leg would answer them as SSE). Neither checks Host/Origin; the
+  // guards above do.
+  // responseMode stays "auto": one JSON body unless a tool emits a notification
+  // before its result, and ours never do ("json" would warn on every start).
+  const modern = createMcpHandler(({ era }) => createServer(root, { era }), { legacy: "reject" });
+  const legacy = async (request: Request): Promise<Response> => {
+    const server = createServer(root, { era: "legacy" });
     const transport = new WebStandardStreamableHTTPServerTransport({
       sessionIdGenerator: undefined, // stateless
       enableJsonResponse: true, // complete JSON body, no SSE stream
     });
     await server.connect(transport);
-    const res = await transport.handleRequest(c.req.raw);
+    const res = await transport.handleRequest(request);
     // JSON/stateless mode: the response body is fully built before we get
     // here, so closing the per-request instances now can't truncate it.
     void transport.close();
     void server.close();
     return res;
+  };
+  app.all(MCP_PATH, async (c) => {
+    const request = c.req.raw;
+    // isLegacyRequest clones a POST body itself, so the chosen leg still reads the original.
+    return (await isLegacyRequest(request)) ? legacy(request) : modern.fetch(request);
   });
 
   // ── Discovery documents ─────────────────────────────────────────────

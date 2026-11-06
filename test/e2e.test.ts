@@ -14,10 +14,8 @@ import { createServer as createNetServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { ListRootsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
+import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { REPO_ROOT, TOOLS, fixture } from "./helpers.js";
 
 const BIN = join(REPO_ROOT, "src/bin.ts");
@@ -178,7 +176,7 @@ describe("e2e — real child process", () => {
     const env = { ...process.env, PORT: "" } as Record<string, string>;
     delete env.MCP_CONTEXT_CARD_ROOT;
     const c = new Client({ name: "e2e-roots", version: "0" }, { capabilities: { roots: { listChanged: true } } });
-    c.setRequestHandler(ListRootsRequestSchema, async () => ({
+    c.setRequestHandler('roots/list', async () => ({
       roots: [{ uri: pathToFileURL(proj).href, name: "working_directory" }],
     }));
     try {

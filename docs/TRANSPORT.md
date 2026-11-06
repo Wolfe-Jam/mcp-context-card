@@ -12,11 +12,34 @@ HOST=0.0.0.0 PORT=8080 …      → exposed beyond this machine (a hosted deploy
 mcp-context-card --stdio      → force stdio even when PORT is set
 ```
 
+## Protocol eras
+
+The server speaks both MCP protocol eras, on both transports:
+
+- **2026-07-28** — the client opens with `server/discover` and sends its
+  capabilities in a `_meta` envelope on every request. No `initialize`.
+- **2025** (2024-10-07 to 2025-11-25) — the client opens with `initialize`.
+
+A client that negotiates (Claude Code and goose already do) gets 2026-07-28;
+an older client gets 2025, unchanged from 1.x. The Server Card lists both.
+
+**Roots differ by era.** On 2025 the server asks the client with a
+`roots/list` request; if the client fails to answer, the server falls back to
+the start directory. On 2026-07-28 there are no server-to-client requests: the
+server returns `input_required` with a roots request, and the client retries
+the call with its roots. It asks once per connection: 2026-07-28 has no
+`roots/list_changed`, so a host whose roots change sends them with a later
+call (`inputResponses`) or reconnects. The client answers the roots request
+itself, so a client that declares `roots` but can't answer (no handler, or an
+error) fails the tool call on 2026-07-28 instead of falling back. Host
+authors: either answer roots or don't declare the capability.
+
 ## stdio
 
-`StdioServerTransport` — one process, one client, JSON-RPC over stdin/stdout.
-This is what Claude Desktop, Cursor, and `npx`-style hosts use. `stdout` is
-the wire, so all logging goes to `stderr`.
+`serveStdio` from the MCP SDK — one process, one client, JSON-RPC over
+stdin/stdout. The first message picks the era for the connection. This is
+what Claude Desktop, Cursor, and `npx`-style hosts use. `stdout` is the wire,
+so all logging goes to `stderr`.
 
 ```jsonc
 // claude_desktop_config.json
@@ -29,15 +52,19 @@ the wire, so all logging goes to `stderr`.
 
 ## Streamable HTTP — stateless
 
-`POST /mcp` is the MCP endpoint. It runs **stateless**:
+`POST /mcp` is the MCP endpoint, for both eras. It runs **stateless**:
 
-- `sessionIdGenerator: undefined` — no session IDs issued, no session
-  validation, no `Mcp-Session-Id` header.
-- `enableJsonResponse: true` — every response is a complete JSON body. No
-  SSE stream is opened, so there is nothing to hold open and nothing to
-  leak.
-- A **fresh `Server` + transport per request**. Two concurrent requests
-  never share state or collide on JSON-RPC ids.
+- **2026-07-28 requests** (the `_meta` envelope) go to the SDK's
+  `createMcpHandler`, which builds a fresh server per request. Answers are
+  one JSON body: the handler streams only when a tool sends a notification
+  before its result, and these tools never do.
+- **2025 requests** keep the 1.x wiring: `sessionIdGenerator: undefined` (no
+  session IDs, no `Mcp-Session-Id` header) and `enableJsonResponse: true`
+  (every response is a complete JSON body, no SSE stream).
+- The SDK's own `isLegacyRequest` decides which; the `Host` and `Origin`
+  guards run before either.
+- A **fresh `Server` per request** on both. Two concurrent requests never
+  share state or collide on JSON-RPC ids.
 
 ```
 GET  /                          → index (endpoints)

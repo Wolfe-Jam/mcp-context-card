@@ -11,9 +11,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { ListRootsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import { CARD_UI_URI } from "../src/constants.js";
 import { createServer, ROOT, type ServerOptions } from "../src/server.js";
 
@@ -40,9 +38,9 @@ async function connect(
     { capabilities: roots ? { roots: { listChanged: true } } : {} },
   );
   if (answer) {
-    client.setRequestHandler(ListRootsRequestSchema, answer);
+    client.setRequestHandler('roots/list', answer);
   } else if (roots) {
-    client.setRequestHandler(ListRootsRequestSchema, async () => ({
+    client.setRequestHandler('roots/list', async () => ({
       roots: roots().map((d) => ({ uri: pathToFileURL(d).href, name: "working_directory" })),
     }));
   }

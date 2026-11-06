@@ -10,7 +10,8 @@
  * `name`, `title` and `version` are the same values the live connection reports
  * in `serverInfo`, so the card never contradicts runtime.
  */
-import { SUPPORTED_PROTOCOL_VERSIONS } from "@modelcontextprotocol/sdk/types.js";
+import { SUPPORTED_PROTOCOL_VERSIONS } from "@modelcontextprotocol/server";
+import { MODERN_PROTOCOL_VERSIONS } from "./constants.js";
 import {
   DESCRIPTION,
   MCP_PATH,
@@ -43,7 +44,7 @@ export function serverCard(opts: ServerCardOptions = {}) {
             {
               type: "streamable-http" as const,
               url: `${opts.origin}${MCP_PATH}`,
-              supportedProtocolVersions: [...SUPPORTED_PROTOCOL_VERSIONS],
+              supportedProtocolVersions: [...MODERN_PROTOCOL_VERSIONS, ...SUPPORTED_PROTOCOL_VERSIONS],
             },
           ],
         }

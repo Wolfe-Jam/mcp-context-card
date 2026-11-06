@@ -2,6 +2,29 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+Speaks MCP 2026-07-28 as well as 2025, on the MCP SDK v2.
+
+- **Both protocol eras, both transports.** A client that opens with
+  `server/discover` (Claude Code, goose) connects on 2026-07-28; a client
+  that opens with `initialize` gets 2025, unchanged. The Server Card lists
+  2026-07-28 first. See [docs/TRANSPORT.md](docs/TRANSPORT.md#protocol-eras).
+- **Roots on 2026-07-28** are asked in-band (`input_required`), once per
+  connection, since that revision has no server-to-client requests and no
+  `roots/list_changed`. Roots sent with a later call replace the first. A
+  client that declares `roots` but can't answer now fails the tool call on
+  2026-07-28; on 2025 it still falls back to the start directory.
+- **Breaking for library users** (the `mcp-context-card/server` export): it
+  is built on `@modelcontextprotocol/server` 2.x instead of
+  `@modelcontextprotocol/sdk` 1.x. `createServer()` returns a v2 `Server`, so
+  `setRequestHandler(SomeRequestSchema, …)` now throws; register by method
+  string (`setRequestHandler("prompts/list", …)`). The types come from
+  `@modelcontextprotocol/server`, and `zod` 4 comes with it. See the SDK's
+  [upgrade guide](https://github.com/modelcontextprotocol/typescript-sdk/blob/main/docs/migration/upgrade-to-v2.md).
+  New: `serveStdioServer()` serves stdio on both eras; `serve(transport)` is
+  kept and serves 2025. The CLI and the MCP surface are unchanged.
+
 ## 1.7.1
 
 The business card printer is now its own package.

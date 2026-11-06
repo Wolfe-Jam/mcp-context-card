@@ -42,3 +42,7 @@ export const publishMemoryFromEnv = (env: NodeJS.ProcessEnv = process.env) => en
 export const CARD_UI_URI = "ui://mcp-context-card/card.html";
 export const MCP_APP_MIME = "text/html;profile=mcp-app";
 export const UI_EXTENSION = "io.modelcontextprotocol/ui";
+
+/** Protocol revisions served beside the SDK's 2025-era list (SUPPORTED_PROTOCOL_VERSIONS):
+ *  createMcpHandler / serveStdio answer 2026-07-28 too. The SDK exports no constant for it. */
+export const MODERN_PROTOCOL_VERSIONS = ["2026-07-28"] as const;

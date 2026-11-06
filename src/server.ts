@@ -13,18 +13,20 @@
  *      and `GET /.well-known/mcp/server-card` (out of band, http transport).
  *   2. ai-catalog — `GET /.well-known/ai-catalog.json`, three sibling entries
  *      keyed by media type (see catalog-gen.ts).
+ *
+ * Both protocol eras are served: 2026-07-28 (`server/discover`, a `_meta`
+ * envelope on every request) and 2025 (`initialize`). See docs/TRANSPORT.md.
  */
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  CallToolRequestSchema,
-  ListResourcesRequestSchema,
-  ListResourceTemplatesRequestSchema,
-  ListToolsRequestSchema,
-  ReadResourceRequestSchema,
-  RootsListChangedNotificationSchema,
-} from "@modelcontextprotocol/sdk/types.js";
-import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
+import { serveStdio, type StdioServerHandle } from "@modelcontextprotocol/server/stdio";
+import { CLIENT_CAPABILITIES_META_KEY, inputRequired, inputResponse, isInputRequiredResult, Server } from "@modelcontextprotocol/server";
+import type {
+  ClientCapabilities,
+  InputRequiredResult,
+  ListToolsResult,
+  ProtocolEra,
+  ServerContext,
+  Transport,
+} from "@modelcontextprotocol/server";
 import { existsSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -88,10 +90,21 @@ const CARD_ARGS = {
  *              Defaults to the package root; a deploy points `MCP_CONTEXT_CARD_ROOT`
  *              at a real project, a test points it at a fixture.
  */
-/** True when the connected client declared MCP Apps support
+/** The client's declared capabilities. 2026-07-28 requests carry them in their
+ *  own `_meta` envelope (there is no `initialize`); 2025-era connections
+ *  declared them once, at `initialize`, and envelope keys a 2025 request
+ *  happens to carry are ignored. */
+function clientCaps(server: Server, ctx: ServerContext | undefined, era: ProtocolEra | undefined): ClientCapabilities | undefined {
+  if (era !== "modern") return server.getClientCapabilities();
+  // The SDK publishes the envelope as `{}`; it is keyed by the meta-key constants.
+  const envelope = ctx?.mcpReq?.envelope as Record<string, unknown> | undefined;
+  return (envelope?.[CLIENT_CAPABILITIES_META_KEY] as ClientCapabilities | undefined) ?? server.getClientCapabilities();
+}
+
+/** True when the client declared MCP Apps support
  *  (capabilities.extensions["io.modelcontextprotocol/ui"].mimeTypes). */
-function hostRendersApps(server: Server): boolean {
-  const ext = server.getClientCapabilities()?.extensions?.[UI_EXTENSION] as { mimeTypes?: unknown } | undefined;
+function hostRendersApps(server: Server, ctx: ServerContext | undefined, era: ProtocolEra | undefined): boolean {
+  const ext = clientCaps(server, ctx, era)?.extensions?.[UI_EXTENSION] as { mimeTypes?: unknown } | undefined;
   return Array.isArray(ext?.mimeTypes) && ext.mimeTypes.includes(MCP_APP_MIME);
 }
 
@@ -104,6 +117,9 @@ export interface ServerOptions {
   detectRoot?: boolean;
   /** The directory the server was started in (default: process.cwd()). */
   cwd?: string;
+  /** The protocol era this instance serves, set by the stdio/HTTP factory:
+   *  "modern" = 2026-07-28, "legacy" = 2024-10-07 … 2025-11-25 (the default). */
+  era?: ProtocolEra;
 }
 
 /** Where "this project" came from, reported by list_context_sources. */
@@ -120,7 +136,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
   // it has connected, and they can change (goose sends its session's working
   // directory, and notifies when it moves).
   let found: { root: string; from: ProjectFrom } | undefined;
-  server.setNotificationHandler(RootsListChangedNotificationSchema, async () => {
+  server.setNotificationHandler('notifications/roots/list_changed', async () => {
     found = undefined;
   });
   const isDir = (p: string) => {
@@ -130,24 +146,41 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
       return false;
     }
   };
-  async function fromClientRoots(): Promise<string | undefined> {
-    if (!server.getClientCapabilities()?.roots) return undefined;
+  const firstDir = (roots: { uri: string }[]): string | undefined => {
+    for (const r of roots) {
+      if (!r.uri.startsWith("file:")) continue;
+      const dir = fileURLToPath(r.uri);
+      if (isDir(dir)) return dir;
+    }
+    return undefined;
+  };
+  async function fromClientRoots(ctx?: ServerContext): Promise<string | undefined | InputRequiredResult> {
+    if (!clientCaps(server, ctx, opts.era)?.roots) return undefined;
+    if (opts.era === "modern") {
+      // 2026-07-28 has no server→client requests: ask for the roots in-band.
+      // The client answers by retrying this same call with the roots attached.
+      const answer = inputResponse(ctx?.mcpReq?.inputResponses, "roots");
+      if (answer.kind === "roots") return firstDir(answer.roots);
+      if (answer.kind === "missing") return inputRequired({ inputRequests: { roots: inputRequired.listRoots() } });
+      return undefined;
+    }
     try {
       const { roots } = await server.listRoots(undefined, { timeout: 5000 });
-      for (const r of roots) {
-        if (!r.uri.startsWith("file:")) continue;
-        const dir = fileURLToPath(r.uri);
-        if (isDir(dir)) return dir;
-      }
+      return firstDir(roots);
     } catch {
       // a client that declares roots but doesn't answer: fall through
     }
     return undefined;
   }
-  async function project(): Promise<{ root: string; from: ProjectFrom }> {
+  async function project(ctx?: ServerContext): Promise<{ root: string; from: ProjectFrom } | InputRequiredResult> {
     if (!opts.detectRoot) return { root, from: root === ROOT ? "package" : "configured" };
+    // 2026-07-28 has no roots/list_changed (the SDK drops it on that era), so a
+    // roots answer carried by this call (roots, or a decline) replaces the cached
+    // root. No answer keeps the cache: the server asks once per connection.
+    if (opts.era === "modern" && inputResponse(ctx?.mcpReq?.inputResponses, "roots").kind !== "missing") found = undefined;
     if (found) return found;
-    const fromRoots = await fromClientRoots();
+    const fromRoots = await fromClientRoots(ctx);
+    if (fromRoots !== undefined && typeof fromRoots !== "string") return fromRoots;
     const cwd = opts.cwd ?? process.cwd();
     found = fromRoots
       ? { root: fromRoots, from: "client roots" }
@@ -162,7 +195,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
   });
 
   // ── Mechanism 1: the Server Card resource + its _meta context block ───
-  server.setRequestHandler(ListResourcesRequestSchema, async () => ({
+  server.setRequestHandler('resources/list', async () => ({
     resources: [
       {
         uri: SERVER_CARD_URI,
@@ -178,13 +211,15 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
       },
     ],
   }));
-  server.setRequestHandler(ReadResourceRequestSchema, async (req) => {
+  server.setRequestHandler('resources/read', async (req, ctx) => {
     if (req.params.uri === CARD_UI_URI) {
+      const p = await project(ctx);
+      if (isInputRequiredResult(p)) return p;
       // Rendered at read time from the project's own files. The card is
       // self-contained (inline CSS, no external requests), and its one script
       // is progressive enhancement, so it still works in a strict sandbox.
       return {
-        contents: [{ uri: CARD_UI_URI, mimeType: MCP_APP_MIME, text: renderCard((await project()).root, { theme: "auto" }) }],
+        contents: [{ uri: CARD_UI_URI, mimeType: MCP_APP_MIME, text: renderCard(p.root, { theme: "auto" }) }],
       };
     }
     if (req.params.uri !== SERVER_CARD_URI) {
@@ -200,12 +235,12 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
   // templated resources here (the Server Card URI is fixed), but answer with an
   // empty list rather than -32601 — a client shouldn't get method-not-found for
   // something the declared capability covers.
-  server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => ({
+  server.setRequestHandler('resources/templates/list', async () => ({
     resourceTemplates: [],
   }));
 
   // ── Tools ───────────────────────────────────────────────────────────
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({
+  server.setRequestHandler('tools/list', async (): Promise<ListToolsResult> => ({
     tools: [
       {
         name: "read_agents_md",
@@ -344,9 +379,11 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
     ],
   }));
 
-  server.setRequestHandler(CallToolRequestSchema, async (req) => {
+  server.setRequestHandler('tools/call', async (req, ctx) => {
     const args = (req.params.arguments ?? {}) as Record<string, string>;
-    const { root, from } = await project();
+    const p = await project(ctx);
+    if (isInputRequiredResult(p)) return p;
+    const { root, from } = p;
     const { AGENTS, FAFM } = files(root);
     switch (req.params.name) {
       case "read_agents_md": {
@@ -395,7 +432,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
       case "whoami":
         return text(whoami(root));
       case "render_context_card": {
-        if (hostRendersApps(server)) {
+        if (hostRendersApps(server, ctx, opts.era)) {
           // The host renders the card itself from CARD_UI_URI, so the model
           // gets a short summary instead of a whole HTML page.
           const doc = parseAgentsMd(AGENTS);
@@ -481,7 +518,15 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
   return server;
 }
 
-/** Connect a server instance to a transport (stdio or http). */
+/** Serve over stdio, both protocol eras: a 2026-07-28 client connects with
+ *  `server/discover`, a 2025 client with `initialize`. The factory builds one
+ *  instance per connection, for that connection's era. */
+export function serveStdioServer(root: string = ROOT, opts: ServerOptions = {}): StdioServerHandle {
+  return serveStdio(({ era }) => createServer(root, { ...opts, era }));
+}
+
+/** Connect a server instance to a transport you supply. 2025 era only (the
+ *  transport decides the wire); for both eras use `serveStdioServer` or `httpApp`. */
 export async function serve(transport: Transport, root: string = ROOT, opts: ServerOptions = {}): Promise<Server> {
   const server = createServer(root, opts);
   await server.connect(transport);
@@ -493,5 +538,5 @@ export async function serve(transport: Transport, root: string = ROOT, opts: Ser
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { openInBrowser } = await import("./open.js");
   const pinned = process.env.MCP_CONTEXT_CARD_ROOT;
-  await serve(new StdioServerTransport(), pinned ?? ROOT, { openFile: openInBrowser, detectRoot: !pinned });
+  serveStdioServer(pinned ?? ROOT, { openFile: openInBrowser, detectRoot: !pinned });
 }
