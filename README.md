@@ -96,8 +96,12 @@ people: read it, screenshot it, drop it in a PR, put it on a status page.
 
 Flip, tabs and the view switch are plain CSS, so they work with scripts off.
 The one small inline script adds Expand all, opens a `#section` link on the
-back, and opens every section for printing. `--expanded` / `?expand=all`
-renders both faces flat, every section open, for a screenshot or print.
+back, and opens every section for printing. In an MCP Apps host that same
+script runs the start-up exchange and reports the card's size when it
+changes, so the host can fit its frame. The helper is bundled into the file
+(`scripts/bundle-card-app.mjs`); nothing is loaded from the network. With no
+host, that part does nothing. `--expanded` / `?expand=all` renders both
+faces flat, every section open, for a screenshot or print.
 
 ```
 npx mcp-context-card card            # at a terminal: writes context-card.html and opens it
@@ -275,7 +279,7 @@ over both transports:
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-224 tests on Linux, macOS, and Windows, coverage‑gated in CI.
+227 tests on Linux, macOS, and Windows, coverage‑gated in CI.
 `npm run wjttc` runs the WJTTC certification suite (seven tiers, from protocol
 and Server Card conformance to stdio/HTTP parity and the shipped package). Two spawn a real
 child process and check a remembered fact survives the restart — one against

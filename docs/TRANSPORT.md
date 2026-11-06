@@ -34,6 +34,18 @@ itself, so a client that declares `roots` but can't answer (no handler, or an
 error) fails the tool call on 2026-07-28 instead of falling back. Host
 authors: either answer roots or don't declare the capability.
 
+## The card in an MCP Apps host
+
+`render_context_card` serves one self-contained HTML file
+(`text/html;profile=mcp-app`). Inside a host, its script uses
+`@modelcontextprotocol/ext-apps` `App.connect()` (the default transport is
+`PostMessageTransport` to `window.parent`). `autoResize: true` (the helper's
+default, set explicitly here) sends `ui/notifications/size-changed` with
+`{ width, height }` when the document's size changes. The helper is bundled
+into that script at build time; the file makes no network request. A page
+with no host (`window.parent === window`) does not start the exchange.
+`save_context_card`, `GET /card` and `mcp-context-card card` are that page.
+
 ## stdio
 
 `serveStdio` from the MCP SDK — one process, one client, JSON-RPC over

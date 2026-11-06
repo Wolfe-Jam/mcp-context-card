@@ -4,7 +4,17 @@ All notable changes to this project. Adheres to [Semantic Versioning](https://se
 
 ## Unreleased
 
-Speaks MCP 2026-07-28 as well as 2025, on the MCP SDK v2.
+Speaks MCP 2026-07-28 as well as 2025, on the MCP SDK v2. The card reports its size to an MCP Apps host.
+
+- **The card tells the host how big it is.** The one inline script now also
+  runs the MCP Apps start-up exchange (`ui/initialize`, then
+  `ui/notifications/initialized`) and sends `ui/notifications/size-changed`
+  when the document's size changes. That uses
+  `@modelcontextprotocol/ext-apps` `App` with `autoResize: true`, bundled
+  into the HTML at build time (`scripts/bundle-card-app.mjs`) so the sandbox
+  still has no CDN and no external request. With no host — the saved
+  `context-card.html`, `GET /card`, the CLI — the script does not open the
+  exchange. The card still works with the script off.
 
 - **Both protocol eras, both transports.** A client that opens with
   `server/discover` (Claude Code, goose) connects on 2026-07-28; a client

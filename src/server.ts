@@ -216,8 +216,9 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
       const p = await project(ctx);
       if (isInputRequiredResult(p)) return p;
       // Rendered at read time from the project's own files. The card is
-      // self-contained (inline CSS, no external requests), and its one script
-      // is progressive enhancement, so it still works in a strict sandbox.
+      // self-contained (inline CSS, no external requests). Its one script is
+      // progressive enhancement, and the MCP Apps helper bundled into it
+      // reports the card's size. It still works in a strict sandbox.
       return {
         contents: [{ uri: CARD_UI_URI, mimeType: MCP_APP_MIME, text: renderCard(p.root, { theme: "auto" }) }],
       };

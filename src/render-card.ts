@@ -7,10 +7,14 @@
  * ai-catalog; this is the view for people.
  *
  * Self-contained: inline CSS, no external fonts or resources. The only script
- * is the expand-all / print helper (TOGGLE_SCRIPT) — a progressive enhancement;
- * every section still opens on its own without it. Renders anywhere.
+ * is the expand-all / print helper, plus the MCP Apps helper bundled into
+ * that same script (src/card-app.bundle.js). Both are progressive
+ * enhancement: every section still opens on its own with the script off,
+ * and with no host the Apps half does nothing. Renders anywhere.
  */
-import { basename, join, resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseAgentsMd } from "./agents-md.js";
 import { parseFafm } from "./memory.js";
 import { resolveIdentity, serverCardMeta, META_NS } from "./identity.js";
@@ -74,9 +78,22 @@ export function cardOneLiner(id: AgentIdentity | null, max = 140): string {
   return pause && pause.index >= 40 && pause.index <= max ? d.slice(0, pause.index).trim() : first;
 }
 
-/** The project's card: read its files, then draw. */
+/** MCP Apps helper, bundled at build time. Same bytes in src/ and, after build, dist/. */
+const CARD_APP_JS = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "card-app.bundle.js"), "utf8");
+
+/**
+ * Drop the bundled helper inside the card's one inline script. The helper
+ * is progressive enhancement: the page is already the full card.
+ */
+function withCardApp(html: string): string {
+  const close = html.lastIndexOf("</script>");
+  if (close === -1) return html;
+  return `${html.slice(0, close)}\n${CARD_APP_JS}\n${html.slice(close)}`;
+}
+
+/** The project's card: read its files, draw, then add the host script. */
 export function renderCard(root: string, opts: CardOptions = {}): string {
-  return renderBusinessCard(readCard(root, opts), opts);
+  return withCardApp(renderBusinessCard(readCard(root, opts), opts));
 }
 
 /** The (i) panel for an agent or server card. */

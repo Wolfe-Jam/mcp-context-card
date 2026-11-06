@@ -43,7 +43,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-card-app.mjs",
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "version:check": "node scripts/check-versions.mjs",
     "engines:check": "node scripts/check-engines.mjs",
@@ -57,7 +57,7 @@
     "catalog": "tsx src/catalog-gen.ts",
     "catalog:check": "tsx src/catalog-gen.ts && git diff --exit-code -- .well-known/ai-catalog.json",
     "card": "tsx src/card-gen.ts",
-    "card:check": "tsx src/card-gen.ts && git diff --exit-code -- docs/card.html docs/index.html docs/card-light.html docs/card-dark.html",
+    "card:check": "node scripts/bundle-card-app.mjs && tsx src/card-gen.ts && git diff --exit-code -- docs/card.html docs/index.html docs/card-light.html docs/card-dark.html src/card-app.bundle.js",
     "test": "node --import tsx --test \"test/*.test.ts\"",
     "test:coverage": "node --import tsx --test --experimental-test-coverage --test-coverage-exclude=\"test/**\" --test-coverage-exclude=\"demo.ts\" --test-coverage-lines=90 --test-coverage-functions=85 --test-coverage-branches=80 \"test/*.test.ts\"",
     "typecheck": "tsc --noEmit",
@@ -73,9 +73,11 @@
   },
   "devDependencies": {
     "@modelcontextprotocol/client": "^2.4.0",
+    "@modelcontextprotocol/ext-apps": "^2.0.4",
     "@types/node": "^26.2.0",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
+    "esbuild": "^0.28.2",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   },
