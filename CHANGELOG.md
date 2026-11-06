@@ -18,6 +18,12 @@ Speaks MCP 2026-07-28 as well as 2025, on the MCP SDK v2. The card reports its s
   are the plain card, without that script. `card:check` fails if a plain
   card exceeds 64 KB. The card still works with the script off.
   `card --stdout` exits 0 when the reader closes the pipe early.
+- **You choose whether the host's card carries the helper.**
+  `MCP_CONTEXT_CARD_APP=helper` (the default) or `plain`. `plain` makes the
+  `ui://` card the plain card (~30 KB, no MCP Apps messages) for hosts where
+  the ~700 KB helper isn't worth it. Only that resource changes.
+  `list_context_sources` reports the active value; an unknown value warns
+  once on stderr and uses `helper`.
 
 - **Both protocol eras, both transports.** A client that opens with
   `server/discover` (Claude Code, goose) connects on 2026-07-28; a client
