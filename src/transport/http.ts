@@ -36,7 +36,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
-import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/server";
+import { createMcpHandler, isLegacyRequest, WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/server";
 import { buildCatalog } from "../catalog-gen.js";
 import { fafaFile } from "../identity.js";
 import { createServer, NAME, ROOT, VERSION, serverCard } from "../server.js";
@@ -119,20 +119,31 @@ export function httpApp(root: string = ROOT, opts: HttpAppOptions = {}): Hono {
   app.use("/card", cors());
   app.use("/", cors());
 
-  // ── MCP endpoint — stateless ────────────────────────────────────────
-  app.all(MCP_PATH, async (c) => {
-    const server = createServer(root);
+  // ── MCP endpoint — stateless, both protocol eras ────────────────────
+  // 2026-07-28 requests (per-request `_meta` envelope) go to the SDK's
+  // createMcpHandler. 2025 requests keep the 1.x wiring byte for byte: a fresh
+  // server + transport per request, complete JSON bodies (the handler's own
+  // legacy leg would answer them as SSE). Neither checks Host/Origin; the
+  // guards above do.
+  const modern = createMcpHandler(({ era }) => createServer(root, { era }), { legacy: "reject", responseMode: "json" });
+  const legacy = async (request: Request): Promise<Response> => {
+    const server = createServer(root, { era: "legacy" });
     const transport = new WebStandardStreamableHTTPServerTransport({
       sessionIdGenerator: undefined, // stateless
       enableJsonResponse: true, // complete JSON body, no SSE stream
     });
     await server.connect(transport);
-    const res = await transport.handleRequest(c.req.raw);
+    const res = await transport.handleRequest(request);
     // JSON/stateless mode: the response body is fully built before we get
     // here, so closing the per-request instances now can't truncate it.
     void transport.close();
     void server.close();
     return res;
+  };
+  app.all(MCP_PATH, async (c) => {
+    const request = c.req.raw;
+    // The predicate reads the body, so it gets a copy; the chosen leg reads the original.
+    return (await isLegacyRequest(request.clone())) ? legacy(request) : modern.fetch(request);
   });
 
   // ── Discovery documents ─────────────────────────────────────────────

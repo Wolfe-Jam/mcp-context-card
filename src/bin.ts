@@ -20,9 +20,8 @@
 import { realpathSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import { NAME, VERSION } from "./constants.js";
-import { ROOT, serve } from "./server.js";
+import { ROOT, serveStdioServer } from "./server.js";
 
 export type Mode = "stdio" | "http" | "card" | "help" | "version";
 
@@ -184,7 +183,7 @@ if (entryPath && import.meta.url === pathToFileURL(entryPath).href) {
     // With no MCP_CONTEXT_CARD_ROOT, find the user's project: the host's MCP
     // roots, then the start directory. So a host needs no config to show yours.
     const { openInBrowser } = await import("./open.js");
-    await serve(new StdioServerTransport(), root, {
+    serveStdioServer(root, {
       openFile: openInBrowser,
       detectRoot: !process.env.MCP_CONTEXT_CARD_ROOT,
     });
