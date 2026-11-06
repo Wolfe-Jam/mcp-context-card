@@ -2,9 +2,9 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 1.8.0
 
-Speaks MCP 2026-07-28 as well as 2025, on the MCP SDK v2. The card reports its size to an MCP Apps host.
+Speaks MCP 2026-07-28 as well as 2025, on the MCP SDK v2, and the card fits a chat panel. Library users: see the breaking note at the end.
 
 - **The card tells the host how big it is.** Hosts that support MCP Apps
   read `ui://mcp-context-card/card.html`. That resource is the card plus
@@ -23,9 +23,8 @@ Speaks MCP 2026-07-28 as well as 2025, on the MCP SDK v2. The card reports its s
   `MCP_CONTEXT_CARD_APP=helper` (the default) or `plain`. `plain` makes the
   `ui://` card the plain card (~30 KB, no MCP Apps messages) for hosts where
   the ~700 KB helper isn't worth it. Only that resource changes.
-  `list_context_sources` reports the active value; an unknown value warns
-  once on stderr and uses `helper`.
-
+  `list_context_sources` reports the active value. Any case is read; an
+  unknown value warns once on stderr and uses `helper`.
 - **An inline view for chat panels.** Inside an MCP Apps host, display mode
   `inline` or `pip` (`McpUiHostContext.displayMode`) shows a mini card:
   monogram, name, kind · version, one line, and a counts strip (sections ·
@@ -35,10 +34,10 @@ Speaks MCP 2026-07-28 as well as 2025, on the MCP SDK v2. The card reports its s
   when there is no host. A host that stays smaller points to
   `save_context_card`, which writes the full card to `context-card.html`.
   The card declares the display modes it supports (inline, pip,
-  fullscreen) when it starts, as the MCP Apps spec requires. The mini card is part of the `ui://` resource only,
-  hidden until the host says the panel is inline. The plain card does not
-  include it, and the script off still shows the full card.
-
+  fullscreen) when it starts, as the MCP Apps spec requires. The mini card
+  is part of the `ui://` resource only, hidden until the host says the
+  panel is inline. The plain card does not include it, and the script off
+  still shows the full card.
 - **Both protocol eras, both transports.** A client that opens with
   `server/discover` (Claude Code, goose) connects on 2026-07-28; a client
   that opens with `initialize` gets 2025, unchanged. The Server Card lists
