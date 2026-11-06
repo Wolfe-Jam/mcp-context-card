@@ -37,7 +37,7 @@ import { identity, resolveIdentity, whoami } from "./identity.js";
 import { renderAppsCard, renderCard, renderCardText, safeAccent, type Theme } from "./render-card.js";
 
 export { NAME, VERSION, SERVER_CARD_URI } from "./constants.js";
-import { NAME, VERSION, SERVER_CARD_URI, CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION, REGISTRY_NAME, TITLE, SERVER_CARD_MEDIA_TYPE, cardAppFromEnv, type CardApp } from "./constants.js";
+import { NAME, VERSION, SERVER_CARD_URI, CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION, REGISTRY_NAME, TITLE, SERVER_CARD_MEDIA_TYPE, cardAppFromEnv, toCardApp, type CardApp } from "./constants.js";
 import { serverCard } from "./server-card.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -129,7 +129,8 @@ export interface ServerOptions {
 type ProjectFrom = "configured" | "client roots" | "start directory" | "package";
 
 export function createServer(root: string = ROOT, opts: ServerOptions = {}): Server {
-  const cardApp: CardApp = opts.cardApp ?? cardAppFromEnv();
+  // A JS caller can pass any string: normalise it; an unknown value falls back to the environment.
+  const cardApp: CardApp = toCardApp(opts.cardApp) ?? cardAppFromEnv();
   const server = new Server(
     { name: REGISTRY_NAME, title: TITLE, version: VERSION },
     { capabilities: { tools: {}, resources: {} }, instructions: INSTRUCTIONS },
