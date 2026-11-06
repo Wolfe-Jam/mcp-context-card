@@ -10,10 +10,11 @@ Speaks MCP 2026-07-28 as well as 2025, on the MCP SDK v2.
   `server/discover` (Claude Code, goose) connects on 2026-07-28; a client
   that opens with `initialize` gets 2025, unchanged. The Server Card lists
   2026-07-28 first. See [docs/TRANSPORT.md](docs/TRANSPORT.md#protocol-eras).
-- **Roots on 2026-07-28** are asked in-band (`input_required`), since that
-  revision has no server-to-client requests. A client that declares `roots`
-  but can't answer now fails the tool call on 2026-07-28; on 2025 it still
-  falls back to the start directory.
+- **Roots on 2026-07-28** are asked in-band (`input_required`), once per
+  connection, since that revision has no server-to-client requests and no
+  `roots/list_changed`. Roots sent with a later call replace the first. A
+  client that declares `roots` but can't answer now fails the tool call on
+  2026-07-28; on 2025 it still falls back to the start directory.
 - **Breaking for library users** (the `mcp-context-card/server` export): it
   is built on `@modelcontextprotocol/server` 2.x instead of
   `@modelcontextprotocol/sdk` 1.x. `createServer()` returns a v2 `Server`, so

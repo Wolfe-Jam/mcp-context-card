@@ -27,10 +27,12 @@ an older client gets 2025, unchanged from 1.x. The Server Card lists both.
 `roots/list` request; if the client fails to answer, the server falls back to
 the start directory. On 2026-07-28 there are no server-to-client requests: the
 server returns `input_required` with a roots request, and the client retries
-the call with its roots. The client answers that request itself, so a client
-that declares `roots` but can't answer (no handler, or an error) fails the
-tool call on 2026-07-28 instead of falling back. Host authors: either answer
-roots or don't declare the capability.
+the call with its roots. It asks once per connection: 2026-07-28 has no
+`roots/list_changed`, so a host whose roots change sends them with a later
+call (`inputResponses`) or reconnects. The client answers the roots request
+itself, so a client that declares `roots` but can't answer (no handler, or an
+error) fails the tool call on 2026-07-28 instead of falling back. Host
+authors: either answer roots or don't declare the capability.
 
 ## stdio
 

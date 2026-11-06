@@ -6,6 +6,7 @@
  */
 import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
@@ -33,8 +34,10 @@ describe("http: both eras on one /mcp", () => {
 
   before(async () => {
     fx = fixture();
-    httpServer = serve({ fetch: httpApp(fx.root).fetch, port: 0 });
-    await new Promise((r) => setTimeout(r, 50));
+    // Read the port once the socket is listening, not after a fixed wait.
+    await new Promise<void>((r) => {
+      httpServer = serve({ fetch: httpApp(fx.root).fetch, port: 0 }, () => r());
+    });
     url = new URL(`http://127.0.0.1:${(httpServer.address() as AddressInfo).port}/mcp`);
   });
   after(() => {
@@ -229,4 +232,62 @@ describe("stdio: both eras from one child", () => {
       }
     });
   }
+});
+
+describe("stdio, 2026-07-28: a later roots answer replaces the first", () => {
+  // Real clients send roots only in answer to input_required, so the server asks
+  // once per connection; a client that sends roots with a later call (here, raw
+  // JSON-RPC) must get that root, not the cached one. 2025 follows
+  // notifications/roots/list_changed instead (roots.test.ts).
+  test("roots a, then a call carrying roots b, answers b; a decline falls back", async () => {
+    const mk = (n: string) => {
+      const d = mkdtempSync(join(tmpdir(), `mcp-cc-eras-${n}-`));
+      writeFileSync(join(d, "AGENTS.md"), `# AGENTS.md\n\n## ${n}\n`);
+      return d;
+    };
+    const a = mk("a"), b = mk("b");
+    const env = { ...process.env, PORT: "" } as Record<string, string>;
+    delete env.MCP_CONTEXT_CARD_ROOT;
+    // cwd = the repo (tsx resolves from it); its own AGENTS.md is the decline fallback
+    const child = spawn(runner.command, runner.args, { env, cwd: REPO_ROOT, stdio: ["pipe", "pipe", "ignore"] });
+    const meta = {
+      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+      "io.modelcontextprotocol/clientInfo": { name: "eras", version: "0" },
+      "io.modelcontextprotocol/clientCapabilities": { roots: { listChanged: true } },
+    };
+    const pending = new Map<number, (m: any) => void>();
+    let buf = "";
+    child.stdout.on("data", (d) => {
+      buf += d;
+      for (let n = buf.indexOf("\n"); n >= 0; n = buf.indexOf("\n")) {
+        const m = JSON.parse(buf.slice(0, n));
+        buf = buf.slice(n + 1);
+        pending.get(m.id)?.(m);
+      }
+    });
+    let id = 0;
+    const rpc = (method: string, params: object) =>
+      new Promise<any>((resolve) => {
+        pending.set(++id, resolve);
+        child.stdin.write(JSON.stringify({ jsonrpc: "2.0", id, method, params: { _meta: meta, ...params } }) + "\n");
+      });
+    const sources = async (inputResponses?: object) => {
+      const r = (await rpc("tools/call", { name: "list_context_sources", arguments: {}, ...(inputResponses ? { inputResponses } : {}) })).result;
+      return r.content ? JSON.parse(r.content[0].text).project : "input_required";
+    };
+    const roots = (d: string) => ({ roots: { roots: [{ uri: pathToFileURL(d).href }] } });
+    try {
+      await rpc("server/discover", {});
+      assert.equal(await sources(), "input_required");
+      assert.deepEqual(await sources(roots(a)), { path: a, from: "client roots" });
+      assert.deepEqual(await sources(), { path: a, from: "client roots" }, "no answer: the cached root, no new question");
+      assert.deepEqual(await sources(roots(b)), { path: b, from: "client roots" });
+      const declined = await sources({ roots: { action: "decline" } });
+      assert.deepEqual(declined, { path: REPO_ROOT, from: "start directory" });
+    } finally {
+      child.stdin.end();
+      await new Promise((r) => child.once("exit", r));
+      for (const d of [a, b]) rmSync(d, { recursive: true, force: true });
+    }
+  });
 });

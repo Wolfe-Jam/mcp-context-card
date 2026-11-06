@@ -174,6 +174,10 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
   }
   async function project(ctx?: ServerContext): Promise<{ root: string; from: ProjectFrom } | InputRequiredResult> {
     if (!opts.detectRoot) return { root, from: root === ROOT ? "package" : "configured" };
+    // 2026-07-28 has no roots/list_changed (the SDK drops it on that era), so a
+    // roots answer carried by this call (roots, or a decline) replaces the cached
+    // root. No answer keeps the cache: the server asks once per connection.
+    if (opts.era === "modern" && inputResponse(ctx?.mcpReq?.inputResponses, "roots").kind !== "missing") found = undefined;
     if (found) return found;
     const fromRoots = await fromClientRoots(ctx);
     if (fromRoots !== undefined && typeof fromRoots !== "string") return fromRoots;
