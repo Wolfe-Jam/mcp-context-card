@@ -48,7 +48,25 @@ build time; it makes no network request. A page with no host
 
 `render_context_card` for a client without MCP Apps, `save_context_card`,
 `GET /card`, and `mcp-context-card card` return the plain card. That page
-does not include the helper. `card:check` fails if it exceeds 64 KB.
+does not include the helper or the inline view. `card:check` fails if it
+exceeds 64 KB.
+
+After `ui/initialize`, `App.getHostContext()` is the host context
+(`McpUiHostContext` in `@modelcontextprotocol/ext-apps`). The fields this
+card reads are `displayMode` (`inline` | `fullscreen` | `pip`),
+`availableDisplayModes`, and `theme` (`light` | `dark`). A later
+`ui/notifications/host-context-changed` is merged into that same object;
+the card listens with `addEventListener("hostcontextchanged")` and reads
+`getHostContext()` again, because the notification params are only the
+fields that changed.
+
+`inline` and `pip` show the inline view (a mini card). `fullscreen` shows
+the full card. No `displayMode`, and no host at all, show the full card.
+"Open full card" calls `requestDisplayMode({ mode: "fullscreen" })` — method
+`ui/request-display-mode` — only when `availableDisplayModes` includes
+`fullscreen`, matching the helper's own example. The result's `mode` is
+what the host actually set. Anything other than `fullscreen` leaves the
+inline view up and offers the saved `context-card.html`.
 
 ## stdio
 

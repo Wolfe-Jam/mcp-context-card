@@ -26,10 +26,11 @@ test("renderCard: the plain card has no MCP Apps bundle and stays under 64 KB", 
     const html = renderCard(root);
     assert.doesNotMatch(html, /ui\/notifications\/size-changed/);
     assert.doesNotMatch(html, /ui\/initialize/);
+    assert.doesNotMatch(html, /id="inline-view"/);
     assert.ok(Buffer.byteLength(html) < PLAIN_CARD_LIMIT_BYTES, `plain card is ${Buffer.byteLength(html)} bytes`);
     const apps = renderAppsCard(root);
     assert.match(apps, /ui\/notifications\/size-changed/);
-    assert.ok(apps.includes(html.slice(0, html.lastIndexOf("</script>"))));
+    assert.match(apps, /id="inline-view" hidden/);
     assert.ok(Buffer.byteLength(apps) > Buffer.byteLength(html));
   } finally {
     cleanup();
@@ -139,6 +140,8 @@ test("renderCard: handles a project with no AGENTS.md / no facts", () => {
     assert.match(html, /No AGENTS\.md yet/);
     assert.match(html, /Memory — 0 facts/);
     assert.match(html, /No facts yet/);
+    assert.doesNotMatch(html, /0 sections · 0 facts · no identity/);
+    assert.match(renderAppsCard(root + "/does-not-exist"), /0 sections · 0 facts · no identity/);
   } finally {
     cleanup();
   }

@@ -21,7 +21,7 @@ Node 22 or newer. No other system dependencies.
 
 ```bash
 npm run build       # tsc -p tsconfig.build.json, then copy the bundled card script → dist/
-npm run typecheck   # tsc --noEmit over src/ + test/
+npm run typecheck   # tsc --noEmit over src/ + test/, then the browser script
 ```
 
 ## Test
@@ -50,7 +50,7 @@ code's shape moved without `project.faf`) on Linux.
 | `src/author.ts` | `author_agents_md` — BETTER via `agents-md-facts`, BEST when `project.faf` exists |
 | `src/md.ts` | a minimal dependency-free Markdown → HTML renderer |
 | `src/render-card.ts` | the card — identity + this file + memory + discovery, as one HTML page |
-| `src/browser/card-app.ts` | the card's MCP Apps script (size), inlined only into the `ui://` resource |
+| `src/browser/card-app.ts` | the card's MCP Apps script (size, inline view), inlined only into the `ui://` resource |
 | `scripts/bundle-card-app.mjs` | bundles the script so the sandbox loads nothing from the network |
 | `src/memory.ts` → `src/faf/parse-fafm.ts` | file-backed `remember` / `recall` / `forget` |
 | `src/identity.ts` | `whoami` (`.fafa` → `package.json` fallback) + the `_meta` context block |

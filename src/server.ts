@@ -216,9 +216,10 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
       const p = await project(ctx);
       if (isInputRequiredResult(p)) return p;
       // Rendered at read time from the project's own files. This is the only
-      // card that includes the MCP Apps helper: tool text, save_context_card,
-      // GET /card and the CLI stay on renderCard. Inline CSS, no external
-      // requests. The helper reports the card's size inside a host sandbox.
+      // card that includes the MCP Apps helper and the inline view. Tool text,
+      // save_context_card, GET /card and the CLI stay on renderCard. Inline
+      // CSS, no external requests. The helper reports the card's size and,
+      // in a host panel, shows the inline view.
       return {
         contents: [{ uri: CARD_UI_URI, mimeType: MCP_APP_MIME, text: renderAppsCard(p.root, { theme: "auto" }) }],
       };
