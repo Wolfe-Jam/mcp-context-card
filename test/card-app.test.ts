@@ -8,9 +8,10 @@ import vm from "node:vm";
 import { renderAppsCard, renderCard } from "../src/render-card.js";
 import { fixture } from "./helpers.js";
 
+/** The helper's own inline script (the card's toggle script is separate). */
 function scriptOf(html: string): string {
-  const m = html.match(/<script>([\s\S]*)<\/script>/);
-  assert.ok(m, "the card has one inline script");
+  const m = html.match(/<script data-card-app>([\s\S]*?)<\/script>/);
+  assert.ok(m, "the ui:// card has the helper script");
   return m[1];
 }
 
@@ -134,7 +135,9 @@ test("ui:// card bundles the size message and stays one self-contained file", ()
   try {
     const html = renderAppsCard(root);
     assert.doesNotMatch(renderCard(root), /ui\/notifications\/size-changed/);
-    assert.equal((html.match(/<script>/g) ?? []).length, 1);
+    // two inline scripts: the card's toggle, then the helper in its own element
+    assert.equal((html.match(/<script[\s>]/g) ?? []).length, 2);
+    assert.equal((html.match(/<script data-card-app>/g) ?? []).length, 1);
     assert.ok(!/<script[^>]+\bsrc=/.test(html));
     assert.match(html, /ui\/initialize/);
     assert.match(html, /ui\/notifications\/size-changed/);
@@ -148,6 +151,17 @@ test("ui:// card bundles the size message and stays one self-contained file", ()
     const scriptAt = html.indexOf("<script>");
     assert.ok(html.slice(0, scriptAt).includes('class="bcard"'));
     assert.ok(html.slice(0, scriptAt).includes('id="inline-view"'));
+  } finally {
+    cleanup();
+  }
+});
+
+test("the helper is its own script: an error in the card's script can't stop it", () => {
+  const { root, cleanup } = fixture();
+  try {
+    const helper = scriptOf(renderAppsCard(root));
+    // The card's toggle decodes location.hash, which throws on a malformed hash.
+    assert.ok(!helper.includes("location.hash"), "the toggle is not in the helper's script");
   } finally {
     cleanup();
   }

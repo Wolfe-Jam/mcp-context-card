@@ -112,6 +112,21 @@ test("the environment decides when no option is given: unset is helper, plain is
   }
 });
 
+test("ServerOptions.cardApp wins over the environment", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const text = await withEnv("plain", async () => {
+      const c = await connect(root, "helper", APPS);
+      const t = (await uiCard(c)).text;
+      await c.close();
+      return t;
+    });
+    assert.ok(text.includes(HELPER_MARK), "option helper, env plain: helper");
+  } finally {
+    cleanup();
+  }
+});
+
 test("every other surface is the plain card under both settings", async () => {
   const { root, cleanup } = fixture();
   try {
