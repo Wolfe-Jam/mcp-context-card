@@ -236,6 +236,8 @@ test("server: save_context_card writes context-card.html into the project and re
     const html = readFileSync(out, "utf8");
     assert.match(html, /^<!doctype html>/);
     assert.match(html, /data-theme="dark"/);
+    assert.doesNotMatch(html, /ui\/notifications\/size-changed/);
+    assert.ok(Buffer.byteLength(html) < 64 * 1024, `saved card is ${Buffer.byteLength(html)} bytes`);
     assert.ok(!reply.includes("<html"), "the reply is a path, not the page");
 
     // Saving again replaces the file with the new render.
@@ -403,6 +405,7 @@ test("mcp app: the card resource is self-contained HTML that loads nothing exter
     assert.doesNotMatch(html, /<(script|img|iframe)[^>]+src=["']https?:/i, "external src");
     assert.doesNotMatch(html, /<link[^>]+href=["']https?:/i, "external stylesheet");
     assert.doesNotMatch(html, /@import\s+url\(["']?https?:/i, "external CSS import");
+    assert.match(html, /ui\/notifications\/size-changed/, "the ui:// resource carries the helper");
     await client.close();
   } finally {
     cleanup();
@@ -421,6 +424,8 @@ test("mcp app: a host that renders apps gets a short summary; others keep the fu
     const plain = await connected(root);
     const full = say(await plain.callTool({ name: "render_context_card", arguments: {} }));
     assert.match(full, /<html/i, "non-Apps hosts must still get the whole card");
+    assert.doesNotMatch(full, /ui\/notifications\/size-changed/);
+    assert.ok(Buffer.byteLength(full) < 64 * 1024, `tool text is ${Buffer.byteLength(full)} bytes`);
     await plain.close();
   } finally {
     cleanup();

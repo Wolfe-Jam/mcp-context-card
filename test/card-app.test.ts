@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import vm from "node:vm";
-import { renderCard } from "../src/render-card.js";
+import { renderAppsCard, renderCard } from "../src/render-card.js";
 import { fixture } from "./helpers.js";
 
 function scriptOf(html: string): string {
@@ -102,10 +102,11 @@ async function until(pred: () => boolean, ms = 1500) {
   return true;
 }
 
-test("card html bundles the size message and stays one self-contained file", () => {
+test("ui:// card bundles the size message and stays one self-contained file", () => {
   const { root, cleanup } = fixture();
   try {
-    const html = renderCard(root);
+    const html = renderAppsCard(root);
+    assert.doesNotMatch(renderCard(root), /ui\/notifications\/size-changed/);
     assert.equal((html.match(/<script>/g) ?? []).length, 1);
     assert.ok(!/<script[^>]+\bsrc=/.test(html));
     assert.match(html, /ui\/initialize/);
@@ -121,7 +122,7 @@ test("card html bundles the size message and stays one self-contained file", () 
 test("no host: the script sends nothing", async () => {
   const { root, cleanup } = fixture();
   try {
-    const host = run(scriptOf(renderCard(root)), false);
+    const host = run(scriptOf(renderAppsCard(root)), false);
     const spoke = await until(() => host.messages.length > 0, 200);
     assert.equal(spoke, false);
     assert.equal(host.messages.length, 0);
@@ -133,7 +134,7 @@ test("no host: the script sends nothing", async () => {
 test("stub host: initialize, then a size-changed message", async () => {
   const { root, cleanup } = fixture();
   try {
-    const host = run(scriptOf(renderCard(root)), true);
+    const host = run(scriptOf(renderAppsCard(root)), true);
     assert.ok(await until(() => host.messages.some((m) => m.method === "ui/initialize")), "no ui/initialize");
     const init = host.messages.find((m) => m.method === "ui/initialize")!;
     assert.equal(init.params?.appInfo && (init.params.appInfo as { name: string }).name, "mcp-context-card");

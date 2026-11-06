@@ -169,12 +169,11 @@ test("read and render are separate: readCard gives a neutral card, renderBusines
     assert.equal(card.title, `MCP server · v${VERSION}`);
     assert.deepEqual(card.tabs.map((t) => t.key), ["about", "context", "memory", "discovery"]);
     assert.ok(card.chips.some((c) => c.accent && c.text === "published"));
-    // renderCard = read, then draw, then the bundled host script inside the one <script>.
+    // renderCard = read, then draw. The MCP Apps bundle is not part of it.
     const drawn = renderBusinessCard(card);
     const html = renderCard(root);
-    const cut = drawn.lastIndexOf("</script>");
-    assert.equal(html.slice(0, cut), drawn.slice(0, cut));
-    assert.match(html, /ui\/notifications\/size-changed/);
+    assert.equal(html, drawn);
+    assert.doesNotMatch(html, /ui\/notifications\/size-changed/);
   } finally {
     cleanup();
   }

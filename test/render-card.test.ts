@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { AAIF_ACCENT, clip, renderCard, renderCardText, safeAccent } from "../src/render-card.js";
+import { AAIF_ACCENT, clip, plainCardExceedsLimit, PLAIN_CARD_LIMIT_BYTES, renderAppsCard, renderCard, renderCardText, safeAccent } from "../src/render-card.js";
 import { fixture } from "./helpers.js";
 import { join } from "node:path";
 import { remember } from "../src/memory.js";
@@ -12,6 +12,28 @@ test("safeAccent: valid hex passes, anything else is dropped", () => {
   assert.equal(safeAccent("red"), undefined);
   assert.equal(safeAccent("#fff</style><script>"), undefined);
   assert.equal(safeAccent(undefined), undefined);
+});
+
+test("plainCardExceedsLimit: a plain card over 64 KB fails the check", () => {
+  assert.equal(PLAIN_CARD_LIMIT_BYTES, 64 * 1024);
+  assert.equal(plainCardExceedsLimit("x".repeat(PLAIN_CARD_LIMIT_BYTES)), false);
+  assert.equal(plainCardExceedsLimit("x".repeat(PLAIN_CARD_LIMIT_BYTES + 1)), true);
+});
+
+test("renderCard: the plain card has no MCP Apps bundle and stays under 64 KB", () => {
+  const { root, cleanup } = fixture();
+  try {
+    const html = renderCard(root);
+    assert.doesNotMatch(html, /ui\/notifications\/size-changed/);
+    assert.doesNotMatch(html, /ui\/initialize/);
+    assert.ok(Buffer.byteLength(html) < PLAIN_CARD_LIMIT_BYTES, `plain card is ${Buffer.byteLength(html)} bytes`);
+    const apps = renderAppsCard(root);
+    assert.match(apps, /ui\/notifications\/size-changed/);
+    assert.ok(apps.includes(html.slice(0, html.lastIndexOf("</script>"))));
+    assert.ok(Buffer.byteLength(apps) > Buffer.byteLength(html));
+  } finally {
+    cleanup();
+  }
 });
 
 test("renderCard: a complete, self-contained HTML document", () => {

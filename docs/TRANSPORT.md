@@ -36,15 +36,19 @@ authors: either answer roots or don't declare the capability.
 
 ## The card in an MCP Apps host
 
-`render_context_card` serves one self-contained HTML file
-(`text/html;profile=mcp-app`). Inside a host, its script uses
-`@modelcontextprotocol/ext-apps` `App.connect()` (the default transport is
-`PostMessageTransport` to `window.parent`). `autoResize: true` (the helper's
-default, set explicitly here) sends `ui/notifications/size-changed` with
-`{ width, height }` when the document's size changes. The helper is bundled
-into that script at build time; the file makes no network request. A page
-with no host (`window.parent === window`) does not start the exchange.
-`save_context_card`, `GET /card` and `mcp-context-card card` are that page.
+Hosts that support MCP Apps read `ui://mcp-context-card/card.html`
+(`text/html;profile=mcp-app`). That resource is the card plus one script.
+Inside a host, the script uses `@modelcontextprotocol/ext-apps`
+`App.connect()` (the default transport is `PostMessageTransport` to
+`window.parent`). `autoResize: true` (the helper's default, set explicitly
+here) sends `ui/notifications/size-changed` with `{ width, height }` when
+the document's size changes. The helper is bundled into that resource at
+build time; it makes no network request. A page with no host
+(`window.parent === window`) does not start the exchange.
+
+`render_context_card` for a client without MCP Apps, `save_context_card`,
+`GET /card`, and `mcp-context-card card` return the plain card. That page
+does not include the helper. `card:check` fails if it exceeds 64 KB.
 
 ## stdio
 

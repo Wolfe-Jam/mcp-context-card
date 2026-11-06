@@ -164,6 +164,8 @@ describe("e2e — real child process", () => {
       assert.match(out, /^<!doctype html>/);
       assert.match(out, /data-theme="dark"/);
       assert.match(out, /Context — AGENTS\.md/);
+      assert.doesNotMatch(out, /ui\/notifications\/size-changed/);
+      assert.ok(Buffer.byteLength(out) < 64 * 1024, `CLI card is ${Buffer.byteLength(out)} bytes`);
     } finally {
       fx.cleanup();
     }

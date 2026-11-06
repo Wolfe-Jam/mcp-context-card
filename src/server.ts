@@ -34,7 +34,7 @@ import { findSection, parseAgentsMd } from "./agents-md.js";
 import { authorAgentsMd } from "./author.js";
 import { forget, parseFafm, recall, remember } from "./memory.js";
 import { identity, resolveIdentity, whoami } from "./identity.js";
-import { renderCard, renderCardText, safeAccent, type Theme } from "./render-card.js";
+import { renderAppsCard, renderCard, renderCardText, safeAccent, type Theme } from "./render-card.js";
 
 export { NAME, VERSION, SERVER_CARD_URI } from "./constants.js";
 import { NAME, VERSION, SERVER_CARD_URI, CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION, REGISTRY_NAME, TITLE, SERVER_CARD_MEDIA_TYPE } from "./constants.js";
@@ -215,12 +215,12 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
     if (req.params.uri === CARD_UI_URI) {
       const p = await project(ctx);
       if (isInputRequiredResult(p)) return p;
-      // Rendered at read time from the project's own files. The card is
-      // self-contained (inline CSS, no external requests). Its one script is
-      // progressive enhancement, and the MCP Apps helper bundled into it
-      // reports the card's size. It still works in a strict sandbox.
+      // Rendered at read time from the project's own files. This is the only
+      // card that includes the MCP Apps helper: tool text, save_context_card,
+      // GET /card and the CLI stay on renderCard. Inline CSS, no external
+      // requests. The helper reports the card's size inside a host sandbox.
       return {
-        contents: [{ uri: CARD_UI_URI, mimeType: MCP_APP_MIME, text: renderCard(p.root, { theme: "auto" }) }],
+        contents: [{ uri: CARD_UI_URI, mimeType: MCP_APP_MIME, text: renderAppsCard(p.root, { theme: "auto" }) }],
       };
     }
     if (req.params.uri !== SERVER_CARD_URI) {

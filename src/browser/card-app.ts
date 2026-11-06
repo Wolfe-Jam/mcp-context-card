@@ -1,10 +1,10 @@
 /**
  * card-app — the card talking to an MCP Apps host.
  *
- * Bundled into the one HTML file (scripts/bundle-card-app.mjs). The sandbox
- * is deny-by-default, so this never loads a URL. With no host (a browser,
- * the saved file, GET /card, the CLI) window.parent is the page itself and
- * this does nothing: the card stays as drawn.
+ * Bundled only into ui://mcp-context-card/card.html (scripts/bundle-card-app.mjs).
+ * The sandbox is deny-by-default, so this never loads a URL. The saved file,
+ * GET /card and the CLI do not include this script. With no host,
+ * window.parent is the page itself and this does nothing.
  *
  * Inside a host, App.connect() runs ui/initialize and, with autoResize,
  * sends ui/notifications/size-changed when the document's size changes.

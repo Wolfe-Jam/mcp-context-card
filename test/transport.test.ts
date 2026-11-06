@@ -92,6 +92,8 @@ test("http: GET /card renders the card; ?theme + ?accent are honoured / sanitise
   assert.match(html, /^<!doctype html>/);
   assert.match(html, /data-theme="light"/);
   assert.match(html, /--accent:#0A7/);
+  assert.doesNotMatch(html, /ui\/notifications\/size-changed/);
+  assert.ok(Buffer.byteLength(html) < 64 * 1024, `GET /card is ${Buffer.byteLength(html)} bytes`);
 
   // a hostile accent is dropped
   const bad = await (await fetch(`${base}/card?accent=x%3B%7D%3C%2Fstyle%3E`)).text();

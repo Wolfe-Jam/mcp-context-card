@@ -2,12 +2,13 @@
 /**
  * bundle-card-app.mjs — inline the MCP Apps helper into one script.
  *
- * The card is one self-contained HTML file. The host sandbox loads no CDN
- * and makes no external request, so @modelcontextprotocol/ext-apps is
- * bundled here, at build time, into src/card-app.bundle.js. render-card.ts
- * drops that file inside the card's single <script>. Regenerate with
- * `node scripts/bundle-card-app.mjs`. card:check does that and fails if the
- * committed bundle drifted.
+ * The ui://mcp-context-card/card.html resource is one self-contained HTML
+ * file. The host sandbox loads no CDN and makes no external request, so
+ * @modelcontextprotocol/ext-apps is bundled here, at build time, into
+ * src/card-app.bundle.js. renderAppsCard drops that file inside that
+ * resource's single <script>. The plain card does not include it.
+ * Regenerate with `node scripts/bundle-card-app.mjs`. card:check does that
+ * and fails if the committed bundle drifted, or if a plain card exceeds 64 KB.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
