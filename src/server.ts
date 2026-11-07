@@ -63,7 +63,7 @@ export const INSTRUCTIONS =
   "This server publishes a project's context (AGENTS.md), memory (project.fafm) and identity (.well-known/fafa). " +
   "Read them with read_agents_md, recall and whoami; list_context_sources says what is published and where. " +
   "When the user wants to see the context card, call render_context_card. Its reply says what the user sees: in a " +
-  "client that displays MCP Apps, the card appears in the chat; elsewhere the reply is a short text card — show it " +
+  "client that displays MCP Apps, the card appears in the chat; elsewhere the reply is a short text card; show it " +
   "as returned. For the original card in a browser, call save_context_card: it writes context-card.html into the " +
   "project, opens it when this server runs locally, and returns a link. Never paste the card's HTML into the chat.";
 
