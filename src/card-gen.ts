@@ -1,8 +1,7 @@
 /**
  * card-gen - write docs/card.html from the three sources, so the card is
  * browsable on GitHub and screenshot-able for the README. Same renderer as
- * GET /card, the CLI, and render_context_card for a client without MCP Apps:
- * the plain card, without the MCP Apps helper. The ui:// resource is
+ * GET /card, the CLI, and save_context_card: the plain card, without the MCP Apps helper. The ui:// resource is
  * rendered at read time and is not one of these files. A plain card over
  * 64 KB fails here, which fails card:check.
  *

@@ -108,7 +108,7 @@ describe("http: both eras on one /mcp", () => {
     const plain = client(MODERN);
     await plain.connect(new StreamableHTTPClientTransport(url));
     try {
-      assert.match(say(await plain.callTool({ name: "render_context_card", arguments: {} })), /<html/i);
+      assert.match(say(await plain.callTool({ name: "render_context_card", arguments: {} })), /^### .+ — business card/m, "no MCP Apps: the text card");
     } finally {
       await plain.close();
     }
@@ -149,6 +149,18 @@ describe("http: both eras on one /mcp", () => {
     }
   });
 
+  test("a 2025 MCP Apps client over stateless HTTP gets the text card (its initialize capabilities don't reach tools/call)", async () => {
+    const c = client("legacy", { extensions: { [UI_EXTENSION]: { mimeTypes: [MCP_APP_MIME] } } });
+    await c.connect(new StreamableHTTPClientTransport(url));
+    try {
+      const reply = say(await c.callTool({ name: "render_context_card", arguments: {} }));
+      assert.match(reply, /^### .+ — business card/m, "each POST is a fresh server: no capabilities, so the text card, never HTML");
+      assert.doesNotMatch(reply, /<html/i);
+    } finally {
+      await c.close();
+    }
+  });
+
   test("2025 requests ignore 2026 envelope keys in _meta (capabilities come from initialize)", async () => {
     const res = await fetch(url, {
       method: "POST",
@@ -172,7 +184,7 @@ describe("http: both eras on one /mcp", () => {
     });
     assert.equal(res.status, 200);
     const body = await res.json();
-    assert.match(body.result.content[0].text, /<html/i, "a 2025 request must not switch to the MCP Apps summary");
+    assert.match(body.result.content[0].text, /^### .+ — business card/m, "a 2025 request must not switch to the MCP Apps reply: it gets the text card");
   });
 });
 

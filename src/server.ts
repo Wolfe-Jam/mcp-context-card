@@ -28,13 +28,13 @@ import type {
   Transport,
 } from "@modelcontextprotocol/server";
 import { existsSync, statSync, writeFileSync } from "node:fs";
-import { basename, dirname, join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { findSection, parseAgentsMd } from "./agents-md.js";
 import { authorAgentsMd } from "./author.js";
 import { forget, parseFafm, recall, remember } from "./memory.js";
-import { identity, resolveIdentity, whoami } from "./identity.js";
-import { renderAppsCard, renderCard, renderCardText, safeAccent, type Theme } from "./render-card.js";
+import { identity, whoami } from "./identity.js";
+import { cardCounts, renderAppsCard, renderCard, renderCardText, safeAccent, type Theme } from "./render-card.js";
 
 export { NAME, VERSION, SERVER_CARD_URI } from "./constants.js";
 import { NAME, VERSION, SERVER_CARD_URI, CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION, REGISTRY_NAME, TITLE, SERVER_CARD_MEDIA_TYPE, cardAppFromEnv, toCardApp, type CardApp } from "./constants.js";
@@ -361,15 +361,24 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
         _meta: { ui: { resourceUri: CARD_UI_URI }, "ui/resourceUri": CARD_UI_URI },
         annotations: { title: "Render Context Card", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
         description:
-          "Render the project's business card as one self-contained HTML page a person can read or screenshot. Front: name, title, one-liner. Flip it for the back: About, Skills (when the .fafa lists any), Context (AGENTS.md), Memory, Discovery. layout:\"portrait\" for the tall view; expanded:true renders both faces flat with every section open. Also served at GET /card (?expand=all) over the HTTP transport.",
-        inputSchema: { type: "object", properties: CARD_ARGS },
+          "Show the project's context card. In a client that displays MCP Apps, the host draws it in the chat (a mini card in a chat panel). Anywhere else the reply is the card as Markdown: identity, AGENTS.md sections, memory, discovery. For the original card in a browser, use save_context_card (also GET /card over HTTP).",
+        inputSchema: {
+          type: "object",
+          properties: {
+            detail: {
+              type: "string",
+              enum: ["tldr", "full"],
+              description: "the Markdown card: tldr (default) shows five facts, each cut short; full shows every fact whole",
+            },
+          },
+        },
       },
       {
         name: "save_context_card",
         title: "Save Context Card",
         annotations: { title: "Save Context Card", readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
         description:
-          "Write the context card to context-card.html in the project and, when this server runs locally, open it in the person's browser. Returns the card as Markdown (identity, AGENTS.md sections, memory, discovery) plus a clickable link to the saved file. Use this instead of pasting render_context_card's HTML into a chat that can't display it. Replaces any earlier context-card.html.",
+          "Write the context card to context-card.html in the project and, when this server runs locally, open it in the person's browser. Returns the card as Markdown (identity, AGENTS.md sections, memory, discovery) plus a clickable link to the saved file. Use this when the user wants the full card in a browser. Replaces any earlier context-card.html.",
         inputSchema: {
           type: "object",
           properties: {
@@ -442,20 +451,25 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
       case "whoami":
         return text(whoami(root));
       case "render_context_card": {
+        // One command, three surfaces: an MCP Apps host draws the card from
+        // CARD_UI_URI (the mini card in a panel); anywhere else the reply is
+        // the text card (Markdown). HTML only goes to a browser: save_context_card,
+        // GET /card, the CLI.
         if (hostRendersApps(server, ctx, opts.era)) {
-          // The host renders the card itself from CARD_UI_URI, so the model
-          // gets a short summary instead of a whole HTML page.
-          const doc = parseAgentsMd(AGENTS);
-          const mem = parseFafm(FAFM);
-          const sections = doc?.sections.length ?? 0;
-          const facts = mem.facts.length;
+          const c = cardCounts(root);
+          const n = (k: number, w: string) => `${k} ${w}${k === 1 ? "" : "s"}`;
+          const context = c.agents ? `AGENTS.md with ${n(c.sections, "section")}` : "no AGENTS.md yet";
           return text(
-            `Showing the context card for ${resolveIdentity(root)?.name ?? basename(root)}: AGENTS.md with ${sections} section${sections === 1 ? "" : "s"}, ` +
-              `${facts} remembered fact${facts === 1 ? "" : "s"}, and this server's identity. ` +
-              "The card is displayed to the user; call read_agents_md or recall for the text itself.",
+            `Showing the context card for ${c.name} in the chat: ` +
+              `${context}, ${n(c.facts, "remembered fact")}, and this server's identity. ` +
+              "This client displays MCP Apps, so the card is drawn here. If the user says they can't see it, " +
+              "call save_context_card. For the text itself, call read_agents_md or recall.",
           );
         }
-        return text(renderCard(root, cardOptions(args)));
+        return text(
+          `${renderCardText(root, { detail: args.detail === "full" ? "full" : "tldr" })}\n\n` +
+            "_The original card: save_context_card writes context-card.html and, when this server runs locally, opens it in the browser._",
+        );
       }
       case "save_context_card": {
         const out = join(root, "context-card.html");

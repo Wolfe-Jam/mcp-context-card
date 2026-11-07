@@ -46,10 +46,22 @@ the document's size changes. The helper is bundled into that resource at
 build time; it makes no network request. A page with no host
 (`window.parent === window`) does not start the exchange.
 
-`render_context_card` for a client without MCP Apps, `save_context_card`,
-`GET /card`, and `mcp-context-card card` return the plain card. That page
-does not include the helper or the inline view. `card:check` fails if it
-exceeds 64 KB.
+`save_context_card`, `GET /card`, and `mcp-context-card card` return the
+plain card. That page does not include the helper or the inline view.
+`card:check` fails if it exceeds 64 KB.
+
+`render_context_card` returns no HTML. For a client that declared MCP Apps it
+returns one line (the counts, and `save_context_card` in case the host
+doesn't draw it); for any other client, the card as Markdown (the same text
+`save_context_card` returns, with no file written). Over the stateless HTTP
+transport a 2025 client's `initialize` capabilities don't reach the later
+`tools/call` (each POST is a fresh server), so a 2025 MCP Apps host there
+gets the Markdown card; it still draws the card from the tool's `_meta.ui`.
+The mini card and that line share one count (`cardCounts`); level-1
+headings, such as the `# AGENTS.md` title, are not sections. The server
+instructions are unchanged from 1.8.0 on purpose: goose
+desktop 1.52 stopped loading a build whose instructions changed (cause not
+found), and a test pins them.
 
 After `ui/initialize`, `App.getHostContext()` is the host context
 (`McpUiHostContext` in `@modelcontextprotocol/ext-apps`). The fields this
@@ -172,7 +184,7 @@ they carry no private data.
 | `MCP_CONTEXT_CARD_ALLOWED_HOSTS=ctx.example.com` | extra Host names to accept, e.g. a reverse proxy's public name in front of a local bind |
 | `MCP_CONTEXT_CARD_ALLOWED_ORIGINS=https://app.example.com` | browser origins allowed to call the server |
 | `MCP_CONTEXT_CARD_PUBLISH_MEMORY=1` | serve `project.fafm`, list it in the AI Catalog, and show memory facts on an exposed `/card` |
-| `MCP_CONTEXT_CARD_APP=plain` | the `ui://mcp-context-card/card.html` card an MCP Apps host reads is the plain card (~30 KB, no MCP Apps messages, the host's default frame) instead of the card with the MCP Apps helper (`helper`, the default, ~700 KB). Tool text, `save_context_card`, `GET /card` and the CLI are the plain card either way. Any case is read (`PLAIN` is `plain`); any other value prints one line to stderr and uses `helper`. `list_context_sources` reports the active value (`surfaces.mcp.cardApp`). |
+| `MCP_CONTEXT_CARD_APP=plain` | the `ui://mcp-context-card/card.html` card an MCP Apps host reads is the plain card (~30 KB, no MCP Apps messages, the host's default frame) instead of the card with the MCP Apps helper (`helper`, the default, ~700 KB). `save_context_card`, `GET /card` and the CLI are the plain card either way; `render_context_card`'s reply (a line or Markdown) doesn't change. Any case is read (`PLAIN` is `plain`); any other value prints one line to stderr and uses `helper`. `list_context_sources` reports the active value (`surfaces.mcp.cardApp`). |
 
 ### Where memory shows
 

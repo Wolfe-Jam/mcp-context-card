@@ -31,6 +31,12 @@ export interface AgentsMd {
 const HEADING = /^(#{1,6})\s+(.+?)\s*#*\s*$/;
 const FENCE = /^\s*(```|~~~)/;
 
+/** The sections the card shows and counts: every heading below level 1.
+ *  Level-1 headings (the `# AGENTS.md` title) are not sections. */
+export function bodySections(agents: AgentsMd | null): AgentsSection[] {
+  return agents?.sections.filter((s) => s.level > 1) ?? [];
+}
+
 export function parseAgentsMd(path: string): AgentsMd | null {
   try {
     return fromString(readFileSync(path, "utf8"));

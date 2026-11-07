@@ -4,9 +4,18 @@ import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import { createServer, SERVER_CARD_URI } from "../src/server.js";
 import { CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION } from "../src/constants.js";
 import { TOOLS, fixture } from "./helpers.js";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+/** The 1.8.0 instructions, as text so a change shows as a diff (sha256 7943dfbc5ec1fb67…).
+ *  A build that changed them (branch feat/text-card, 4ca9edd) failed to load in goose desktop 1.52. */
+const INSTRUCTIONS_1_8_0 =
+  "This server publishes a project's context (AGENTS.md), memory (project.fafm) and identity (.well-known/fafa). " +
+  "Read them with read_agents_md, recall and whoami; list_context_sources says what is published and where. " +
+  "When the user wants to see the context card: hosts that support MCP Apps display it inline from render_context_card. " +
+  "Otherwise, don't paste the card's HTML into the conversation. " +
+  "Call save_context_card: it writes context-card.html into the project, opens it in the user's browser when this server runs locally, and returns the card as Markdown with a link to the saved file. " +
+  "Show the user that Markdown as returned, including the link, so they see the card in the chat and can open the full version in a browser.";
 
 async function connected(root: string): Promise<Client> {
   const server = createServer(root);
@@ -180,21 +189,38 @@ test("server: whoami reads the .fafa", async () => {
   }
 });
 
-test("server: render_context_card returns a self-contained HTML card", async () => {
+test("server: render_context_card, no MCP Apps: the text card (Markdown), never HTML", async () => {
   const { root, cleanup } = fixture();
   try {
     const client = await connected(root);
-    const html = say(await client.callTool({ name: "render_context_card", arguments: { theme: "dark" } }));
+    const card = say(await client.callTool({ name: "render_context_card", arguments: {} }));
+    assert.match(card, /^### mcp-context-card — business card/);
+    assert.match(card, /\*\*Context — AGENTS\.md\*\* · 9 sections/);
+    assert.match(card, /save_context_card/, "the original card is one call away");
+    assert.doesNotMatch(card, /<html|<script/i);
+    assert.ok(card.length < 4000, `text card is ${card.length} chars`);
+    const full = say(await client.callTool({ name: "render_context_card", arguments: { detail: "full" } }));
+    assert.ok(full.length >= card.length, "detail: full shows every fact whole");
+    await client.close();
+  } finally {
+    cleanup();
+  }
+});
+
+test("server: save_context_card styles the original card (theme, expanded)", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const client = await connected(root);
+    const out = join(root, "context-card.html");
+    await client.callTool({ name: "save_context_card", arguments: { theme: "dark", open: false } });
+    const html = readFileSync(out, "utf8");
     assert.match(html, /^<!doctype html>/);
     assert.match(html, /data-theme="dark"/);
     assert.match(html, /Context — AGENTS\.md/);
     assert.ok(!/<script[^>]+src=/.test(html), "no external script — the toggle helper is inline");
     assert.equal((html.match(/<details class="ctx-section" open/g) ?? []).length, 0);
-
-    const full = say(
-      await client.callTool({ name: "render_context_card", arguments: { expanded: true } }),
-    );
-    assert.ok((full.match(/<details class="ctx-section" open/g) ?? []).length > 0);
+    await client.callTool({ name: "save_context_card", arguments: { expanded: true, open: false } });
+    assert.ok((readFileSync(out, "utf8").match(/<details class="ctx-section" open/g) ?? []).length > 0);
     await client.close();
   } finally {
     cleanup();
@@ -412,22 +438,58 @@ test("mcp app: the card resource is self-contained HTML that loads nothing exter
   }
 });
 
-test("mcp app: a host that renders apps gets a short summary; others keep the full HTML", async () => {
+test("mcp app: a host that renders apps gets a short line; others get the text card", async () => {
   const { root, cleanup } = fixture();
   try {
     const apps = await connectedWithApps(root);
     const short = say(await apps.callTool({ name: "render_context_card", arguments: {} }));
-    assert.match(short, /^Showing the context card/);
+    assert.match(short, /^Showing the context card for mcp-context-card in the chat/);
+    assert.match(short, /save_context_card/, "a way out when the host declares MCP Apps but doesn't draw them");
     assert.doesNotMatch(short, /<html/i);
     await apps.close();
 
     const plain = await connected(root);
-    const full = say(await plain.callTool({ name: "render_context_card", arguments: {} }));
-    assert.match(full, /<html/i, "non-Apps hosts must still get the whole card");
-    assert.doesNotMatch(full, /ui\/notifications\/size-changed/);
-    assert.ok(Buffer.byteLength(full) < 64 * 1024, `tool text is ${Buffer.byteLength(full)} bytes`);
+    const card = say(await plain.callTool({ name: "render_context_card", arguments: {} }));
+    assert.match(card, /^### mcp-context-card — business card/, "non-Apps hosts get the text card");
+    assert.doesNotMatch(card, /<html/i);
     await plain.close();
   } finally {
     cleanup();
   }
+});
+
+test("mcp app: with no AGENTS.md the line says so instead of 0 sections", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    rmSync(join(root, "AGENTS.md"));
+    const apps = await connectedWithApps(root);
+    const short = say(await apps.callTool({ name: "render_context_card", arguments: {} }));
+    assert.match(short, /: no AGENTS\.md yet, /);
+    assert.doesNotMatch(short, /0 sections/);
+    await apps.close();
+  } finally {
+    cleanup();
+  }
+});
+
+test("one section count: the mini card, the text card and the model's line agree", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const apps = await connectedWithApps(root);
+    const said = /with (\d+) section/.exec(say(await apps.callTool({ name: "render_context_card", arguments: {} })))?.[1];
+    const ui = (await apps.readResource({ uri: CARD_UI_URI })).contents[0] as { text: string };
+    const mini = /<p class="counts">(\d+) section/.exec(ui.text)?.[1];
+    await apps.close();
+    const plain = await connected(root);
+    const text = /AGENTS\.md\*\* · (\d+) section/.exec(say(await plain.callTool({ name: "render_context_card", arguments: {} })))?.[1];
+    await plain.close();
+    assert.deepEqual([said, mini, text], ["9", "9", "9"], "this repo's AGENTS.md has 9 ## sections; the # title is not one");
+  } finally {
+    cleanup();
+  }
+});
+
+test("the instructions are 1.8.0's, byte for byte (goose desktop 1.52 stopped loading a server whose instructions changed)", async () => {
+  const { INSTRUCTIONS } = await import("../src/server.js");
+  assert.equal(INSTRUCTIONS, INSTRUCTIONS_1_8_0, "changing the instructions needs a goose desktop load check first");
 });

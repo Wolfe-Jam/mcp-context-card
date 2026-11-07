@@ -122,9 +122,11 @@ GET /card                            # live, on the HTTP transport
 GET /card?layout=portrait&theme=light&accent=%230066cc
 ```
 
-In a chat, hosts that support [MCP Apps](https://modelcontextprotocol.io/extensions/apps)
-show the card inline when `render_context_card` runs; the model gets a short
-summary instead of the page. Everywhere else, `save_context_card` writes
+`render_context_card` is the one command, with three outcomes. In a chat
+whose host supports [MCP Apps](https://modelcontextprotocol.io/extensions/apps),
+the host draws the card (the mini card in a panel) and the model gets a short
+line. Anywhere else, a terminal for one, the reply is the text card: the card
+as Markdown. HTML goes only to a browser: `save_context_card` writes
 `context-card.html` into the project, opens it in your browser when the
 server runs locally, and replies with the card as Markdown (identity, the
 `AGENTS.md` sections, memory, discovery), a link to the full card, and its
@@ -275,7 +277,7 @@ The wire‑level detail is in [docs/MECHANISMS.md](./docs/MECHANISMS.md).
 | `forget` | drop or correct a stale fact |
 | `whoami` | this server's name, vendor, version, status, license |
 | `list_context_sources` | what this project publishes, in what media types, via which surface |
-| `render_context_card` | the whole card as one self‑contained HTML page (also `GET /card`); hosts that support MCP Apps show it inline |
+| `render_context_card` | shows the card: drawn in the chat by hosts that support MCP Apps, the card as Markdown everywhere else (the HTML card: `save_context_card`, `GET /card`) |
 | `save_context_card` | write the card to `context-card.html` in the project and open it in your browser; returns the card as Markdown plus a link to the full version |
 
 Seven tools only read. `remember` and `forget` write the memory file, and
@@ -296,7 +298,7 @@ over both transports:
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-245 tests on Linux, macOS, and Windows, coverage‑gated in CI.
+250 tests on Linux, macOS, and Windows, coverage‑gated in CI.
 `npm run wjttc` runs the WJTTC certification suite (seven tiers, from protocol
 and Server Card conformance to stdio/HTTP parity and the shipped package). Two spawn a real
 child process and check a remembered fact survives the restart — one against
