@@ -24,7 +24,7 @@
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { parseAgentsMd } from "./agents-md.js";
+import { bodySections, parseAgentsMd } from "./agents-md.js";
 import { parseFafm } from "./faf/parse-fafm.js";
 import { parseFafa } from "./faf/parse-fafa.js";
 import { META_NS, catalogPublisher, fafaFile } from "./identity.js";
@@ -75,7 +75,7 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
         type: "text/markdown",
         description: agents
           ? (() => {
-              const h = agents.sections.filter((s) => s.level > 1).map((s) => s.heading);
+              const h = bodySections(agents).map((s) => s.heading);
               return `Agent instructions for this project — ${h.length} section(s): ${h
                 .slice(0, 6)
                 .join(", ")}${h.length > 6 ? ", …" : ""}.`;

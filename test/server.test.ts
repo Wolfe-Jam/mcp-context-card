@@ -4,12 +4,18 @@ import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import { createServer, SERVER_CARD_URI } from "../src/server.js";
 import { CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION } from "../src/constants.js";
 import { TOOLS, fixture } from "./helpers.js";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { createHash } from "node:crypto";
-/** sha256 (first 16 hex) of the 1.8.0 instructions. */
-const INSTRUCTIONS_1_8_0_SHA = "7943dfbc5ec1fb67";
+/** The 1.8.0 instructions, as text so a change shows as a diff (sha256 7943dfbc5ec1fb67…).
+ *  A build that changed them (branch feat/text-card, 4ca9edd) failed to load in goose desktop 1.52. */
+const INSTRUCTIONS_1_8_0 =
+  "This server publishes a project's context (AGENTS.md), memory (project.fafm) and identity (.well-known/fafa). " +
+  "Read them with read_agents_md, recall and whoami; list_context_sources says what is published and where. " +
+  "When the user wants to see the context card: hosts that support MCP Apps display it inline from render_context_card. " +
+  "Otherwise, don't paste the card's HTML into the conversation. " +
+  "Call save_context_card: it writes context-card.html into the project, opens it in the user's browser when this server runs locally, and returns the card as Markdown with a link to the saved file. " +
+  "Show the user that Markdown as returned, including the link, so they see the card in the chat and can open the full version in a browser.";
 
 async function connected(root: string): Promise<Client> {
   const server = createServer(root);
@@ -452,6 +458,20 @@ test("mcp app: a host that renders apps gets a short line; others get the text c
   }
 });
 
+test("mcp app: with no AGENTS.md the line says so instead of 0 sections", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    rmSync(join(root, "AGENTS.md"));
+    const apps = await connectedWithApps(root);
+    const short = say(await apps.callTool({ name: "render_context_card", arguments: {} }));
+    assert.match(short, /: no AGENTS\.md yet, /);
+    assert.doesNotMatch(short, /0 sections/);
+    await apps.close();
+  } finally {
+    cleanup();
+  }
+});
+
 test("one section count: the mini card, the text card and the model's line agree", async () => {
   const { root, cleanup } = fixture();
   try {
@@ -471,9 +491,5 @@ test("one section count: the mini card, the text card and the model's line agree
 
 test("the instructions are 1.8.0's, byte for byte (goose desktop 1.52 stopped loading a server whose instructions changed)", async () => {
   const { INSTRUCTIONS } = await import("../src/server.js");
-  assert.equal(
-    createHash("sha256").update(INSTRUCTIONS).digest("hex").slice(0, 16),
-    INSTRUCTIONS_1_8_0_SHA,
-    "changing the instructions needs a goose desktop load check first",
-  );
+  assert.equal(INSTRUCTIONS, INSTRUCTIONS_1_8_0, "changing the instructions needs a goose desktop load check first");
 });

@@ -14,11 +14,29 @@ One command, three surfaces: `render_context_card` gives the mini card in an MCP
   that no terminal can show. An MCP Apps client is unchanged apart from the
   line the model gets. The style arguments (`theme`, `accent`, `layout`,
   `expanded`) stay on `save_context_card`; `render_context_card` ignores them.
-- **One section count.** The line the model gets and the mini card share
-  `cardCounts`; the `# AGENTS.md` title is not a section (the line said 10
-  where the card said 9).
+- **One section count.** The line the model gets, the mini card, the text
+  card and the HTML card share one filter (`bodySections`): level-1 headings,
+  such as the `# AGENTS.md` title, are not sections (the line said 10 where
+  the card said 9). `list_agents_md_sections` still lists every heading,
+  title included.
 - **The line says the card is drawn in the chat**, and to call
-  `save_context_card` if the user can't see it.
+  `save_context_card` if the user can't see it. With no AGENTS.md it says
+  "no AGENTS.md yet", not "0 sections". It names the project the way the
+  card does (the business card's display name first).
+- **A 2025 MCP Apps client over HTTP gets the Markdown card**, not the line:
+  the stateless transport doesn't carry its `initialize` capabilities to the
+  tool call. The host still draws the card. Over stdio it gets the line.
+- **The server instructions are 1.8.0's, unchanged.** They still steer a
+  client without MCP Apps to `save_context_card` rather than the new Markdown
+  reply; they change once a changed version passes a goose desktop load
+  check (a build that changed them didn't load in goose desktop 1.52; the
+  cause isn't found yet). A test pins the text.
+
+Breaking for tool callers that read HTML from `render_context_card`: it
+returns a line or Markdown now, and its `inputSchema` has only `detail`
+(`theme`, `accent`, `layout`, `expanded` are ignored, no error). For the HTML
+use `save_context_card` (a file), `GET /card` (HTTP) or
+`mcp-context-card card` (CLI); all three are unchanged.
 
 ## 1.8.0
 

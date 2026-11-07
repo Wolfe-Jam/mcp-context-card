@@ -15,7 +15,7 @@
 import { readFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseAgentsMd } from "./agents-md.js";
+import { bodySections, parseAgentsMd } from "./agents-md.js";
 import { parseFafm } from "./memory.js";
 import { resolveIdentity, serverCardMeta, META_NS } from "./identity.js";
 import type { AgentIdentity } from "./faf/types.js";
@@ -105,15 +105,23 @@ function withCardApp(html: string): string {
   return `${html.slice(0, end)}\n<script data-card-app>\n${CARD_APP_JS}\n</script>${html.slice(end)}`;
 }
 
-/** The same sections, facts and identity the full card is built from. */
+/** The name the card shows: the business card's display name, else its
+ *  name, else the folder. */
+export function cardName(id: AgentIdentity | null, root: string): string {
+  return id?.displayName ?? id?.name ?? basename(resolve(root));
+}
+
 /** What the card counts: one source for the mini card and the line the model
- *  gets, so they agree. The `# AGENTS.md` title is not a section. */
-export function cardCounts(root: string): { sections: number; facts: number; identity: boolean } {
+ *  gets, so they agree. Sections are `bodySections` (level-1 headings are not
+ *  sections); `agents` is false when there is no AGENTS.md. */
+export function cardCounts(root: string): { name: string; agents: boolean; sections: number; facts: number; identity: boolean } {
   const agents = parseAgentsMd(join(root, "AGENTS.md"));
   const mem = parseFafm(join(root, "project.fafm"));
   const id = resolveIdentity(root);
   return {
-    sections: agents?.sections.filter((s) => s.level > 1).length ?? 0,
+    name: cardName(id, root),
+    agents: agents !== null,
+    sections: bodySections(agents).length,
     facts: mem.facts.length,
     identity: id !== null,
   };
@@ -210,9 +218,9 @@ export function readCard(root: string, opts: Pick<CardOptions, "expanded" | "mem
   // CONTEXT — one <details> per AGENTS.md section, collapsed by default;
   // `expanded` renders them all open. The "# AGENTS.md" top-level heading is
   // dropped; its intro rides above the sections.
-  const bodySections = agents?.sections.filter((s) => s.level > 1) ?? [];
-  const toc = bodySections.length
-    ? `<ul class="toc">${bodySections
+  const body = bodySections(agents);
+  const toc = body.length
+    ? `<ul class="toc">${body
         .map((s) => `<li><a href="#${slug(s.heading)}">${escapeHtml(s.heading)}</a></li>`)
         .join("")}</ul>`
     : "";
@@ -220,7 +228,7 @@ export function readCard(root: string, opts: Pick<CardOptions, "expanded" | "mem
     .filter(Boolean)
     .join("\n\n");
   const openAttr = flat ? " open" : "";
-  const sections = bodySections
+  const sections = body
     .map(
       (s) =>
         `<details class="ctx-section"${openAttr} id="${slug(s.heading)}"><summary>${escapeHtml(
@@ -230,7 +238,7 @@ export function readCard(root: string, opts: Pick<CardOptions, "expanded" | "mem
     .join("");
   const contextBody = agents
     ? `<div class="ctx-nav">${toc}${
-        bodySections.length
+        body.length
           ? `<button type="button" class="xall" hidden>${flat ? "Collapse all" : "Expand all"}</button>`
           : ""
       }</div>
@@ -355,7 +363,7 @@ export function renderCardText(root: string, opts: { detail?: Detail } = {}): st
   const mem = parseFafm(join(root, "project.fafm"));
   const id = resolveIdentity(root);
   const meta = serverCardMeta() as Record<string, { source: string; mediaType: string }>;
-  const name = id?.displayName ?? id?.name ?? basename(resolve(root));
+  const name = cardName(id, root);
   const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
 
   const out = [`### ${name} — business card`];
@@ -370,7 +378,7 @@ export function renderCardText(root: string, opts: { detail?: Detail } = {}): st
   if (pills.length) out.push(pills.join(" · "));
   if (id?.description) out.push(id.description);
 
-  const sections = agents?.sections.filter((s) => s.level > 1) ?? [];
+  const sections = bodySections(agents);
   out.push(
     agents
       ? `**Context — AGENTS.md** · ${plural(sections.length, "section")}\n${sections.map((s) => s.heading).join(" · ")}`

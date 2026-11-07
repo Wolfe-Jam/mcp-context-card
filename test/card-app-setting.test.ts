@@ -149,7 +149,7 @@ test("ServerOptions.cardApp from a JS caller: any case is read; an unknown value
   }
 });
 
-test("every other surface is the plain card under both settings", async () => {
+test("the setting only changes the ui:// card: the tool reply and GET /card are the same under both", async () => {
   const { root, cleanup } = fixture();
   try {
     const seen: Record<string, { tool: string; http: string }> = {};

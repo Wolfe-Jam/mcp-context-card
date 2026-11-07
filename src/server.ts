@@ -28,12 +28,12 @@ import type {
   Transport,
 } from "@modelcontextprotocol/server";
 import { existsSync, statSync, writeFileSync } from "node:fs";
-import { basename, dirname, join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { findSection, parseAgentsMd } from "./agents-md.js";
 import { authorAgentsMd } from "./author.js";
 import { forget, parseFafm, recall, remember } from "./memory.js";
-import { identity, resolveIdentity, whoami } from "./identity.js";
+import { identity, whoami } from "./identity.js";
 import { cardCounts, renderAppsCard, renderCard, renderCardText, safeAccent, type Theme } from "./render-card.js";
 
 export { NAME, VERSION, SERVER_CARD_URI } from "./constants.js";
@@ -378,7 +378,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
         title: "Save Context Card",
         annotations: { title: "Save Context Card", readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
         description:
-          "Write the context card to context-card.html in the project and, when this server runs locally, open it in the person's browser. Returns the card as Markdown (identity, AGENTS.md sections, memory, discovery) plus a clickable link to the saved file. Use this instead of pasting render_context_card's HTML into a chat that can't display it. Replaces any earlier context-card.html.",
+          "Write the context card to context-card.html in the project and, when this server runs locally, open it in the person's browser. Returns the card as Markdown (identity, AGENTS.md sections, memory, discovery) plus a clickable link to the saved file. Use this when the user wants the full card in a browser. Replaces any earlier context-card.html.",
         inputSchema: {
           type: "object",
           properties: {
@@ -458,16 +458,17 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
         if (hostRendersApps(server, ctx, opts.era)) {
           const c = cardCounts(root);
           const n = (k: number, w: string) => `${k} ${w}${k === 1 ? "" : "s"}`;
+          const context = c.agents ? `AGENTS.md with ${n(c.sections, "section")}` : "no AGENTS.md yet";
           return text(
-            `Showing the context card for ${resolveIdentity(root)?.name ?? basename(root)} in the chat: ` +
-              `AGENTS.md with ${n(c.sections, "section")}, ${n(c.facts, "remembered fact")}, and this server's identity. ` +
+            `Showing the context card for ${c.name} in the chat: ` +
+              `${context}, ${n(c.facts, "remembered fact")}, and this server's identity. ` +
               "This client displays MCP Apps, so the card is drawn here. If the user says they can't see it, " +
               "call save_context_card. For the text itself, call read_agents_md or recall.",
           );
         }
         return text(
           `${renderCardText(root, { detail: args.detail === "full" ? "full" : "tldr" })}\n\n` +
-            "_The original card: save_context_card writes context-card.html and opens it in the browser._",
+            "_The original card: save_context_card writes context-card.html and, when this server runs locally, opens it in the browser._",
         );
       }
       case "save_context_card": {
