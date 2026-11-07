@@ -281,7 +281,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
         title: "List AGENTS.md Sections",
         annotations: { title: "List AGENTS.md Sections", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
         description:
-          "List the headings in this project's AGENTS.md, so a client can pull one section instead of spending context on the whole file.",
+          "List the headings in this project's AGENTS.md, with their levels, so a client can pull one section instead of spending context on the whole file. Level 1 is the file's title; the context card counts level 2 and below as its sections, so this list can be one longer than the card's count.",
         inputSchema: { type: "object", properties: {} },
       },
       {
@@ -361,10 +361,15 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
         _meta: { ui: { resourceUri: CARD_UI_URI }, "ui/resourceUri": CARD_UI_URI },
         annotations: { title: "Render Context Card", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
         description:
-          "Show the project's context card. In a client that displays MCP Apps, the host draws it in the chat (a mini card in a chat panel). Anywhere else the reply is the card as Markdown: identity, AGENTS.md sections, memory, discovery. For the original card in a browser, use save_context_card (also GET /card over HTTP).",
+          "Show the project's context card. In a client that displays MCP Apps, the host draws it in the chat (a mini card in a chat panel). Anywhere else the reply is the card as Markdown: identity, AGENTS.md sections, memory, discovery. format: \"markdown\" returns the Markdown card in any client, for a user who asks for the card as text. For the original card in a browser, use save_context_card (also GET /card over HTTP).",
         inputSchema: {
           type: "object",
           properties: {
+            format: {
+              type: "string",
+              enum: ["auto", "markdown"],
+              description: "auto (default): the host draws the card if it displays MCP Apps, else the Markdown card; markdown: the Markdown card in any client",
+            },
             detail: {
               type: "string",
               enum: ["tldr", "full"],
@@ -454,8 +459,8 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
         // One command, three surfaces: an MCP Apps host draws the card from
         // CARD_UI_URI (the mini card in a panel); anywhere else the reply is
         // the text card (Markdown). HTML only goes to a browser: save_context_card,
-        // GET /card, the CLI.
-        if (hostRendersApps(server, ctx, opts.era)) {
+        // GET /card, the CLI. format: "markdown" asks for the text card anywhere.
+        if (args.format !== "markdown" && hostRendersApps(server, ctx, opts.era)) {
           const c = cardCounts(root);
           const n = (k: number, w: string) => `${k} ${w}${k === 1 ? "" : "s"}`;
           const context = c.agents ? `AGENTS.md with ${n(c.sections, "section")}` : "no AGENTS.md yet";
@@ -463,7 +468,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
             `Showing the context card for ${c.name} in the chat: ` +
               `${context}, ${n(c.facts, "remembered fact")}, and this server's identity. ` +
               "This client displays MCP Apps, so the card is drawn here. If the user says they can't see it, " +
-              "call save_context_card. For the text itself, call read_agents_md or recall.",
+              "call save_context_card. For the card as Markdown, call render_context_card with format: \"markdown\".",
           );
         }
         return text(
