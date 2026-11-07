@@ -2,7 +2,7 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 1.9.1
 
 - **The card as Markdown in any chat.** `render_context_card` takes
   `format: "markdown"` (default `auto`) and returns the text card even where
