@@ -46,10 +46,17 @@ the document's size changes. The helper is bundled into that resource at
 build time; it makes no network request. A page with no host
 (`window.parent === window`) does not start the exchange.
 
-`render_context_card` for a client without MCP Apps, `save_context_card`,
-`GET /card`, and `mcp-context-card card` return the plain card. That page
-does not include the helper or the inline view. `card:check` fails if it
-exceeds 64 KB.
+`save_context_card`, `GET /card`, and `mcp-context-card card` return the
+plain card. That page does not include the helper or the inline view.
+`card:check` fails if it exceeds 64 KB.
+
+`render_context_card` returns no HTML. For a client that declared MCP Apps
+(per request on 2026-07-28, at `initialize` on 2025) it says the card is
+shown in the chat, with the counts, and names `save_context_card` in case
+the host doesn't draw it. For any other client it returns the text card
+(Markdown: name, kind · version, one line, the counts). The mini card, the
+text card and that line share one count (`cardCounts`); the `# AGENTS.md`
+title is not a section.
 
 After `ui/initialize`, `App.getHostContext()` is the host context
 (`McpUiHostContext` in `@modelcontextprotocol/ext-apps`). The fields this

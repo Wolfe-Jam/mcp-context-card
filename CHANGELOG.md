@@ -2,6 +2,25 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+Asking for the card shows the right view without coaching.
+
+- **`render_context_card` picks the view.** A client that declared MCP Apps
+  is told plainly that the card is shown in the chat, with the counts, and
+  to call `save_context_card` if the user doesn't see it. Any other client
+  gets the **text card**: name, kind · version, one line, and the counts, in
+  Markdown. The tool no longer returns the card's HTML; the original card is
+  `save_context_card`, `GET /card` and the CLI, unchanged. Its style
+  arguments moved with it: `render_context_card` takes none (extra ones are
+  ignored).
+- **The instructions send "show me the card" to `render_context_card`** in
+  every client, and the original card in a browser to `save_context_card`.
+  Before, a model in an MCP Apps host often chose the browser.
+- **One section count.** The mini card, the text card and the model's line
+  share `cardCounts`; the `# AGENTS.md` title no longer counts as a section
+  (the line said 10 where the card said 9).
+
 ## 1.8.0
 
 Speaks MCP 2026-07-28 as well as 2025, on the MCP SDK v2, and the card fits a chat panel. Library users: see the breaking note at the end.

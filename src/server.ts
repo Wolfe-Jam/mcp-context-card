@@ -34,7 +34,7 @@ import { findSection, parseAgentsMd } from "./agents-md.js";
 import { authorAgentsMd } from "./author.js";
 import { forget, parseFafm, recall, remember } from "./memory.js";
 import { identity, resolveIdentity, whoami } from "./identity.js";
-import { renderAppsCard, renderCard, renderCardText, safeAccent, type Theme } from "./render-card.js";
+import { cardCounts, countsStrip, renderAppsCard, renderCard, renderCardText, renderTextCard, safeAccent, type Theme } from "./render-card.js";
 
 export { NAME, VERSION, SERVER_CARD_URI } from "./constants.js";
 import { NAME, VERSION, SERVER_CARD_URI, CARD_UI_URI, MCP_APP_MIME, UI_EXTENSION, REGISTRY_NAME, TITLE, SERVER_CARD_MEDIA_TYPE, cardAppFromEnv, toCardApp, type CardApp } from "./constants.js";
@@ -55,17 +55,17 @@ export { serverCard } from "./server-card.js";
 
 const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] });
 
-/** Sent to every client at initialize. Hosts that support MCP Apps show the
- *  card inline; for the rest, this steers the model to save the card as a
- *  file instead of pasting a whole HTML page into the chat. */
+/** Sent to every client at initialize. "Show me the card" always goes to
+ *  render_context_card; its reply says what the user sees (the card in the
+ *  chat for an MCP Apps client, else the text card). save_context_card is the
+ *  original card in a browser. */
 export const INSTRUCTIONS =
   "This server publishes a project's context (AGENTS.md), memory (project.fafm) and identity (.well-known/fafa). " +
   "Read them with read_agents_md, recall and whoami; list_context_sources says what is published and where. " +
-  "When the user wants to see the context card: hosts that support MCP Apps display it inline from render_context_card. " +
-  "Otherwise, don't paste the card's HTML into the conversation. Call save_context_card: it writes context-card.html " +
-  "into the project, opens it in the user's browser when this server runs locally, and returns the card as Markdown " +
-  "with a link to the saved file. Show the user that Markdown as returned, including the link, so they see the card " +
-  "in the chat and can open the full version in a browser.";
+  "When the user wants to see the context card, call render_context_card. Its reply says what the user sees: in a " +
+  "client that displays MCP Apps, the card appears in the chat; elsewhere the reply is a short text card — show it " +
+  "as returned. For the original card in a browser, call save_context_card: it writes context-card.html into the " +
+  "project, opens it when this server runs locally, and returns a link. Never paste the card's HTML into the chat.";
 
 /** Theme / accent / expanded from tool arguments, shared by render and save. */
 function cardOptions(args: Record<string, unknown>) {
@@ -361,8 +361,8 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
         _meta: { ui: { resourceUri: CARD_UI_URI }, "ui/resourceUri": CARD_UI_URI },
         annotations: { title: "Render Context Card", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
         description:
-          "Render the project's business card as one self-contained HTML page a person can read or screenshot. Front: name, title, one-liner. Flip it for the back: About, Skills (when the .fafa lists any), Context (AGENTS.md), Memory, Discovery. layout:\"portrait\" for the tall view; expanded:true renders both faces flat with every section open. Also served at GET /card (?expand=all) over the HTTP transport.",
-        inputSchema: { type: "object", properties: CARD_ARGS },
+          "Show the project's context card. In a client that displays MCP Apps, the host draws it in the chat (a mini card in a chat panel, the original card when there is room) and the reply says so. Elsewhere the reply is a short text card: name, kind and version, one line, and the counts. For the original card in a browser, use save_context_card. The original card's HTML is also served at GET /card (?expand=all) over the HTTP transport.",
+        inputSchema: { type: "object", properties: {} },
       },
       {
         name: "save_context_card",
@@ -442,20 +442,24 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
       case "whoami":
         return text(whoami(root));
       case "render_context_card": {
+        const name = resolveIdentity(root)?.name ?? basename(root);
+        const strip = countsStrip(cardCounts(root));
         if (hostRendersApps(server, ctx, opts.era)) {
-          // The host renders the card itself from CARD_UI_URI, so the model
-          // gets a short summary instead of a whole HTML page.
-          const doc = parseAgentsMd(AGENTS);
-          const mem = parseFafm(FAFM);
-          const sections = doc?.sections.length ?? 0;
-          const facts = mem.facts.length;
+          // The client said it displays MCP Apps: the host draws the card from
+          // CARD_UI_URI (the mini card in a chat panel, the original card when
+          // larger). Say so plainly, so the model doesn't doubt it, with a way
+          // out for a client that declares MCP Apps and doesn't draw them.
           return text(
-            `Showing the context card for ${resolveIdentity(root)?.name ?? basename(root)}: AGENTS.md with ${sections} section${sections === 1 ? "" : "s"}, ` +
-              `${facts} remembered fact${facts === 1 ? "" : "s"}, and this server's identity. ` +
-              "The card is displayed to the user; call read_agents_md or recall for the text itself.",
+            `The context card for ${name} is shown in the chat: this client said it displays MCP Apps. ` +
+              `${strip}. If the user says they don't see it, call save_context_card to open the original card ` +
+              "in their browser. For the text itself, call read_agents_md or recall.",
           );
         }
-        return text(renderCard(root, cardOptions(args)));
+        // No MCP Apps: the text card, and the original card one call away.
+        return text(
+          `${renderTextCard(root)}\n\n` +
+            "_The original card: save_context_card writes context-card.html and opens it in the browser._",
+        );
       }
       case "save_context_card": {
         const out = join(root, "context-card.html");

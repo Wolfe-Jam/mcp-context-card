@@ -180,21 +180,38 @@ test("server: whoami reads the .fafa", async () => {
   }
 });
 
-test("server: render_context_card returns a self-contained HTML card", async () => {
+test("server: render_context_card, no MCP Apps: the text card, not HTML", async () => {
   const { root, cleanup } = fixture();
   try {
     const client = await connected(root);
-    const html = say(await client.callTool({ name: "render_context_card", arguments: { theme: "dark" } }));
+    const card = say(await client.callTool({ name: "render_context_card", arguments: {} }));
+    assert.match(card, /^\*\*mcp-context-card\*\* · MCP server · v\d+\.\d+\.\d+/);
+    assert.match(card, /\d+ sections · \d+ facts · identity/);
+    assert.match(card, /save_context_card/, "the original card is one call away");
+    assert.doesNotMatch(card, /<html|<script/i);
+    assert.ok(card.length < 600, `text card is ${card.length} chars`);
+    // old style arguments are accepted and change nothing
+    assert.equal(say(await client.callTool({ name: "render_context_card", arguments: { theme: "dark", expanded: true } })), card);
+    await client.close();
+  } finally {
+    cleanup();
+  }
+});
+
+test("server: save_context_card styles the original card (theme, expanded)", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const client = await connected(root);
+    const out = join(root, "context-card.html");
+    await client.callTool({ name: "save_context_card", arguments: { theme: "dark", open: false } });
+    const html = readFileSync(out, "utf8");
     assert.match(html, /^<!doctype html>/);
     assert.match(html, /data-theme="dark"/);
     assert.match(html, /Context — AGENTS\.md/);
     assert.ok(!/<script[^>]+src=/.test(html), "no external script — the toggle helper is inline");
     assert.equal((html.match(/<details class="ctx-section" open/g) ?? []).length, 0);
-
-    const full = say(
-      await client.callTool({ name: "render_context_card", arguments: { expanded: true } }),
-    );
-    assert.ok((full.match(/<details class="ctx-section" open/g) ?? []).length > 0);
+    await client.callTool({ name: "save_context_card", arguments: { expanded: true, open: false } });
+    assert.ok((readFileSync(out, "utf8").match(/<details class="ctx-section" open/g) ?? []).length > 0);
     await client.close();
   } finally {
     cleanup();
@@ -412,21 +429,43 @@ test("mcp app: the card resource is self-contained HTML that loads nothing exter
   }
 });
 
-test("mcp app: a host that renders apps gets a short summary; others keep the full HTML", async () => {
+test("mcp app: a host that renders apps is told the card is in the chat; others get the text card", async () => {
   const { root, cleanup } = fixture();
   try {
     const apps = await connectedWithApps(root);
     const short = say(await apps.callTool({ name: "render_context_card", arguments: {} }));
-    assert.match(short, /^Showing the context card/);
+    assert.match(short, /^The context card for mcp-context-card is shown in the chat/);
+    assert.match(short, /save_context_card/, "a way out when the host declares MCP Apps but doesn't draw them");
     assert.doesNotMatch(short, /<html/i);
     await apps.close();
 
     const plain = await connected(root);
-    const full = say(await plain.callTool({ name: "render_context_card", arguments: {} }));
-    assert.match(full, /<html/i, "non-Apps hosts must still get the whole card");
-    assert.doesNotMatch(full, /ui\/notifications\/size-changed/);
-    assert.ok(Buffer.byteLength(full) < 64 * 1024, `tool text is ${Buffer.byteLength(full)} bytes`);
+    const card = say(await plain.callTool({ name: "render_context_card", arguments: {} }));
+    assert.match(card, /^\*\*mcp-context-card\*\* · /, "non-Apps hosts get the text card");
+    assert.doesNotMatch(card, /<html/i);
     await plain.close();
+  } finally {
+    cleanup();
+  }
+});
+
+test("one section count: the mini card, the text card and the model's line agree", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const strip = (s: string) => /(\d+ sections? · \d+ facts? · (?:no )?identity)/.exec(s)?.[1];
+    const apps = await connectedWithApps(root);
+    const said = strip(say(await apps.callTool({ name: "render_context_card", arguments: {} })));
+    const ui = (await apps.readResource({ uri: CARD_UI_URI })).contents[0] as { text: string };
+    const mini = strip(/<p class="counts">([^<]*)<\/p>/.exec(ui.text)?.[1] ?? "");
+    await apps.close();
+    const plain = await connected(root);
+    const text = strip(say(await plain.callTool({ name: "render_context_card", arguments: {} })));
+    await plain.close();
+    assert.ok(said && mini && text, `found all three: ${said} | ${mini} | ${text}`);
+    assert.equal(said, mini);
+    assert.equal(text, mini);
+    // the # AGENTS.md title is not a section: this repo's file has 9 ## sections
+    assert.match(mini!, /^9 sections/);
   } finally {
     cleanup();
   }

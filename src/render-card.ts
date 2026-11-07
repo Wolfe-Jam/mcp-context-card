@@ -106,7 +106,15 @@ function withCardApp(html: string): string {
 }
 
 /** The same sections, facts and identity the full card is built from. */
-function inlineCounts(root: string): { sections: number; facts: number; identity: boolean } {
+/** What the card counts. One source for the mini card, the text card and the
+ *  line the model sees, so they always agree. The `# AGENTS.md` title is not
+ *  a section (the card's Context tab doesn't list it). */
+export interface CardCounts {
+  sections: number;
+  facts: number;
+  identity: boolean;
+}
+export function cardCounts(root: string): CardCounts {
   const agents = parseAgentsMd(join(root, "AGENTS.md"));
   const mem = parseFafm(join(root, "project.fafm"));
   const id = resolveIdentity(root);
@@ -121,17 +129,35 @@ function countLabel(n: number, word: string): string {
   return `${n} ${word}${n === 1 ? "" : "s"}`;
 }
 
+/** "9 sections · 4 facts · identity": the strip on the mini card and the text card. */
+export function countsStrip(counts: CardCounts): string {
+  return `${countLabel(counts.sections, "section")} · ${countLabel(counts.facts, "fact")} · ${
+    counts.identity ? "identity" : "no identity"
+  }`;
+}
+
+/**
+ * The text card: the mini card's facts as Markdown, for a client that can't
+ * draw HTML (a terminal, or a chat without MCP Apps). Name, kind · version,
+ * one line, the counts. The original card stays one call away.
+ */
+export function renderTextCard(root: string): string {
+  const card = readCard(root);
+  const lines = [card.title ? `**${card.name}** · ${card.title}` : `**${card.name}**`];
+  if (card.oneLiner) lines.push(card.oneLiner);
+  lines.push(countsStrip(cardCounts(root)));
+  return lines.join("\n\n");
+}
+
 /**
  * The inline view: monogram, name, kind · version, one line, a counts strip,
  * and one action. Hidden until a host's display mode is inline or pip.
  * No host, and the script off, keep the full card.
  */
-function inlineView(card: BusinessCard, counts: { sections: number; facts: number; identity: boolean }): string {
+function inlineView(card: BusinessCard, counts: CardCounts): string {
   const kind = card.title ? `<p class="kind">${escapeHtml(card.title)}</p>` : "";
   const line = card.oneLiner ? `<p class="line">${escapeHtml(card.oneLiner)}</p>` : "";
-  const strip = `${countLabel(counts.sections, "section")} · ${countLabel(counts.facts, "fact")} · ${
-    counts.identity ? "identity" : "no identity"
-  }`;
+  const strip = countsStrip(counts);
   return `<style>
 #inline-view{--iv-fg:#0a0a0a;--iv-bg:#fff;--iv-muted:#6b6b70;--iv-line:rgba(0,0,0,.12);color:var(--iv-fg);background:var(--iv-bg);border:1px solid var(--iv-line);border-top:4px solid var(--accent,#FF702D);border-radius:14px;padding:12px 14px;font:14px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 body[data-theme="dark"] #inline-view{--iv-fg:#fafafa;--iv-bg:#0d0d0d;--iv-muted:#9a9aa0;--iv-line:rgba(255,255,255,.16)}
@@ -173,7 +199,7 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
  */
 export function renderAppsCard(root: string, opts: CardOptions = {}): string {
   const card = readCard(root, opts);
-  const drawn = withInlineView(renderBusinessCard(card, opts), inlineView(card, inlineCounts(root)));
+  const drawn = withInlineView(renderBusinessCard(card, opts), inlineView(card, cardCounts(root)));
   return withCardApp(drawn);
 }
 

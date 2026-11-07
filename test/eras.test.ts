@@ -101,14 +101,14 @@ describe("http: both eras on one /mcp", () => {
     await apps.connect(new StreamableHTTPClientTransport(url));
     try {
       const short = say(await apps.callTool({ name: "render_context_card", arguments: {} }));
-      assert.match(short, /^Showing the context card/);
+      assert.match(short, /^The context card for .+ is shown in the chat/);
     } finally {
       await apps.close();
     }
     const plain = client(MODERN);
     await plain.connect(new StreamableHTTPClientTransport(url));
     try {
-      assert.match(say(await plain.callTool({ name: "render_context_card", arguments: {} })), /<html/i);
+      assert.match(say(await plain.callTool({ name: "render_context_card", arguments: {} })), /^\*\*.+\*\* · /, "no MCP Apps: the text card");
     } finally {
       await plain.close();
     }
@@ -172,7 +172,7 @@ describe("http: both eras on one /mcp", () => {
     });
     assert.equal(res.status, 200);
     const body = await res.json();
-    assert.match(body.result.content[0].text, /<html/i, "a 2025 request must not switch to the MCP Apps summary");
+    assert.match(body.result.content[0].text, /^\*\*.+\*\* · /, "a 2025 request must not switch to the MCP Apps reply: it gets the text card");
   });
 });
 
