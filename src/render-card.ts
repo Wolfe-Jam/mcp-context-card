@@ -106,7 +106,9 @@ function withCardApp(html: string): string {
 }
 
 /** The same sections, facts and identity the full card is built from. */
-function inlineCounts(root: string): { sections: number; facts: number; identity: boolean } {
+/** What the card counts: one source for the mini card and the line the model
+ *  gets, so they agree. The `# AGENTS.md` title is not a section. */
+export function cardCounts(root: string): { sections: number; facts: number; identity: boolean } {
   const agents = parseAgentsMd(join(root, "AGENTS.md"));
   const mem = parseFafm(join(root, "project.fafm"));
   const id = resolveIdentity(root);
@@ -173,7 +175,7 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
  */
 export function renderAppsCard(root: string, opts: CardOptions = {}): string {
   const card = readCard(root, opts);
-  const drawn = withInlineView(renderBusinessCard(card, opts), inlineView(card, inlineCounts(root)));
+  const drawn = withInlineView(renderBusinessCard(card, opts), inlineView(card, cardCounts(root)));
   return withCardApp(drawn);
 }
 

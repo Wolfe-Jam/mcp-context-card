@@ -2,6 +2,24 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+One command, three surfaces: `render_context_card` gives the mini card in an MCP Apps host and the card as Markdown everywhere else. HTML goes only to a browser.
+
+- **`render_context_card` never returns HTML.** A client without MCP Apps
+  (a terminal) gets the card as Markdown: identity, `AGENTS.md` sections,
+  memory, discovery (`detail: "full"` for every fact whole). That's the text
+  `save_context_card` already returned, now without writing a file or opening
+  a browser. Before, it got the whole HTML page (about 30 KB, 7,400 tokens)
+  that no terminal can show. An MCP Apps client is unchanged apart from the
+  line the model gets. The style arguments (`theme`, `accent`, `layout`,
+  `expanded`) stay on `save_context_card`; `render_context_card` ignores them.
+- **One section count.** The line the model gets and the mini card share
+  `cardCounts`; the `# AGENTS.md` title is not a section (the line said 10
+  where the card said 9).
+- **The line says the card is drawn in the chat**, and to call
+  `save_context_card` if the user can't see it.
+
 ## 1.8.0
 
 Speaks MCP 2026-07-28 as well as 2025, on the MCP SDK v2, and the card fits a chat panel. Library users: see the breaking note at the end.

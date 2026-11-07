@@ -46,10 +46,18 @@ the document's size changes. The helper is bundled into that resource at
 build time; it makes no network request. A page with no host
 (`window.parent === window`) does not start the exchange.
 
-`render_context_card` for a client without MCP Apps, `save_context_card`,
-`GET /card`, and `mcp-context-card card` return the plain card. That page
-does not include the helper or the inline view. `card:check` fails if it
-exceeds 64 KB.
+`save_context_card`, `GET /card`, and `mcp-context-card card` return the
+plain card. That page does not include the helper or the inline view.
+`card:check` fails if it exceeds 64 KB.
+
+`render_context_card` returns no HTML. For a client that declared MCP Apps it
+returns one line (the counts, and `save_context_card` in case the host
+doesn't draw it); for any other client, the card as Markdown (the same text
+`save_context_card` returns, with no file written). The mini card and that
+line share one count (`cardCounts`); the `# AGENTS.md` title is not a
+section. The server instructions are unchanged from 1.8.0 on purpose: goose
+desktop 1.52 stopped loading a build whose instructions changed (cause not
+found), and a test pins them.
 
 After `ui/initialize`, `App.getHostContext()` is the host context
 (`McpUiHostContext` in `@modelcontextprotocol/ext-apps`). The fields this
