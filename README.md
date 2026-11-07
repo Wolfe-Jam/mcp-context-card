@@ -133,9 +133,9 @@ server runs locally, and replies with the card as Markdown (identity, the
 `AGENTS.md` sections, memory, discovery), a link to the full card, and its
 address to copy. The Markdown is a tl;dr by default: five facts, each cut to
 its first sentence as stored, so it stays small however much a project
-remembers. `detail: "full"` lists every fact whole. The server's
-instructions tell the model to show that rather than paste the HTML into
-the chat.
+remembers. `detail: "full"` lists every fact whole. For a client without
+MCP Apps, the server's instructions point the model at `save_context_card`
+when the user wants to see the card.
 
 Light, dark, or auto. The colour is the owner's: set it in the project's
 `.fafa` (`metadata.cards.accent: "#0066cc"`), or pass any hex with `--accent`
@@ -272,14 +272,14 @@ The wire‑level detail is in [docs/MECHANISMS.md](./docs/MECHANISMS.md).
 |---|---|
 | `author_agents_md` | draft an `AGENTS.md` — BETTER from the repo's facts (via `agents-md-facts`), BEST when a `project.faf` exists — ready to drop in |
 | `read_agents_md` | return the project's `AGENTS.md` — whole, or one section by heading |
-| `list_agents_md_sections` | the headings, so a client pulls one section instead of the whole file |
+| `list_agents_md_sections` | the headings and their levels, so a client pulls one section instead of the whole file (level 1 is the title, which the card doesn't count) |
 | `remember` | write a fact that will still be there next session |
 | `recall` | read a fact stored in a previous session |
 | `forget` | drop or correct a stale fact |
 | `whoami` | this server's name, vendor, version, status, license |
 | `list_context_sources` | what this project publishes, in what media types, via which surface |
-| `render_context_card` | shows the card: drawn in the chat by hosts that support MCP Apps, the card as Markdown everywhere else (the HTML card: `save_context_card`, `GET /card`) |
-| `save_context_card` | write the card to `context-card.html` in the project and open it in your browser; returns the card as Markdown plus a link to the full version |
+| `render_context_card` | shows the card: drawn in the chat by hosts that support MCP Apps, the card as Markdown everywhere else; `format: "markdown"` gives the Markdown in any chat (the HTML card: `save_context_card`, `GET /card`) |
+| `save_context_card` | write the card to `context-card.html` in the project and, when the server runs locally, open it in your browser; returns the card as Markdown plus a link to the full version |
 
 Seven tools only read. `remember` and `forget` write the memory file, and
 `save_context_card` writes `context-card.html`, so those three are marked
@@ -318,6 +318,7 @@ transport security against the specs, one MUST or SHOULD at a time.
 | `src/author.ts` | `author_agents_md` — BETTER via [`agents-md-facts`](https://github.com/Wolfe-Jam/agents-md-facts), BEST when `project.faf` exists |
 | `src/md.ts` | a minimal dependency‑free Markdown → HTML renderer |
 | `src/render-card.ts` | the card — reads identity + `AGENTS.md` + memory + discovery into a card; [`agent-business-card`](https://github.com/Wolfe-Jam/agent-business-card) draws it as one HTML page |
+| `src/browser/card-app.ts` | the card's MCP Apps script, bundled into the `ui://` resource only |
 | `src/memory.ts` | file‑backed `remember` / `recall` / `forget` |
 | `src/identity.ts` | `whoami` (`.fafa` → `package.json` fallback) + the `_meta` block |
 | `src/server-card.ts` | the MCP Server Card (SEP-2127, schema v1) |
