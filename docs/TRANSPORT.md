@@ -53,7 +53,8 @@ plain card. That page does not include the helper or the inline view.
 `render_context_card` returns no HTML. For a client that declared MCP Apps it
 returns one line (the counts, and `save_context_card` in case the host
 doesn't draw it); for any other client, the card as Markdown (the same text
-`save_context_card` returns, with no file written). Over the stateless HTTP
+`save_context_card` returns, with no file written). `format: "markdown"`
+returns that Markdown card for any client, MCP Apps or not. Over the stateless HTTP
 transport a 2025 client's `initialize` capabilities don't reach the later
 `tools/call` (each POST is a fresh server), so a 2025 MCP Apps host there
 gets the Markdown card; it still draws the card from the tool's `_meta.ui`.

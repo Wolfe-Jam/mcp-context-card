@@ -458,6 +458,34 @@ test("mcp app: a host that renders apps gets a short line; others get the text c
   }
 });
 
+test("mcp app: format markdown gets the Markdown card even where the host draws it", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const apps = await connectedWithApps(root);
+    const line = say(await apps.callTool({ name: "render_context_card", arguments: {} }));
+    assert.match(line, /render_context_card with format: "markdown"/, "the line names the way to the text");
+    const card = say(await apps.callTool({ name: "render_context_card", arguments: { format: "markdown" } }));
+    assert.match(card, /^### mcp-context-card — business card/);
+    assert.match(card, /\*\*Memory\*\*/, "the facts the model couldn't list through recall");
+    assert.doesNotMatch(card, /<html/i);
+    await apps.close();
+  } finally {
+    cleanup();
+  }
+});
+
+test("list_agents_md_sections says level 1 is the title the card doesn't count", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const c = await connected(root);
+    const tool = (await c.listTools()).tools.find((t) => t.name === "list_agents_md_sections");
+    assert.match(tool?.description ?? "", /Level 1 is the file's title/);
+    await c.close();
+  } finally {
+    cleanup();
+  }
+});
+
 test("mcp app: with no AGENTS.md the line says so instead of 0 sections", async () => {
   const { root, cleanup } = fixture();
   try {

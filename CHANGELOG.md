@@ -2,6 +2,16 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+- **The card as Markdown in any chat.** `render_context_card` takes
+  `format: "markdown"` (default `auto`) and returns the text card even where
+  the host draws the card, and the line the model gets in an MCP Apps host
+  names it. Before, a user who asked goose for the card as text got it
+  stitched together from three other tools, without the remembered facts.
+- **`list_agents_md_sections` says level 1 is the file's title**, which the
+  card doesn't count, so its list can be one longer than the card's.
+
 ## 1.9.0
 
 One command, three surfaces: `render_context_card` gives the mini card in an MCP Apps host and the card as Markdown everywhere else. HTML goes only to a browser.
