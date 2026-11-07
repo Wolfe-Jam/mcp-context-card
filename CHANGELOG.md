@@ -2,7 +2,7 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 1.9.0
 
 One command, three surfaces: `render_context_card` gives the mini card in an MCP Apps host and the card as Markdown everywhere else. HTML goes only to a browser.
 
