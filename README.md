@@ -193,8 +193,9 @@ goose, Claude Desktop, Cursor, or any stdio host:
 ```
 
 No path to configure: the server asks the host which project you're in (MCP
-roots — goose sends its session's working directory), then falls back to the
-directory it was started in if that has an `AGENTS.md`. `list_context_sources`
+roots — goose sends its session's working directory, the Cursor editor its open
+folder), then falls back to the directory it was started in if that has an
+`AGENTS.md`. `list_context_sources`
 reports which project it picked and how. To pin one project instead, set
 `"env": { "MCP_CONTEXT_CARD_ROOT": "/abs/path/to/your/project" }`; that always
 wins. Identity is optional. Over HTTP instead:
@@ -299,7 +300,7 @@ over both transports:
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-252 tests on Linux, macOS, and Windows, coverage‑gated in CI.
+254 tests on Linux, macOS, and Windows, coverage‑gated in CI.
 `npm run wjttc` runs the WJTTC certification suite (seven tiers, from protocol
 and Server Card conformance to stdio/HTTP parity and the shipped package). Two spawn a real
 child process and check a remembered fact survives the restart — one against

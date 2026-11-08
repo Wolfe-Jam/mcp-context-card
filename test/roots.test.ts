@@ -86,6 +86,37 @@ test("roots: when the host's roots change, the next call follows them", async ()
   }
 });
 
+test("roots: a bare absolute path (as the Cursor editor sends) is read as that folder", async () => {
+  const p = project("Plain Path Marker");
+  try {
+    // Cursor editor 3.29.9 answers roots/list with a path, not a file:// URI.
+    const c = await connect(undefined, { detectRoot: true }, () => [], async () => ({ roots: [{ uri: p.dir, name: "cli" }] }));
+    const src = JSON.parse(say(await c.callTool({ name: "list_context_sources", arguments: {} })));
+    assert.equal(src.project.path, p.dir);
+    assert.equal(src.project.from, "client roots");
+    assert.match(await headings(c), /Plain Path Marker/);
+    await c.close();
+  } finally {
+    p.cleanup();
+  }
+});
+
+test("roots: relative paths, `..` segments, other schemes and a file:// URI with a host are skipped, not fatal", async () => {
+  const p = project("Last Good Root");
+  try {
+    const bad = ["relative/dir", `${p.dir}/../${p.dir.split("/").pop()}`, "https://example.com/x", "file://host/share", "/no/such/dir"];
+    const c = await connect(undefined, { detectRoot: true }, () => [], async () => ({
+      roots: [...bad.map((uri) => ({ uri })), { uri: pathToFileURL(p.dir).href }],
+    }));
+    const src = JSON.parse(say(await c.callTool({ name: "list_context_sources", arguments: {} })));
+    assert.equal(src.project.path, p.dir, "every bad root is skipped; the good one after them is used");
+    assert.equal(src.project.from, "client roots");
+    await c.close();
+  } finally {
+    p.cleanup();
+  }
+});
+
 test("roots: no roots from the host → the start directory, if it has an AGENTS.md", async () => {
   const p = project("Cwd Marker");
   try {

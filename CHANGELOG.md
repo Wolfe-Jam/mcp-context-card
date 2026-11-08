@@ -2,6 +2,19 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+- **The Cursor editor's project is found.** Cursor answers `roots/list` with
+  a bare path (`/Users/me/project`) where the spec says `file://`. The MCP
+  SDK's schema rejected that reply, so the server fell back to its own
+  package folder. It now reads `roots/list` with its own check: a `file://`
+  URI or an absolute path to an existing folder is the project; another
+  scheme, a relative path, a `..` segment or a `file://` URI with a host is
+  skipped, never fatal.
+- **README:** the line-by-line check against 1.9.1 (#93): the instructions
+  sentence, the tools table (`format: "markdown"`, section levels, the browser
+  opens only locally), and `src/browser/card-app.ts` in the layout.
+
 ## 1.9.1
 
 - **The card as Markdown in any chat.** `render_context_card` takes
