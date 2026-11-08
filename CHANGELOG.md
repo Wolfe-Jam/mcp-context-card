@@ -2,7 +2,7 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 1.9.2
 
 - **The Cursor editor's project is found.** Cursor answers `roots/list` with
   a bare path (`/Users/me/project`) where the spec says `file://`. The MCP
