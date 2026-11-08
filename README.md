@@ -127,7 +127,7 @@ whose host supports [MCP Apps](https://modelcontextprotocol.io/extensions/apps),
 the host draws the card (the mini card in a panel) and the model gets a short
 line. Anywhere else, a terminal for one, the reply is the text card: the card
 as Markdown. Ask for it as text and `format: "markdown"` gives the text card in
-any chat. HTML goes only to a browser: `save_context_card` writes
+any chat (an MCP Apps host still draws the card too). HTML goes only to a browser: `save_context_card` writes
 `context-card.html` into the project, opens it in your browser when the
 server runs locally, and replies with the card as Markdown (identity, the
 `AGENTS.md` sections, memory, discovery), a link to the full card, and its

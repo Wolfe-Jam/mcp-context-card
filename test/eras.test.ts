@@ -102,6 +102,9 @@ describe("http: both eras on one /mcp", () => {
     try {
       const short = say(await apps.callTool({ name: "render_context_card", arguments: {} }));
       assert.match(short, /^Showing the context card/);
+      const full = say(await apps.callTool({ name: "render_context_card", arguments: { format: "markdown", detail: "FULL" } }));
+      const tldr = say(await apps.callTool({ name: "render_context_card", arguments: { format: "markdown" } }));
+      assert.ok(full.length > tldr.length, "detail is read case-insensitively: FULL is the full card");
       for (const format of ["markdown", " Markdown "]) {
         const md = say(await apps.callTool({ name: "render_context_card", arguments: { format } }));
         assert.match(md, /^### .+ — business card/m, `format ${JSON.stringify(format)}: the text card, never the line`);

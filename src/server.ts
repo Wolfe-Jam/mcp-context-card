@@ -522,7 +522,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
           );
         }
         return text(
-          `${renderCardText(root, { detail: args.detail === "full" ? "full" : "tldr" })}\n\n` +
+          `${renderCardText(root, { detail: String(args.detail ?? "").trim().toLowerCase() === "full" ? "full" : "tldr" })}\n\n` +
             "_The original card: save_context_card writes context-card.html and, when this server runs locally, opens it in the browser._",
         );
       }
@@ -540,7 +540,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
         if (opened) opts.openFile!(out);
         return text(
           `${saved}\n\n` +
-            `${renderCardText(root, { detail: args.detail === "full" ? "full" : "tldr" })}\n\n` +
+            `${renderCardText(root, { detail: String(args.detail ?? "").trim().toLowerCase() === "full" ? "full" : "tldr" })}\n\n` +
             "_In a host that supports MCP Apps, this card shows inline._\n\n---\n\n" +
             (opened ? "Opened the full card in your browser.\n\n" : "") +
             `**[Open the full card in your browser](${pathToFileURL(out).href})**\n\n` +

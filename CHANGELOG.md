@@ -4,7 +4,7 @@ All notable changes to this project. Adheres to [Semantic Versioning](https://se
 
 ## Unreleased
 
-From an outside review of #91 and #94 (goose):
+From outside reviews of #91 and #94 (goose and claude):
 
 - **A malformed root never fails a call.** On 2026-07-28 the client's roots
   arrive unvalidated; a non-string or missing `uri`, or a `null` entry, made
@@ -17,8 +17,8 @@ From an outside review of #91 and #94 (goose):
   `\\?\…`, a `file://` URI with a host on Windows) before anything touches
   the filesystem, so a root can't make Windows contact another machine.
 - **Smaller:** at most 64 roots are looked at; `FILE://` is read like
-  `file://`; a trailing slash is dropped; `format` is read case- and
-  space-insensitively (`" Markdown "`).
+  `file://`; a trailing slash is dropped; `format` and `detail` are read
+  case- and space-insensitively (`" Markdown "`, `"FULL"`).
 - **Tests that fail without each guard**, a pure `rootPath` table that runs on
   the Windows CI leg too, the 2026-07-28 path with malformed entries, and
   `format` over HTTP. The roots schema is typed, so the cast is gone.
