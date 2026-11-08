@@ -23,6 +23,12 @@ The server speaks both MCP protocol eras, on both transports:
 A client that negotiates (Claude Code and goose already do) gets 2026-07-28;
 an older client gets 2025, unchanged from 1.x. The Server Card lists both.
 
+**A root's `uri` should be `file://`.** The spec says it MUST be; the Cursor
+editor (3.29.9) sends a bare absolute path (`/Users/me/project`). The server
+reads either as the same folder, and skips anything else (another scheme, a
+relative path, a `..` segment, a `file://` URI with a host) without failing
+the call.
+
 **Roots differ by era.** On 2025 the server asks the client with a
 `roots/list` request; if the client fails to answer, the server falls back to
 the start directory. On 2026-07-28 there are no server-to-client requests: the

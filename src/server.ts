@@ -28,7 +28,7 @@ import type {
   Transport,
 } from "@modelcontextprotocol/server";
 import { existsSync, statSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, isAbsolute, join, normalize, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { findSection, parseAgentsMd } from "./agents-md.js";
 import { authorAgentsMd } from "./author.js";
@@ -54,6 +54,20 @@ export const ROOT = join(here, "..");
 export { serverCard } from "./server-card.js";
 
 const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] });
+
+/** A roots/list result read leniently: any string uri, checked later by
+ *  rootDir(). A Standard Schema, so no schema library is needed. */
+const LENIENT_ROOTS = {
+  "~standard": {
+    version: 1 as const,
+    vendor: "mcp-context-card",
+    validate(value: unknown) {
+      const roots = (value as { roots?: unknown } | null)?.roots;
+      if (!Array.isArray(roots)) return { issues: [{ message: "roots/list result has no roots array" }] };
+      return { value: { roots: roots.filter((r): r is { uri: string } => typeof (r as { uri?: unknown })?.uri === "string") } };
+    },
+  },
+};
 
 /** Sent to every client at initialize. Hosts that support MCP Apps show the
  *  card inline; for the rest, this steers the model to save the card as a
@@ -151,11 +165,25 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
       return false;
     }
   };
+  /** A root's folder. The spec says a root uri MUST be file://; some clients
+   *  (the Cursor editor) send a bare absolute path, so that is read as the
+   *  same folder. Anything else (another scheme, a relative path, a `..`
+   *  segment, a file:// URI with a host) is skipped, never fatal. */
+  const rootDir = (uri: string): string | undefined => {
+    if (uri.startsWith("file:")) {
+      try {
+        return fileURLToPath(uri);
+      } catch {
+        return undefined;
+      }
+    }
+    if (!isAbsolute(uri) || normalize(uri).split(sep).includes("..") || uri.split(/[\\/]/).includes("..")) return undefined;
+    return normalize(uri);
+  };
   const firstDir = (roots: { uri: string }[]): string | undefined => {
     for (const r of roots) {
-      if (!r.uri.startsWith("file:")) continue;
-      const dir = fileURLToPath(r.uri);
-      if (isDir(dir)) return dir;
+      const dir = rootDir(r.uri);
+      if (dir && isDir(dir)) return dir;
     }
     return undefined;
   };
@@ -170,7 +198,9 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
       return undefined;
     }
     try {
-      const { roots } = await server.listRoots(undefined, { timeout: 5000 });
+      // Not server.listRoots(): its schema rejects a uri without file://, and
+      // the Cursor editor sends bare paths. rootDir() does the checking.
+      const { roots } = (await server.request({ method: "roots/list" }, LENIENT_ROOTS, { timeout: 5000 })) as { roots: { uri: string }[] };
       return firstDir(roots);
     } catch {
       // a client that declares roots but doesn't answer: fall through
