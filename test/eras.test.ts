@@ -102,6 +102,11 @@ describe("http: both eras on one /mcp", () => {
     try {
       const short = say(await apps.callTool({ name: "render_context_card", arguments: {} }));
       assert.match(short, /^Showing the context card/);
+      for (const format of ["markdown", " Markdown "]) {
+        const md = say(await apps.callTool({ name: "render_context_card", arguments: { format } }));
+        assert.match(md, /^### .+ — business card/m, `format ${JSON.stringify(format)}: the text card, never the line`);
+        assert.doesNotMatch(md, /<html/i);
+      }
     } finally {
       await apps.close();
     }
@@ -294,6 +299,10 @@ describe("stdio, 2026-07-28: a later roots answer replaces the first", () => {
       assert.deepEqual(await sources(roots(a)), { path: a, from: "client roots" });
       assert.deepEqual(await sources(), { path: a, from: "client roots" }, "no answer: the cached root, no new question");
       assert.deepEqual(await sources(roots(b)), { path: b, from: "client roots" });
+      // inputResponses are not validated by the SDK: malformed entries must not fail the call,
+      // and a bare absolute path (the Cursor editor's form) is read on this era too
+      const messy = { roots: { roots: [42, null, { name: "x" }, "x", { uri: 7 }, { uri: a }] } };
+      assert.deepEqual(await sources(messy), { path: a, from: "client roots" });
       const declined = await sources({ roots: { action: "decline" } });
       assert.deepEqual(declined, { path: REPO_ROOT, from: "start directory" });
     } finally {

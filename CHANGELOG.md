@@ -2,6 +2,27 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+From an outside review of #91 and #94 (goose):
+
+- **A malformed root never fails a call.** On 2026-07-28 the client's roots
+  arrive unvalidated; a non-string or missing `uri`, or a `null` entry, made
+  `list_context_sources` (and every tool that resolves the project) fail.
+  Every entry is now checked by one function, `rootPath`, on both eras.
+- **`..` is refused in both forms.** It was only refused in a bare path;
+  `file:///a/../b` and `%2e%2e` slipped through as the URL parser had already
+  resolved them.
+- **UNC and device paths are refused** (`\\host\share`, `//host/share`,
+  `\\?\…`, a `file://` URI with a host on Windows) before anything touches
+  the filesystem, so a root can't make Windows contact another machine.
+- **Smaller:** at most 64 roots are looked at; `FILE://` is read like
+  `file://`; a trailing slash is dropped; `format` is read case- and
+  space-insensitively (`" Markdown "`).
+- **Tests that fail without each guard**, a pure `rootPath` table that runs on
+  the Windows CI leg too, the 2026-07-28 path with malformed entries, and
+  `format` over HTTP. The roots schema is typed, so the cast is gone.
+
 ## 1.9.2
 
 - **The Cursor editor's project is found.** Cursor answers `roots/list` with

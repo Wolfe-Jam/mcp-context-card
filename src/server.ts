@@ -18,7 +18,7 @@
  * envelope on every request) and 2025 (`initialize`). See docs/TRANSPORT.md.
  */
 import { serveStdio, type StdioServerHandle } from "@modelcontextprotocol/server/stdio";
-import { CLIENT_CAPABILITIES_META_KEY, inputRequired, inputResponse, isInputRequiredResult, Server } from "@modelcontextprotocol/server";
+import { CLIENT_CAPABILITIES_META_KEY, inputRequired, inputResponse, isInputRequiredResult, Server, type StandardSchemaV1 } from "@modelcontextprotocol/server";
 import type {
   ClientCapabilities,
   InputRequiredResult,
@@ -28,7 +28,7 @@ import type {
   Transport,
 } from "@modelcontextprotocol/server";
 import { existsSync, statSync, writeFileSync } from "node:fs";
-import { dirname, isAbsolute, join, normalize, sep } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { findSection, parseAgentsMd } from "./agents-md.js";
 import { authorAgentsMd } from "./author.js";
@@ -55,19 +55,49 @@ export { serverCard } from "./server-card.js";
 
 const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] });
 
-/** A roots/list result read leniently: any string uri, checked later by
- *  rootDir(). A Standard Schema, so no schema library is needed. */
-const LENIENT_ROOTS = {
+/** How many roots are looked at; the rest of a longer list is ignored. */
+export const MAX_ROOTS = 64;
+
+/** A roots/list result read leniently: entries kept as sent, each checked by
+ *  rootPath(). A Standard Schema, so no schema library is needed. */
+const LENIENT_ROOTS: StandardSchemaV1<unknown, { roots: unknown[] }> = {
   "~standard": {
-    version: 1 as const,
+    version: 1,
     vendor: "mcp-context-card",
     validate(value: unknown) {
       const roots = (value as { roots?: unknown } | null)?.roots;
       if (!Array.isArray(roots)) return { issues: [{ message: "roots/list result has no roots array" }] };
-      return { value: { roots: roots.filter((r): r is { uri: string } => typeof (r as { uri?: unknown })?.uri === "string") } };
+      return { value: { roots: roots.slice(0, MAX_ROOTS) } };
     },
   },
 };
+
+/** The folder a root names, or undefined. Never throws, never touches the
+ *  filesystem. The spec says a root uri MUST be file://; the Cursor editor
+ *  sends a bare absolute path, so that is read as the same folder. Skipped:
+ *  a non-string, another scheme, a relative path, a `..` segment (raw or
+ *  %2e%2e, in either form), a file:// URI with a host, and UNC or device
+ *  paths (\\host\share, //host/share), which on Windows would reach the
+ *  network. */
+export function rootPath(uri: unknown): string | undefined {
+  if (typeof uri !== "string" || uri === "" || uri.includes("\0")) return undefined;
+  if (/(^|[\\/])(\.\.|%2e%2e)([\\/]|$)/i.test(uri)) return undefined;
+  let dir: string;
+  if (/^file:/i.test(uri)) {
+    try {
+      dir = fileURLToPath(uri);
+    } catch {
+      return undefined; // a host on POSIX, or not a file URL
+    }
+  } else if (isAbsolute(uri) || /^[a-z]:[\\/]/i.test(uri)) {
+    dir = uri;
+  } else {
+    return undefined;
+  }
+  if (/^[\\/]{2}/.test(dir)) return undefined; // UNC, \\?\, \\.\ (a file:// host on Windows)
+  if (!isAbsolute(dir)) return undefined; // a drive path on POSIX
+  return resolve(dir);
+}
 
 /** Sent to every client at initialize. Hosts that support MCP Apps show the
  *  card inline; for the rest, this steers the model to save the card as a
@@ -165,24 +195,13 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
       return false;
     }
   };
-  /** A root's folder. The spec says a root uri MUST be file://; some clients
-   *  (the Cursor editor) send a bare absolute path, so that is read as the
-   *  same folder. Anything else (another scheme, a relative path, a `..`
-   *  segment, a file:// URI with a host) is skipped, never fatal. */
-  const rootDir = (uri: string): string | undefined => {
-    if (uri.startsWith("file:")) {
-      try {
-        return fileURLToPath(uri);
-      } catch {
-        return undefined;
-      }
-    }
-    if (!isAbsolute(uri) || normalize(uri).split(sep).includes("..") || uri.split(/[\\/]/).includes("..")) return undefined;
-    return normalize(uri);
-  };
-  const firstDir = (roots: { uri: string }[]): string | undefined => {
-    for (const r of roots) {
-      const dir = rootDir(r.uri);
+  /** The first root that is an existing folder. Entries come from the
+   *  client unvalidated (2026-07-28 inputResponses are not checked by the
+   *  SDK), so anything may be here; nothing in it can fail the call. */
+  const firstDir = (roots: unknown): string | undefined => {
+    if (!Array.isArray(roots)) return undefined;
+    for (const r of roots.slice(0, MAX_ROOTS)) {
+      const dir = rootPath((r as { uri?: unknown } | null)?.uri);
       if (dir && isDir(dir)) return dir;
     }
     return undefined;
@@ -200,7 +219,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
     try {
       // Not server.listRoots(): its schema rejects a uri without file://, and
       // the Cursor editor sends bare paths. rootDir() does the checking.
-      const { roots } = (await server.request({ method: "roots/list" }, LENIENT_ROOTS, { timeout: 5000 })) as { roots: { uri: string }[] };
+      const { roots } = await server.request({ method: "roots/list" }, LENIENT_ROOTS, { timeout: 5000 });
       return firstDir(roots);
     } catch {
       // a client that declares roots but doesn't answer: fall through
@@ -490,7 +509,8 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
         // CARD_UI_URI (the mini card in a panel); anywhere else the reply is
         // the text card (Markdown). HTML only goes to a browser: save_context_card,
         // GET /card, the CLI. format: "markdown" asks for the text card anywhere.
-        if (args.format !== "markdown" && hostRendersApps(server, ctx, opts.era)) {
+        const asMarkdown = String(args.format ?? "").trim().toLowerCase() === "markdown";
+        if (!asMarkdown && hostRendersApps(server, ctx, opts.era)) {
           const c = cardCounts(root);
           const n = (k: number, w: string) => `${k} ${w}${k === 1 ? "" : "s"}`;
           const context = c.agents ? `AGENTS.md with ${n(c.sections, "section")}` : "no AGENTS.md yet";

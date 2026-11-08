@@ -13,7 +13,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import { CARD_UI_URI } from "../src/constants.js";
-import { createServer, ROOT, type ServerOptions } from "../src/server.js";
+import { createServer, MAX_ROOTS, ROOT, rootPath, type ServerOptions } from "../src/server.js";
 
 const say = (r: unknown) => (r as any).content[0].text as string;
 
@@ -95,6 +95,38 @@ test("roots: a bare absolute path (as the Cursor editor sends) is read as that f
     assert.equal(src.project.path, p.dir);
     assert.equal(src.project.from, "client roots");
     assert.match(await headings(c), /Plain Path Marker/);
+    await c.close();
+  } finally {
+    p.cleanup();
+  }
+});
+
+test("roots: a `..` path to a real folder, or a relative path that exists, is not used", async () => {
+  const good = project("Good Root Marker");
+  const decoy = project("Decoy Marker");
+  try {
+    // both resolve to an existing folder with an AGENTS.md; neither may be chosen
+    const viaDots = `${good.dir}/../${decoy.dir.split(/[\\/]/).pop()}`;
+    const relative = "test"; // exists relative to the test process's cwd (the repo)
+    for (const uri of [viaDots, `file://${viaDots}`, relative]) {
+      const c = await connect(undefined, { detectRoot: true }, () => [], async () => ({ roots: [{ uri }, { uri: pathToFileURL(good.dir).href }] }));
+      const src = JSON.parse(say(await c.callTool({ name: "list_context_sources", arguments: {} })));
+      assert.equal(src.project.path, good.dir, `${uri} must be skipped`);
+      await c.close();
+    }
+  } finally {
+    good.cleanup();
+    decoy.cleanup();
+  }
+});
+
+test("roots: only the first MAX_ROOTS entries are looked at", async () => {
+  const p = project("Past The Cap");
+  try {
+    const filler = Array.from({ length: MAX_ROOTS }, () => ({ uri: "/no/such/dir" }));
+    const c = await connect(undefined, { detectRoot: true }, () => [], async () => ({ roots: [...filler, { uri: pathToFileURL(p.dir).href }] }));
+    const src = JSON.parse(say(await c.callTool({ name: "list_context_sources", arguments: {} })));
+    assert.notEqual(src.project.path, p.dir, "a root past the cap is ignored");
     await c.close();
   } finally {
     p.cleanup();
@@ -230,4 +262,27 @@ test("roots: the MCP App card (ui:// resource) shows the detected project too", 
   } finally {
     p.cleanup();
   }
+});
+
+test("rootPath: what a root may name (pure, no filesystem, never throws)", () => {
+  const win = process.platform === "win32";
+  const posix: Array<[unknown, string | undefined]> = [
+    ["/Users/x/p", "/Users/x/p"],
+    ["/Users/x/p/", "/Users/x/p"], // trailing slash dropped, as file:// gives
+    ["file:///Users/x/p", "/Users/x/p"],
+    ["FILE:///Users/x/p", "/Users/x/p"], // schemes are case-insensitive
+    ["file://localhost/Users/x/p", "/Users/x/p"],
+  ];
+  const never: unknown[] = [
+    "file://evil.example/x", // a host: on Windows this is a UNC share
+    "/a/../p", "file:///a/../p", "file:///a/%2e%2e/p", "file:///a/%2E%2E/p", "/a/..\\p", // `..`, raw or encoded
+    "relative", "./x", "~/x", "https://x/y", "", "/a\u0000b",
+    "\\\\srv\\share", "//srv/share", "\\\\?\\C:\\x", "\\\\.\\pipe\\x", // UNC and device paths reach the network on Windows
+    42, null, undefined, {}, ["/x"],
+  ];
+  if (!win) for (const [uri, want] of posix) assert.equal(rootPath(uri), want, String(uri));
+  for (const uri of never) assert.equal(rootPath(uri), undefined, JSON.stringify(uri));
+  // a drive path is a folder on Windows and nothing on POSIX
+  assert.equal(rootPath("C:\\Users\\x") === undefined, !win);
+  assert.equal(rootPath("c:/Users/x") === undefined, !win);
 });
