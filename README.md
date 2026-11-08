@@ -127,7 +127,7 @@ whose host supports [MCP Apps](https://modelcontextprotocol.io/extensions/apps),
 the host draws the card (the mini card in a panel) and the model gets a short
 line. Anywhere else, a terminal for one, the reply is the text card: the card
 as Markdown. Ask for it as text and `format: "markdown"` gives the text card in
-any chat. HTML goes only to a browser: `save_context_card` writes
+any chat (an MCP Apps host still draws the card too). HTML goes only to a browser: `save_context_card` writes
 `context-card.html` into the project, opens it in your browser when the
 server runs locally, and replies with the card as Markdown (identity, the
 `AGENTS.md` sections, memory, discovery), a link to the full card, and its
@@ -300,7 +300,7 @@ over both transports:
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-254 tests on Linux, macOS, and Windows, coverage‑gated in CI.
+257 tests on Linux, macOS, and Windows, coverage‑gated in CI.
 `npm run wjttc` runs the WJTTC certification suite (seven tiers, from protocol
 and Server Card conformance to stdio/HTTP parity and the shipped package). Two spawn a real
 child process and check a remembered fact survives the restart — one against

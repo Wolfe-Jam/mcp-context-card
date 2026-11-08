@@ -25,9 +25,15 @@ an older client gets 2025, unchanged from 1.x. The Server Card lists both.
 
 **A root's `uri` should be `file://`.** The spec says it MUST be; the Cursor
 editor (3.29.9) sends a bare absolute path (`/Users/me/project`). The server
-reads either as the same folder, and skips anything else (another scheme, a
-relative path, a `..` segment, a `file://` URI with a host) without failing
-the call.
+reads either as the same folder (on Windows, a drive path such as `C:\proj`
+too). It skips, on both protocol eras and without failing the call: a
+non-string or malformed entry, another scheme, a relative path, a `..`
+segment (raw or `%2e%2e`, in either form), a `file://` URI with a host other than `localhost`, and
+UNC or device paths (`\\host\share`, `//host/share`), which on Windows would
+reach the network. It looks at the first 64 roots and uses the first that is
+an existing folder. A root is the client's choice of project, like
+`MCP_CONTEXT_CARD_ROOT`: `remember`, `forget` and `save_context_card` write
+there.
 
 **Roots differ by era.** On 2025 the server asks the client with a
 `roots/list` request; if the client fails to answer, the server falls back to
@@ -60,7 +66,9 @@ plain card. That page does not include the helper or the inline view.
 returns one line (the counts, and `save_context_card` in case the host
 doesn't draw it); for any other client, the card as Markdown (the same text
 `save_context_card` returns, with no file written). `format: "markdown"`
-returns that Markdown card for any client, MCP Apps or not. Over the stateless HTTP
+returns that Markdown card for any client, MCP Apps or not; an MCP Apps host
+still draws the card for that call, because the card belongs to the tool,
+not to one call. Over the stateless HTTP
 transport a 2025 client's `initialize` capabilities don't reach the later
 `tools/call` (each POST is a fresh server), so a 2025 MCP Apps host there
 gets the Markdown card; it still draws the card from the tool's `_meta.ui`.
