@@ -2,7 +2,7 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 1.9.3
 
 From outside reviews of #91 and #94 (goose and claude):
 
