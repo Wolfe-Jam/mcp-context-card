@@ -22,6 +22,13 @@ title, one-liner. Flip it for the back: About, Context, Memory, Discovery.
 npx mcp-context-card card
 ```
 
+**In your AI client**, once the server is added ([Add it to your setup](#add-it-to-your-setup)), say
+**show context card**. The AI picks where it appears: drawn in the chat by
+hosts that support MCP Apps, as Markdown elsewhere. Name a place to choose:
+*show context card as markdown*, *show context card in the browser*. Clients
+that list MCP prompts also offer it as the prompt `show`; in Claude Code type
+`/context-card:show`.
+
 **context** — the project's `AGENTS.md`, served whole or one section at a time.
 
 ![the back's Context tab — AGENTS.md, section nav, read_agents_md](./docs/img/card-context.png)
@@ -61,7 +68,7 @@ say what it is. `mcp-context-card` is those three, done once:
   gains context, memory, and identity discovery it didn't have. Nothing to
   migrate; it composes.
 
-Ten tools, two discovery surfaces already in the ecosystem (Server Card
+Ten tools, one prompt (`show`), two discovery surfaces already in the ecosystem (Server Card
 `_meta`, `ai-catalog.json`), and a rendered [card](#the-card). MIT, on npm.
 
 It composes:
@@ -133,9 +140,9 @@ server runs locally, and replies with the card as Markdown (identity, the
 `AGENTS.md` sections, memory, discovery), a link to the full card, and its
 address to copy. The Markdown is a tl;dr by default: five facts, each cut to
 its first sentence as stored, so it stays small however much a project
-remembers. `detail: "full"` lists every fact whole. For a client without
-MCP Apps, the server's instructions point the model at `save_context_card`
-when the user wants to see the card.
+remembers. `detail: "full"` lists every fact whole. The server's
+instructions send *show context card* to `render_context_card`, and use
+`save_context_card` only when the user asks for the browser or a file.
 
 Light, dark, or auto. The colour is the owner's: set it in the project's
 `.fafa` (`metadata.cards.accent: "#0066cc"`), or pass any hex with `--accent`
@@ -287,6 +294,9 @@ Seven tools only read. `remember` and `forget` write the memory file, and
 destructive and a host can ask before running them. Every tool carries a
 title and MCP tool annotations.
 
+One prompt, `show`, asks the model to show the context card. Clients that
+list MCP prompts offer it as a command.
+
 ## The demo
 
 `npm run demo` walks through context, memory, identity and discovery, live,
@@ -300,7 +310,7 @@ over both transports:
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-257 tests on Linux, macOS, and Windows, coverage‑gated in CI.
+258 tests on Linux, macOS, and Windows, coverage‑gated in CI.
 `npm run wjttc` runs the WJTTC certification suite (seven tiers, from protocol
 and Server Card conformance to stdio/HTTP parity and the shipped package). Two spawn a real
 child process and check a remembered fact survives the restart — one against

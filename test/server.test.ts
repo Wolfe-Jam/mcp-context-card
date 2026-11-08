@@ -7,15 +7,17 @@ import { TOOLS, fixture } from "./helpers.js";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-/** The 1.8.0 instructions, as text so a change shows as a diff (sha256 7943dfbc5ec1fb67…).
- *  A build that changed them (branch feat/text-card, 4ca9edd) failed to load in goose desktop 1.52. */
-const INSTRUCTIONS_1_8_0 =
+/** The instructions as text, so a change shows as a diff. Changed in 1.9.4 after a
+ *  goose desktop 1.57 load check (1.52 had stopped loading a build whose instructions
+ *  changed; 1.57 loads one). Any change needs that load check again. */
+const INSTRUCTIONS_1_9_4 =
   "This server publishes a project's context (AGENTS.md), memory (project.fafm) and identity (.well-known/fafa). " +
   "Read them with read_agents_md, recall and whoami; list_context_sources says what is published and where. " +
-  "When the user wants to see the context card: hosts that support MCP Apps display it inline from render_context_card. " +
-  "Otherwise, don't paste the card's HTML into the conversation. " +
-  "Call save_context_card: it writes context-card.html into the project, opens it in the user's browser when this server runs locally, and returns the card as Markdown with a link to the saved file. " +
-  "Show the user that Markdown as returned, including the link, so they see the card in the chat and can open the full version in a browser.";
+  "To show the user the context card, call render_context_card. In a client that displays MCP Apps the card appears in the chat, so add nothing or one line. " +
+  "Anywhere else it returns the card as Markdown: show it as returned. " +
+  "When the user names where they want it, follow that: as Markdown or as text, pass format: \"markdown\"; " +
+  "in the browser or as a file, call save_context_card, which writes context-card.html into the project, opens it when this server runs locally, and returns a link. " +
+  "Never paste the card's HTML into the chat.";
 
 async function connected(root: string): Promise<Client> {
   const server = createServer(root);
@@ -227,13 +229,14 @@ test("server: save_context_card styles the original card (theme, expanded)", asy
   }
 });
 
-test("server: instructions tell the model to save the card rather than paste its HTML", async () => {
+test("server: instructions send seeing the card to render_context_card, and save_context_card only when the user names the browser or a file", async () => {
   const { root, cleanup } = fixture();
   try {
     const client = await connected(root);
     const ins = client.getInstructions() ?? "";
-    assert.match(ins, /save_context_card/);
-    assert.match(ins, /render_context_card/);
+    assert.match(ins, /To show the user the context card, call render_context_card\./);
+    assert.match(ins, /in the browser or as a file, call save_context_card/);
+    assert.ok(ins.indexOf("render_context_card") < ins.indexOf("save_context_card"), "render comes first");
     await client.close();
   } finally {
     cleanup();
@@ -517,7 +520,26 @@ test("one section count: the mini card, the text card and the model's line agree
   }
 });
 
-test("the instructions are 1.8.0's, byte for byte (goose desktop 1.52 stopped loading a server whose instructions changed)", async () => {
+test("the instructions are 1.9.4's, byte for byte (a change needs a goose desktop load check)", async () => {
   const { INSTRUCTIONS } = await import("../src/server.js");
-  assert.equal(INSTRUCTIONS, INSTRUCTIONS_1_8_0, "changing the instructions needs a goose desktop load check first");
+  assert.equal(INSTRUCTIONS, INSTRUCTIONS_1_9_4, "changing the instructions needs a goose desktop load check first");
+});
+
+test("prompts: one prompt, show, that asks for the context card", async () => {
+  const { root, cleanup } = fixture();
+  try {
+    const client = await connected(root);
+    assert.ok(client.getServerCapabilities()?.prompts, "prompts capability declared");
+    const { prompts } = await client.listPrompts();
+    assert.deepEqual(prompts.map((p) => p.name), ["show"]);
+    assert.equal(prompts[0].title, "Show the context card");
+    const got = await client.getPrompt({ name: "show" });
+    assert.equal(got.messages.length, 1);
+    assert.equal(got.messages[0].role, "user");
+    assert.deepEqual(got.messages[0].content, { type: "text", text: "Show the context card." });
+    await assert.rejects(client.getPrompt({ name: "card" }), /unknown prompt: card/);
+    await client.close();
+  } finally {
+    cleanup();
+  }
 });

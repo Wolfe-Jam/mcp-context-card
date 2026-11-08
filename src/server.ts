@@ -99,17 +99,23 @@ export function rootPath(uri: unknown): string | undefined {
   return resolve(dir);
 }
 
-/** Sent to every client at initialize. Hosts that support MCP Apps show the
- *  card inline; for the rest, this steers the model to save the card as a
- *  file instead of pasting a whole HTML page into the chat. */
+/** Sent to every client at initialize. Seeing the card is render_context_card
+ *  (the host draws it, or the reply is the Markdown card). The user names a
+ *  surface to change that: Markdown, or the browser (save_context_card, the
+ *  only path that writes a file), so asking to see the card writes nothing.
+ *  Pinned as text in test/server.test.ts: a change needs a goose desktop load check. */
 export const INSTRUCTIONS =
   "This server publishes a project's context (AGENTS.md), memory (project.fafm) and identity (.well-known/fafa). " +
   "Read them with read_agents_md, recall and whoami; list_context_sources says what is published and where. " +
-  "When the user wants to see the context card: hosts that support MCP Apps display it inline from render_context_card. " +
-  "Otherwise, don't paste the card's HTML into the conversation. Call save_context_card: it writes context-card.html " +
-  "into the project, opens it in the user's browser when this server runs locally, and returns the card as Markdown " +
-  "with a link to the saved file. Show the user that Markdown as returned, including the link, so they see the card " +
-  "in the chat and can open the full version in a browser.";
+  "To show the user the context card, call render_context_card. In a client that displays MCP Apps the card appears " +
+  "in the chat, so add nothing or one line. Anywhere else it returns the card as Markdown: show it as returned. " +
+  "When the user names where they want it, follow that: as Markdown or as text, pass format: \"markdown\"; " +
+  "in the browser or as a file, call save_context_card, which writes context-card.html into the project, opens it " +
+  "when this server runs locally, and returns a link. Never paste the card's HTML into the chat.";
+
+/** The one prompt: `show`. Clients that list prompts offer it as a command
+ *  (Claude Code: /<server>:show); it asks the model to show the card. */
+export const SHOW_PROMPT = "Show the context card.";
 
 /** Theme / accent / expanded from tool arguments, shared by render and save. */
 function cardOptions(args: Record<string, unknown>) {
@@ -177,7 +183,7 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
   const cardApp: CardApp = toCardApp(opts.cardApp) ?? cardAppFromEnv();
   const server = new Server(
     { name: REGISTRY_NAME, title: TITLE, version: VERSION },
-    { capabilities: { tools: {}, resources: {} }, instructions: INSTRUCTIONS },
+    { capabilities: { tools: {}, resources: {}, prompts: {} }, instructions: INSTRUCTIONS },
   );
 
   // ── Which project? ────────────────────────────────────────────────────
@@ -297,6 +303,19 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
   server.setRequestHandler('resources/templates/list', async () => ({
     resourceTemplates: [],
   }));
+
+  // ── Prompts ─────────────────────────────────────────────────────────
+  // One word to teach: `show`. The server name supplies "context card".
+  server.setRequestHandler('prompts/list', async () => ({
+    prompts: [{ name: "show", title: "Show the context card", description: "Show this project's context card in the chat." }],
+  }));
+  server.setRequestHandler('prompts/get', async (req) => {
+    if (req.params.name !== "show") throw new Error(`unknown prompt: ${req.params.name}`);
+    return {
+      description: "Show this project's context card in the chat.",
+      messages: [{ role: "user", content: { type: "text", text: SHOW_PROMPT } }],
+    };
+  });
 
   // ── Tools ───────────────────────────────────────────────────────────
   server.setRequestHandler('tools/list', async (): Promise<ListToolsResult> => ({

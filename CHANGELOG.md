@@ -2,6 +2,23 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## 1.9.4
+
+- **Say "show context card".** One prompt, `show`, asks the model to show the
+  card; clients that list MCP prompts offer it as a command (Claude Code:
+  `/context-card:show`). The model picks the surface: drawn in the chat by
+  MCP Apps hosts, Markdown elsewhere. Naming one changes it: *as markdown*,
+  *in the browser*.
+- **Seeing the card no longer writes a file.** The instructions sent a client
+  without MCP Apps to `save_context_card`, which writes `context-card.html`.
+  They now send it to `render_context_card`, which has returned the Markdown
+  card there since 1.9.0; `save_context_card` is for when the user asks for
+  the browser or a file. The instructions also ask for nothing or one line
+  after a drawn card, so the model doesn't repeat it.
+- **The instructions changed for the first time since 1.8.0**, after a goose
+  desktop 1.57 load check: 1.52 had stopped loading a build whose
+  instructions changed; 1.57 loads one. A test pins the new text.
+
 ## 1.9.3
 
 From outside reviews of #91 and #94 (goose and claude):
