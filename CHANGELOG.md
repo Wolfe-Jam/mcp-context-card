@@ -2,6 +2,25 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## 1.9.5
+
+From a new-user run: goose with the README's own config, on two real repos.
+
+- **The config key is `contextcard`.** goose's own keys have no hyphens, and it
+  makes `contextcard` from the name "context card". The README, docs and
+  examples use it; the Claude Code command is `/contextcard:show`. Your
+  existing key keeps working: the name is yours to choose.
+- **goose's first start.** goose can stop waiting while `npx` downloads the
+  package ("process quit before initialization"). The README says what to do:
+  restart once it has downloaded, or install it once and run
+  `mcp-context-card`.
+- **The mini card's monogram shows on a card with no colour.** With no accent
+  the circle is drawn in ink, near-white in a dark host, and the white letter
+  disappeared. The letter now takes the card's ground colour.
+- **After a drawn card, the model is asked to add nothing or one line.** The
+  reply used to list the fallbacks, and models repeated them to the user.
+- **The Markdown card shows the version once,** in the title.
+
 ## 1.9.4
 
 - **Say "show context card".** One prompt, `show`, asks the model to show the

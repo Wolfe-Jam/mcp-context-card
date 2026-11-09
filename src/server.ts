@@ -536,8 +536,8 @@ export function createServer(root: string = ROOT, opts: ServerOptions = {}): Ser
           return text(
             `Showing the context card for ${c.name} in the chat: ` +
               `${context}, ${n(c.facts, "remembered fact")}, and this server's identity. ` +
-              "This client displays MCP Apps, so the card is drawn here. If the user says they can't see it, " +
-              "call save_context_card. For the card as Markdown, call render_context_card with format: \"markdown\".",
+              "The card is drawn in the chat. Add nothing, or one line. " +
+              "Only if the user says they can't see it: save_context_card, or format: \"markdown\".",
           );
         }
         return text(

@@ -74,7 +74,7 @@ transport a 2025 client's `initialize` capabilities don't reach the later
 gets the Markdown card; it still draws the card from the tool's `_meta.ui`.
 The mini card and that line share one count (`cardCounts`); level-1
 headings, such as the `# AGENTS.md` title, are not sections. The server
-instructions changed in 1.9.4, after a goose desktop 1.57 load check: goose
+instructions changed in 1.9.5, after a goose desktop 1.57 load check: goose
 desktop 1.52 had stopped loading a build whose instructions changed (cause
 not found; 1.57 loads one). A test pins them, so any change shows as a diff.
 
@@ -109,7 +109,7 @@ so all logging goes to `stderr`.
 // claude_desktop_config.json
 {
   "mcpServers": {
-    "context-card": { "command": "npx", "args": ["-y", "mcp-context-card"] }
+    "contextcard": { "command": "npx", "args": ["-y", "mcp-context-card"] }
   }
 }
 ```
@@ -141,7 +141,7 @@ GET  /.well-known/fafa              → the agent identity card
 ```jsonc
 {
   "mcpServers": {
-    "context-card": { "url": "https://your-host.example/mcp" }
+    "contextcard": { "url": "https://your-host.example/mcp" }
   }
 }
 ```

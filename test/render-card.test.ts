@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { AAIF_ACCENT, clip, plainCardExceedsLimit, PLAIN_CARD_LIMIT_BYTES, renderAppsCard, renderCard, renderCardText, safeAccent } from "../src/render-card.js";
 import { fixture } from "./helpers.js";
 import { join } from "node:path";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { remember } from "../src/memory.js";
 
 test("safeAccent: valid hex passes, anything else is dropped", () => {
@@ -152,7 +154,8 @@ test("renderCardText: the card as Markdown — identity, AGENTS.md headings, mem
   try {
     const md = renderCardText(root);
     assert.match(md, /^### mcp-context-card — business card/);
-    assert.match(md, /io\.github\.Wolfe-Jam · v\d+\.\d+\.\d+ · published · MIT/);
+    assert.match(md, /\*\*MCP server · v\d+\.\d+\.\d+\*\*/);
+    assert.match(md, /^io\.github\.Wolfe-Jam · published · MIT$/m, "the version shows once, in the title");
     // every AGENTS.md section heading, and none of their bodies
     for (const h of ["Setup", "Build", "Test", "Layout", "Safety", "Definition of done"]) {
       assert.ok(md.includes(h), `missing section: ${h}`);
@@ -265,5 +268,19 @@ test("card: an empty project shows the next step in each section, in both the HT
     assert.match(md, /\*\*Memory\*\* · no facts yet\. Ask your agent to remember something/);
   } finally {
     rmSync(base, { recursive: true, force: true });
+  }
+});
+
+test("inline view: with no colour the monogram letter takes the card's ground, so it shows on an ink circle", () => {
+  const dir = mkdtempSync(join(tmpdir(), "ink-"));
+  try {
+    writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "plain", version: "1.0.0", description: "No colour set." }));
+    const ink = renderAppsCard(dir, { theme: "dark" });
+    assert.match(ink, /<div class="mark ink" aria-hidden="true">/, "no accent: the mark is ink");
+    assert.match(ink, /#inline-view \.mark\.ink\{color:var\(--iv-bg\)\}/);
+    const coloured = renderAppsCard(dir, { theme: "dark", accent: "#0066cc" });
+    assert.match(coloured, /<div class="mark" aria-hidden="true">/, "with an accent: white on colour, as before");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
   }
 });
