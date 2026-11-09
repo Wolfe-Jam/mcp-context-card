@@ -74,9 +74,9 @@ transport a 2025 client's `initialize` capabilities don't reach the later
 gets the Markdown card; it still draws the card from the tool's `_meta.ui`.
 The mini card and that line share one count (`cardCounts`); level-1
 headings, such as the `# AGENTS.md` title, are not sections. The server
-instructions are unchanged from 1.8.0 on purpose: goose
-desktop 1.52 stopped loading a build whose instructions changed (cause not
-found), and a test pins them.
+instructions changed in 1.9.4, after a goose desktop 1.57 load check: goose
+desktop 1.52 had stopped loading a build whose instructions changed (cause
+not found; 1.57 loads one). A test pins them, so any change shows as a diff.
 
 After `ui/initialize`, `App.getHostContext()` is the host context
 (`McpUiHostContext` in `@modelcontextprotocol/ext-apps`). The fields this
