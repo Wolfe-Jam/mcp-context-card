@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "context-card": {
+    "contextcard": {
       "url": "https://your-host.example/mcp"
     }
   }

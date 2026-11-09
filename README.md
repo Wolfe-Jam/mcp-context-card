@@ -27,7 +27,7 @@ npx mcp-context-card card
 hosts that support MCP Apps, as Markdown elsewhere. Name a place to choose:
 *show context card as markdown*, *show context card in the browser*. Clients
 that list MCP prompts also offer it as the prompt `show`; in Claude Code type
-`/context-card:show`.
+`/contextcard:show`.
 
 **context** — the project's `AGENTS.md`, served whole or one section at a time.
 
@@ -191,7 +191,7 @@ goose, Claude Desktop, Cursor, or any stdio host:
 ```jsonc
 {
   "mcpServers": {
-    "context-card": {
+    "contextcard": {
       "command": "npx",
       "args": ["-y", "mcp-context-card"]
     }
@@ -225,6 +225,11 @@ official MCP Apps helper, so it reports its size and fits its frame (about
 `"env": { "MCP_CONTEXT_CARD_APP": "plain" }`. Everywhere else the card is
 plain either way.
 
+In goose, the first start downloads the package, and goose can stop waiting
+before it's ready ("process quit before initialization"). Restart goose once it
+has downloaded, or install it once (`npm i -g mcp-context-card`) and set the
+command to `mcp-context-card`.
+
 If `command: "npx"` fails to spawn (`spawn npx ENOENT` — seen on Cursor, whose
 host process doesn't inherit a shell `PATH`), point `command` at `node` and
 the installed `dist/bin.js` instead — see
@@ -232,7 +237,7 @@ the installed `dist/bin.js` instead — see
 in [docs/TRANSPORT.md](./docs/TRANSPORT.md).
 
 Extending an MCP you already run: most hosts accept more than one
-`mcpServers` entry — add `context-card` alongside `server-filesystem`,
+`mcpServers` entry — add `contextcard` alongside `server-filesystem`,
 `server-git`, or your own, and every agent in that host gains context,
 memory, and identity discovery without anything else changing.
 
@@ -310,7 +315,7 @@ over both transports:
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-258 tests on Linux, macOS, and Windows, coverage‑gated in CI.
+259 tests on Linux, macOS, and Windows, coverage‑gated in CI.
 `npm run wjttc` runs the WJTTC certification suite (seven tiers, from protocol
 and Server Card conformance to stdio/HTTP parity and the shipped package). Two spawn a real
 child process and check a remembered fact survives the restart — one against

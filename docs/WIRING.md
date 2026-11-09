@@ -14,7 +14,7 @@
 // claude_desktop_config.json  ·  ~/.cursor/mcp.json  ·  etc.
 {
   "mcpServers": {
-    "context-card": {
+    "contextcard": {
       "command": "npx",
       "args": ["-y", "mcp-context-card"]
     }
@@ -46,7 +46,7 @@ HOST=0.0.0.0 PORT=8080 npx mcp-context-card   # exposed; without HOST it binds 1
 ```
 
 ```jsonc
-{ "mcpServers": { "context-card": { "url": "https://your-host.example/mcp" } } }
+{ "mcpServers": { "contextcard": { "url": "https://your-host.example/mcp" } } }
 ```
 
 Stateless — any replica serves any request, no session store. Rationale in

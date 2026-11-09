@@ -21,7 +21,7 @@ import { resolveIdentity, serverCardMeta, META_NS } from "./identity.js";
 import type { AgentIdentity } from "./faf/types.js";
 import { PUBLISH_MEMORY_ENV, SERVER_CARD_URI } from "./constants.js";
 import { escapeHtml, renderInline, renderMarkdown, slug } from "./md.js";
-import { cardInitials, renderBusinessCard, type BusinessCard, type RenderOptions, type Theme } from "agent-business-card";
+import { cardInitials, renderBusinessCard, safeAccent, type BusinessCard, type RenderOptions, type Theme } from "agent-business-card";
 
 // The renderer lives in agent-business-card; these readers build the card from a project's files.
 export { cardInitials, renderBusinessCard, safeAccent } from "agent-business-card";
@@ -136,7 +136,7 @@ function countLabel(n: number, word: string): string {
  * and one action. Hidden until a host's display mode is inline or pip.
  * No host, and the script off, keep the full card.
  */
-function inlineView(card: BusinessCard, counts: { sections: number; facts: number; identity: boolean }): string {
+function inlineView(card: BusinessCard, counts: { sections: number; facts: number; identity: boolean }, ink = !safeAccent(card.accent)): string {
   const kind = card.title ? `<p class="kind">${escapeHtml(card.title)}</p>` : "";
   const line = card.oneLiner ? `<p class="line">${escapeHtml(card.oneLiner)}</p>` : "";
   const strip = `${countLabel(counts.sections, "section")} · ${countLabel(counts.facts, "fact")} · ${
@@ -148,6 +148,7 @@ body[data-theme="dark"] #inline-view{--iv-fg:#fafafa;--iv-bg:#0d0d0d;--iv-muted:
 @media (prefers-color-scheme:dark){body:not([data-theme]) #inline-view{--iv-fg:#fafafa;--iv-bg:#0d0d0d;--iv-muted:#9a9aa0;--iv-line:rgba(255,255,255,.16)}}
 #inline-view .row{display:flex;gap:12px;align-items:center}
 #inline-view .mark{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:none;color:#fff;font-weight:800;background:var(--accent,#FF702D)}
+#inline-view .mark.ink{color:var(--iv-bg)}
 #inline-view h2{margin:0;font-size:1.05rem;line-height:1.2;letter-spacing:-.02em}
 #inline-view .kind{margin:2px 0 0;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent,#FF702D)}
 #inline-view .line{margin:8px 0 0;color:var(--iv-muted)}
@@ -157,7 +158,7 @@ body[data-theme="dark"] #inline-view{--iv-fg:#fafafa;--iv-bg:#0d0d0d;--iv-muted:
 html[data-view="inline"] body{padding:8px;background:transparent}
 html[data-view="inline"] body>:not(#inline-view){display:none}
 </style>
-<div class="row"><div class="mark" aria-hidden="true">${escapeHtml(cardInitials(card.name))}</div><div><h2>${escapeHtml(card.name)}</h2>${kind}</div></div>
+<div class="row"><div class="mark${ink ? " ink" : ""}" aria-hidden="true">${escapeHtml(cardInitials(card.name))}</div><div><h2>${escapeHtml(card.name)}</h2>${kind}</div></div>
 ${line}
 <p class="counts">${strip}</p>
 <button type="button" id="open-full-card" class="open">Open full card</button>
@@ -183,7 +184,7 @@ export function renderCard(root: string, opts: CardOptions = {}): string {
  */
 export function renderAppsCard(root: string, opts: CardOptions = {}): string {
   const card = readCard(root, opts);
-  const drawn = withInlineView(renderBusinessCard(card, opts), inlineView(card, cardCounts(root)));
+  const drawn = withInlineView(renderBusinessCard(card, opts), inlineView(card, cardCounts(root), !(safeAccent(opts.accent) ?? safeAccent(card.accent))));
   return withCardApp(drawn);
 }
 
@@ -371,7 +372,7 @@ export function renderCardText(root: string, opts: { detail?: Detail } = {}): st
   if (title) out.push(`**${title}**`);
   const pills = [
     id?.vendor && id.vendor !== id.status ? id.vendor : null,
-    id?.agentVersion ? `v${id.agentVersion}` : null,
+    id?.agentVersion && !title.includes(`v${id.agentVersion}`) ? `v${id.agentVersion}` : null,
     id?.status,
     id?.license,
   ].filter(Boolean);

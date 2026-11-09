@@ -7,7 +7,7 @@ import { TOOLS, fixture } from "./helpers.js";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-/** The instructions as text, so a change shows as a diff. Changed in 1.9.4 after a
+/** The instructions as text, so a change shows as a diff. Changed in 1.9.5 after a
  *  goose desktop 1.57 load check (1.52 had stopped loading a build whose instructions
  *  changed; 1.57 loads one). Any change needs that load check again. */
 const INSTRUCTIONS_1_9_4 =
@@ -466,7 +466,8 @@ test("mcp app: format markdown gets the Markdown card even where the host draws 
   try {
     const apps = await connectedWithApps(root);
     const line = say(await apps.callTool({ name: "render_context_card", arguments: {} }));
-    assert.match(line, /render_context_card with format: "markdown"/, "the line names the way to the text");
+    assert.match(line, /format: "markdown"/, "the line names the way to the text");
+    assert.match(line, /Add nothing, or one line\./, "the line asks the model not to repeat the card");
     const card = say(await apps.callTool({ name: "render_context_card", arguments: { format: "markdown" } }));
     assert.match(card, /^### mcp-context-card — business card/);
     assert.match(card, /\*\*Memory\*\*/, "the facts the model couldn't list through recall");
@@ -520,7 +521,7 @@ test("one section count: the mini card, the text card and the model's line agree
   }
 });
 
-test("the instructions are 1.9.4's, byte for byte (a change needs a goose desktop load check)", async () => {
+test("the instructions are 1.9.5's, byte for byte (a change needs a goose desktop load check)", async () => {
   const { INSTRUCTIONS } = await import("../src/server.js");
   assert.equal(INSTRUCTIONS, INSTRUCTIONS_1_9_4, "changing the instructions needs a goose desktop load check first");
 });
