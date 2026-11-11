@@ -1,6 +1,6 @@
 {
   "name": "mcp-context-card",
-  "version": "1.9.5",
+  "version": "1.9.6",
   "mcpName": "io.github.Wolfe-Jam/mcp-context-card",
   "description": "The essential MCP components for a project's context (AGENTS.md), cross-session memory, and identity — a base MCP on its own, or a drop-in extension for any existing MCP server. Discoverable through the Server Card _meta block and ai-catalog.json sibling entries.",
   "keywords": [
@@ -67,7 +67,7 @@
     "@hono/node-server": "^2.1.6",
     "@modelcontextprotocol/server": "^2.4.0",
     "agent-business-card": "^0.1.0",
-    "agents-md-facts": "^0.1.0",
+    "agents-md-facts": "^0.2.0",
     "hono": "^4.13.7",
     "yaml": "^2.9.0"
   },

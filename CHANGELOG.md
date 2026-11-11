@@ -2,6 +2,15 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## 1.9.6
+
+- **`author_agents_md` uses `agents-md-facts` 0.2.0.** The facts block now
+  also says what `npm publish` runs first (or that nothing does), shows the CI
+  steps that run the repo's own scripts and toolchain commands, lists Python
+  entry points from `pyproject.toml` and the `ruff`, `mypy` and `black`
+  checks it configures, and says when a repo has no GitHub Actions
+  workflows. Everything the block said before is still there.
+
 ## 1.9.5
 
 From a new-user run: goose with the README's own config, on two real repos.
