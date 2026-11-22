@@ -1,4 +1,12 @@
 format_version: 1.0.0
 project: mcp-context-card
 created: 2026-11-22T23:09:37.794Z
-test_history: []
+test_history:
+  - timestamp: 2026-11-22T23:09:37.828Z
+    result: PASSED
+    tests:
+      total: 254
+      passed: 254
+      failed: 0
+    trigger: github-actions
+last_updated: 2026-11-22T23:09:37.829Z
