@@ -87,7 +87,7 @@ jobs:
     if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     permissions:
       contents: write
-    uses: Wolfe-Jam/taf-git/.github/workflows/receipt.yml@v3.0.1
+    uses: Wolfe-Jam/taf-git/.github/workflows/receipt.yml@v3.0.2
     with:
       artifact-name: taf-test-output
       test-output-file: junit.xml
