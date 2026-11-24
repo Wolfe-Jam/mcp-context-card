@@ -1,5 +1,5 @@
 /**
- * MCP Server Cards (SEP-2127, Final) + AI Catalog (specVersion 1.0) — one test per
+ * MCP Server Cards (SEP-2127, Final) + AI Catalog (specVersion 0.9) — one test per
  * requirement in PLANET-FAF's compliance list (rows A1–A13, B1–B5, C1–C10).
  * The card is validated against the official v1 JSON Schema from
  * modelcontextprotocol/experimental-ext-server-card@526201bb (the SEP's snapshot).
@@ -176,7 +176,7 @@ const catalog = async () => (await get("/.well-known/ai-catalog.json")).json() a
 
 test("C1–C3: specVersion, entries and host.displayName are present", async () => {
   const c = await catalog();
-  assert.equal(c.specVersion, "1.0");
+  assert.equal(c.specVersion, "0.9");
   assert.ok(Array.isArray(c.entries));
   assert.ok(c.host.displayName);
 });

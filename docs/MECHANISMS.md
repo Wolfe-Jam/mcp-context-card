@@ -89,7 +89,7 @@ Served from `https://ctx.example.com` (1.9.6, this repo's own files):
 
 ```jsonc
 {
-  "specVersion": "1.0",
+  "specVersion": "0.9",
   "host": { "displayName": "mcp-context-card", "identifier": "https://github.com/Wolfe-Jam/mcp-context-card" },
   "entries": [
     { "identifier": "urn:air:faf.one:mcp:mcp-context-card", "type": "application/mcp-server-card+json",

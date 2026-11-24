@@ -243,8 +243,8 @@ memory, and identity discovery without anything else changing.
 
 ### Your identifiers
 
-The AI Catalog names each entry `urn:air:{domain}:{namespace}:{name}`, and
-the domain is yours. It comes from your project's `.fafa`: run
+Each catalog entry is named `urn:air:{domain}:{namespace}:{name}`, and the
+domain is yours. It comes from your project's `.fafa`: run
 `npx faf-cli card init` (or `--domain example.com`), and it writes
 `agent.id: urn:air:example.com:agent:<short-name>`. Your catalog then publishes
 `urn:air:example.com:context:<short-name>` and so on, with no code to change.

@@ -56,7 +56,7 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
   const host = fafa?.displayName ?? fafa?.name ?? "mcp-context-card";
 
   return {
-    specVersion: "1.0",
+    specVersion: "0.9",
     host: {
       displayName: host,
       identifier: "https://github.com/Wolfe-Jam/mcp-context-card",

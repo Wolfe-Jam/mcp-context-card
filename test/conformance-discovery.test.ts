@@ -196,3 +196,18 @@ test("transport: a local server must refuse a forged Host; remote servers skip t
   const remote = await checkDiscovery({ mcpUrl: "https://wx.example.com/mcp" }, { fetch: via(app) });
   assert.equal(status(remote, "transport.rebinding"), "skip");
 });
+
+test("identifiers: urn:air is {publisher}:{name}[:{kind}] (AI Catalog v0.9)", async () => {
+  const run = async (ids: string[]) => {
+    const app = new Hono();
+    app.get("/.well-known/ai-catalog.json", (c) => {
+      c.header("Content-Type", AI_CATALOG_TYPE);
+      return c.body(JSON.stringify({ specVersion: "0.9", entries: ids.map((identifier, i) => ({ identifier, type: "text/plain", data: String(i) })) }));
+    });
+    return status(await checkDiscovery({ mcpUrl: "https://example.com/mcp" }, { fetch: via(app) }), "catalog.identifiers");
+  };
+  // v0.9's own examples pass: a name alone, slashes or dots in the name, an optional kind.
+  assert.equal(await run(["urn:air:acme.com:code-review", "urn:air:acme.com:engineering/code-review:skill", "urn:air:acme.com:engineering.code-review:skill"]), "pass");
+  // Three segments after the publisher: the name or kind would contain a colon.
+  assert.equal(await run(["urn:air:example.com:finance:agent:ledger"]), "fail");
+});

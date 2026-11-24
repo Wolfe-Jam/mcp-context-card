@@ -1,5 +1,5 @@
 {
-  "specVersion": "1.0",
+  "specVersion": "0.9",
   "host": {
     "displayName": "mcp-context-card",
     "identifier": "https://github.com/Wolfe-Jam/mcp-context-card"
