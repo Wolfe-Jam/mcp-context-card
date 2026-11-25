@@ -78,6 +78,23 @@ test("buildCatalog: formerIds records each entry's pre-v0.9 id; off by default",
   }
 });
 
+test("buildCatalog: formerIds writes no record for localhost or an IP host (the key must be reverse-DNS)", () => {
+  const { root, cleanup } = fixture();
+  try {
+    const f = join(root, ".well-known/fafa");
+    writeFileSync(f, readFileSync(f, "utf8").replace(/^\s*id: .*$/m, ""));
+    for (const origin of ["http://localhost:8080", "http://127.0.0.1:8080", "http://[::1]:8080"]) {
+      for (const e of buildCatalog(root, { origin, formerIds: true }).entries) {
+        assert.equal(e.extensions && Object.keys(e.extensions).some((k) => k.endsWith(".former-identifiers")), e.extensions ? false : undefined, origin);
+      }
+    }
+    const named = buildCatalog(root, { origin: "https://ctx.acme.dev", formerIds: true }).entries[0];
+    assert.deepEqual(named.extensions?.["dev.acme.ctx.former-identifiers"], ["urn:air:ctx.acme.dev:mcp:mcp-context-card"]);
+  } finally {
+    cleanup();
+  }
+});
+
 test(`http: ${FORMER_IDS_ENV}=1 turns the former-id record on for the served catalog`, async () => {
   const { root, cleanup } = fixture();
   const before = process.env[FORMER_IDS_ENV];

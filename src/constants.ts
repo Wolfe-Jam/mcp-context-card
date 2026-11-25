@@ -87,3 +87,6 @@ export const UI_EXTENSION = "io.modelcontextprotocol/ui";
 /** Protocol revisions served beside the SDK's 2025-era list (SUPPORTED_PROTOCOL_VERSIONS):
  *  createMcpHandler / serveStdio answer 2026-07-28 too. The SDK exports no constant for it. */
 export const MODERN_PROTOCOL_VERSIONS = ["2026-07-28"] as const;
+/** Pre-release drafts the SDK still accepts for compatibility. The server negotiates them,
+ *  but the Server Card lists released MCP versions only (v1 schema: supportedProtocolVersions). */
+export const DRAFT_PROTOCOL_VERSIONS: readonly string[] = ["2024-10-07"];

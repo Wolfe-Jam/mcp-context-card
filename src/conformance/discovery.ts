@@ -1,6 +1,6 @@
 /**
  * conformance/discovery — a portable checker for MCP Server Card discovery
- * (SEP-2127, Final), the AI Catalog (spec 1.0), and the Streamable HTTP
+ * (SEP-2127, Final), the AI Catalog (v0.9), and the Streamable HTTP
  * transport's security rules, run against any server URL.
  *
  * Self-contained on purpose: no imports from this package, only the global

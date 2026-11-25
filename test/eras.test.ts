@@ -15,7 +15,7 @@ import { pathToFileURL } from "node:url";
 import { serve } from "@hono/node-server";
 import { Client, StreamableHTTPClientTransport, SUPPORTED_PROTOCOL_VERSIONS } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
-import { MCP_APP_MIME, UI_EXTENSION } from "../src/constants.js";
+import { DRAFT_PROTOCOL_VERSIONS, MCP_APP_MIME, UI_EXTENSION } from "../src/constants.js";
 import { httpApp } from "../src/transport/http.js";
 import { REPO_ROOT, TOOLS, fixture } from "./helpers.js";
 
@@ -122,7 +122,7 @@ describe("http: both eras on one /mcp", () => {
     }
   });
 
-  test("the Server Card lists exactly what the server answers: server/discover's versions, then the 2025 ones", async () => {
+  test("the Server Card lists what the server answers (server/discover's versions, then the 2025 ones), minus pre-release drafts", async () => {
     const card = await (await fetch(new URL("/mcp/server-card", url))).json();
     const versions: string[] = card.remotes[0].supportedProtocolVersions;
     const c = client(MODERN);
@@ -131,7 +131,8 @@ describe("http: both eras on one /mcp", () => {
       // An SDK update that adds a revision changes discover's list; this fails until the card follows.
       const modern = c.getDiscoverResult()?.supportedVersions ?? [];
       assert.ok(modern.length > 0, "server/discover must name its versions");
-      assert.deepEqual(versions, [...modern, ...SUPPORTED_PROTOCOL_VERSIONS]);
+      assert.deepEqual(versions, [...modern, ...SUPPORTED_PROTOCOL_VERSIONS].filter((v) => !DRAFT_PROTOCOL_VERSIONS.includes(v)));
+      for (const d of DRAFT_PROTOCOL_VERSIONS) assert.ok(!versions.includes(d), `draft ${d} is not advertised`);
     } finally {
       await c.close();
     }

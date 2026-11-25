@@ -104,7 +104,7 @@ test("a card found only inline in the catalog is checked; hosting is skipped", a
     c.header("Content-Type", AI_CATALOG_TYPE);
     return c.body(
       JSON.stringify({
-        specVersion: "1.0",
+        specVersion: "0.9",
         entries: [{ identifier: "urn:air:example.com:mcp:weather", type: SERVER_CARD_TYPE, data: goodCard("https://elsewhere.example.com/mcp") }],
       }),
     );
@@ -122,7 +122,7 @@ test("the card is followed from the catalog when it is not at <mcp>/server-card"
   const app = new Hono();
   app.get("/cards/weather.json", (c) => c.json(goodCard("https://wx.example.com/mcp")));
   app.get("/.well-known/ai-catalog.json", (c) =>
-    c.json({ specVersion: "1.0", entries: [{ identifier: "weather", type: SERVER_CARD_TYPE, url: "/cards/weather.json" }] }),
+    c.json({ specVersion: "0.9", entries: [{ identifier: "weather", type: SERVER_CARD_TYPE, url: "/cards/weather.json" }] }),
   );
   const r = await checkDiscovery({ mcpUrl: "https://wx.example.com/mcp" }, { fetch: via(app) });
   assert.equal(r.cardUrl, "https://wx.example.com/cards/weather.json");
