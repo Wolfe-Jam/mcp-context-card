@@ -92,13 +92,13 @@ Served from `https://ctx.example.com` (1.9.6, this repo's own files):
   "specVersion": "0.9",
   "host": { "displayName": "mcp-context-card", "identifier": "https://github.com/Wolfe-Jam/mcp-context-card" },
   "entries": [
-    { "identifier": "urn:air:faf.one:mcp:mcp-context-card", "type": "application/mcp-server-card+json",
+    { "identifier": "urn:air:faf.one:mcp-context-card-mcp", "type": "application/mcp-server-card+json",
       "url": "https://ctx.example.com/mcp/server-card" },
-    { "identifier": "urn:air:faf.one:context:mcp-context-card", "type": "text/markdown",
+    { "identifier": "urn:air:faf.one:mcp-context-card-context", "type": "text/markdown",
       "displayName": "mcp-context-card — project context (AGENTS.md)",
       "description": "Agent instructions for this project — 9 section(s): Setup, Build, Test, …",
       "url": "https://ctx.example.com/AGENTS.md" },
-    { "identifier": "urn:air:faf.one:identity:mcp-context-card", "type": "application/vnd.fafa+yaml",
+    { "identifier": "urn:air:faf.one:mcp-context-card-identity", "type": "application/vnd.fafa+yaml",
       "url": "https://ctx.example.com/.well-known/fafa",
       "extensions": { "io.github.Wolfe-Jam.mcp-context-card": { "iana": "https://www.iana.org/assignments/media-types/application/vnd.fafa+yaml" } },
       "…": "…" }
@@ -118,7 +118,7 @@ with `MCP_CONTEXT_CARD_PUBLISH_MEMORY=1`.
   `text/markdown` context, or `application/vnd.fafm+yaml` memory, finds the
   entry without knowing this publisher.
 - **`identifier` is a `urn:air:` URN** scoped to the publisher
-  (`urn:air:{domain}:{namespace}:{name}`). The domain is the one your `.fafa`
+  (`urn:air:{domain}:{name}-{kind}`). The domain is the one your `.fafa`
   declares (`faf card init` writes it into `agent.id`); `faf.one` above is this
   repo's. With no `.fafa` domain, the served catalog uses the serving host and
   the static file uses plain IDs. No domain is ever invented. In ai-catalog's

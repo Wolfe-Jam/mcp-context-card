@@ -48,6 +48,7 @@ import {
   MCP_PATH,
   SERVER_CARD_MEDIA_TYPE,
   publishMemoryFromEnv,
+  formerIdsFromEnv,
   ALLOWED_HOSTS_ENV,
   ALLOWED_ORIGINS_ENV,
   SERVER_CARD_PATH,
@@ -64,6 +65,8 @@ const PUBLIC_PATHS = [SERVER_CARD_PATH, LEGACY_SERVER_CARD_PATH, "/.well-known/a
 export interface HttpAppOptions {
   /** Serve `project.fafm` and list it in the catalog. Default: the env switch. */
   publishMemory?: boolean;
+  /** Record each catalog entry's pre-v0.9 id. Default: the env switch. */
+  formerIds?: boolean;
   /**
    * `local` (default): only loopback Host names are served, and the card shows
    * memory in full (the reader is on this machine). `exposed`: bound beyond
@@ -108,6 +111,7 @@ function discovery(c: Context, body: string, contentType: string): Response {
 
 export function httpApp(root: string = ROOT, opts: HttpAppOptions = {}): Hono {
   const publishMemory = opts.publishMemory ?? publishMemoryFromEnv();
+  const formerIds = opts.formerIds ?? formerIdsFromEnv();
   const exposure = opts.exposure ?? "local";
   const allowedHosts = opts.allowedHosts ?? listFromEnv(process.env[ALLOWED_HOSTS_ENV]);
   const allowedOrigins = opts.allowedOrigins ?? listFromEnv(process.env[ALLOWED_ORIGINS_ENV]);
@@ -156,7 +160,7 @@ export function httpApp(root: string = ROOT, opts: HttpAppOptions = {}): Hono {
   app.get(LEGACY_SERVER_CARD_PATH, card);
 
   app.get("/.well-known/ai-catalog.json", (c) =>
-    discovery(c, JSON.stringify(buildCatalog(root, { origin: originOf(c), publishMemory }), null, 2), AI_CATALOG_MEDIA_TYPE),
+    discovery(c, JSON.stringify(buildCatalog(root, { origin: originOf(c), publishMemory, formerIds }), null, 2), AI_CATALOG_MEDIA_TYPE),
   );
 
   // The files the catalog links to, each with the type its entry declares.

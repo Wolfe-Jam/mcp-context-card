@@ -243,12 +243,19 @@ memory, and identity discovery without anything else changing.
 
 ### Your identifiers
 
-Each catalog entry is named `urn:air:{domain}:{namespace}:{name}`, and the
-domain is yours. It comes from your project's `.fafa`: run
-`npx faf-cli card init` (or `--domain example.com`), and it writes
-`agent.id: urn:air:example.com:agent:<short-name>`. Your catalog then publishes
-`urn:air:example.com:context:<short-name>` and so on, with no code to change.
-This repo's own `.fafa` says `faf.one`; that's our example, and yours says yours.
+Each catalog entry is named `urn:air:{domain}:{name}-{kind}`
+(`urn:air:example.com:<short-name>-context` and so on), and the domain is yours.
+It comes from your project's `.fafa`: run `npx faf-cli card init` (or
+`--domain example.com`), and its `agent.id` carries your domain; the short name
+is `agent.name`. No code to change. This repo's own `.fafa` says `faf.one`;
+that's our example, and yours says yours.
+
+One segment after the domain reads the same under AI Catalog v0.9
+(`urn:air:{publisher}:{name}[:{kind}]`) and the drafts before it, which read
+the same shape as `{namespace}:{name}`. Catalogs from earlier versions of this
+server used `urn:air:{domain}:{kind}:{name}`; if you published one, set
+`MCP_CONTEXT_CARD_FORMER_IDS=1` and each entry records its earlier id under
+`<your reverse-DNS domain>.former-identifiers`.
 
 With no `.fafa`, no domain is invented: the served catalog uses the host it's
 served from (`localhost` when you run it locally), and the static

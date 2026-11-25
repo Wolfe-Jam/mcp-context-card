@@ -199,9 +199,9 @@ test("C4: the static catalog carries the Server Card inline as data, schema-vali
 test("C5: identifiers use the publisher domain from the project's .fafa (faf.one here)", async () => {
   const ids = (await catalog()).entries.map((x: any) => x.identifier);
   assert.deepEqual(ids, [
-    "urn:air:faf.one:mcp:mcp-context-card",
-    "urn:air:faf.one:context:mcp-context-card",
-    "urn:air:faf.one:identity:mcp-context-card",
+    "urn:air:faf.one:mcp-context-card-mcp",
+    "urn:air:faf.one:mcp-context-card-context",
+    "urn:air:faf.one:mcp-context-card-identity",
   ]);
 });
 
@@ -211,7 +211,7 @@ test("C5: with no .fafa domain, served = request host, static = plain ids (never
     const f = join(root, ".well-known/fafa");
     writeFileSync(f, readFileSync(f, "utf8").replace(/^\s*id: .*$/m, ""));
     const served = buildCatalog(root, { origin: "https://ctx.acme.dev" }).entries.map((x) => x.identifier);
-    assert.equal(served[0], "urn:air:ctx.acme.dev:mcp:mcp-context-card");
+    assert.equal(served[0], "urn:air:ctx.acme.dev:mcp-context-card-mcp");
     const stat = buildCatalog(root).entries.map((x) => x.identifier);
     assert.equal(stat[0], "mcp-context-card:mcp");
     assert.ok(stat.every((i) => !i.includes("faf.one")));

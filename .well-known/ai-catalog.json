@@ -6,7 +6,7 @@
   },
   "entries": [
     {
-      "identifier": "urn:air:faf.one:mcp:mcp-context-card",
+      "identifier": "urn:air:faf.one:mcp-context-card-mcp",
       "type": "application/mcp-server-card+json",
       "data": {
         "$schema": "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
@@ -39,14 +39,14 @@
       }
     },
     {
-      "identifier": "urn:air:faf.one:context:mcp-context-card",
+      "identifier": "urn:air:faf.one:mcp-context-card-context",
       "displayName": "mcp-context-card — project context (AGENTS.md)",
       "type": "text/markdown",
       "description": "Agent instructions for this project — 9 section(s): Setup, Build, Test, Layout, Conventions, The invariant, ….",
       "url": "./AGENTS.md"
     },
     {
-      "identifier": "urn:air:faf.one:identity:mcp-context-card",
+      "identifier": "urn:air:faf.one:mcp-context-card-identity",
       "displayName": "mcp-context-card — agent identity (.fafa)",
       "type": "application/vnd.fafa+yaml",
       "description": "The essential MCP components for a project's context (AGENTS.md), cross-session memory, and identity — a base MCP on its own, or a drop-in extension for any existing MCP server, discoverable through the Server Card _meta block and a self-published ai-catalog.json.",
