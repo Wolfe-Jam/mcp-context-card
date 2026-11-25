@@ -250,9 +250,9 @@ It comes from your project's `.fafa`: run `npx faf-cli card init` (or
 is `agent.name`. No code to change. In this example we used `faf.one`; use
 your own.
 
-One segment after the domain reads the same under AI Catalog v0.9
-(`urn:air:{publisher}:{name}[:{kind}]`) and the drafts before it, which read
-the same shape as `{namespace}:{name}`. Catalogs from earlier versions of this
+AI Catalog v0.9 reads `urn:air:{publisher}:{name}[:{kind}]`; the drafts before
+it read the same shape as `{namespace}:{name}`. One segment after the domain
+can't be read the wrong way round: v0.9 reads it as a name with no kind. Catalogs from earlier versions of this
 server used `urn:air:{domain}:{kind}:{name}`; if you published one, set
 `MCP_CONTEXT_CARD_FORMER_IDS=1` and each entry records its earlier id under
 `<your reverse-DNS domain>.former-identifiers`.

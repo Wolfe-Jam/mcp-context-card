@@ -32,7 +32,7 @@ Streamable HTTP endpoint at `<origin>/mcp` and its protocol versions):
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
   "name": "io.github.Wolfe-Jam/mcp-context-card",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "title": "MCP Context Card",
   "description": "MCP server for a project's context (AGENTS.md), memory, and identity — base or drop-in extension.",
   "websiteUrl": "https://github.com/Wolfe-Jam/mcp-context-card",
@@ -85,7 +85,7 @@ publisher lists artifacts, each entry keyed by its **media type** (`type`).
 GET /.well-known/ai-catalog.json
 ```
 
-Served from `https://ctx.example.com` (1.10.0, this repo's own files):
+Served from `https://ctx.example.com` (1.10.1, this repo's own files):
 
 ```jsonc
 {
@@ -121,10 +121,11 @@ with `MCP_CONTEXT_CARD_PUBLISH_MEMORY=1`.
   (`urn:air:{domain}:{name}-{kind}`). The domain is the one your `.fafa`
   declares (`faf card init` writes it into `agent.id`). In this example we used
   `faf.one`; use your own. With no `.fafa` domain, the served catalog uses the
-  serving host and the static file uses plain IDs. No domain is ever invented. In ai-catalog's
-  [trust‑manifest ADRs](https://github.com/Agent-Card/ai-catalog/tree/main/adr),
-  `urn:air` identifiers carry a publisher‑domain‑aligned trust manifest, so the
-  domain in the identifier is the one a publisher would sign with.
+  serving host and the static file uses plain IDs. No domain is ever invented. In AI Catalog
+  v0.9, Trust Manifests are optional; a publisher who signs one under the
+  `did:web` Publisher Profile (Level 3) signs as exactly `did:web:` plus the
+  identifier's publisher domain, so the domain in the identifier is the one a
+  publisher would sign with.
 - **`description` is derived from real content** — the live AGENTS.md heading
   list, the current fact count, the agent's own description — not a blurb that
   drifts. See `buildCatalog()` in [`src/catalog-gen.ts`](../src/catalog-gen.ts).

@@ -2,11 +2,17 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## 1.10.1 — 2026-11-25
+
+Wording only; the generated catalog is the same as 1.10.0's (apart from the version).
+
+- **Claims about AI Catalog v0.9 match its text.** A one-segment id "can't be read the wrong way round" (v0.9 reads it as a name with no kind); it doesn't "read the same" in v0.9 and the drafts before it, which gave every id a namespace. MECHANISMS.md: Trust Manifests are optional; under the `did:web` Publisher Profile the signer is exactly `did:web:` plus the id's publisher domain. README, CHANGELOG 1.10.0 and `catalog-gen.ts` follow.
+
 ## 1.10.0 — 2026-11-25
 
 Follows AI Catalog v0.9.0 (2026-11-22, the v1.0 release candidate). **Generated catalog ids change.**
 
-- **Catalog ids are now `urn:air:{domain}:{name}-{kind}`** (`urn:air:example.com:weather-context`), not `urn:air:{domain}:{kind}:{name}`. v0.9 reads `urn:air:{publisher}:{name}[:{kind}]`, so the old ids read the other way round there (name `context`, kind `weather`); one segment after the domain reads the same in v0.9 and the drafts before it. The static file without a domain keeps its plain `{name}:{kind}` ids.
+- **Catalog ids are now `urn:air:{domain}:{name}-{kind}`** (`urn:air:example.com:weather-context`), not `urn:air:{domain}:{kind}:{name}`. v0.9 reads `urn:air:{publisher}:{name}[:{kind}]`, so the old ids read the other way round there (name `context`, kind `weather`); one segment after the domain can't be read the wrong way round: v0.9 reads it as a name with no kind. The static file without a domain keeps its plain `{name}:{kind}` ids.
 - **New `MCP_CONTEXT_CARD_FORMER_IDS=1`:** each entry records its earlier id under `<reverse-DNS domain>.former-identifiers`, for servers that published a catalog before this release. Off by default, so new catalogs carry no former ids. Only a domain name gets the record, never `localhost` or an IP host.
 - **The Server Card lists released MCP versions only:** `2024-10-07`, a pre-release draft the SDK still accepts, is no longer in `supportedProtocolVersions`. The server still negotiates it.
 - **`specVersion` is `"0.9"`**, and the conformance check's identifier rule follows v0.9's `urn:air:{publisher-domain}:{name}[:{kind}]`.

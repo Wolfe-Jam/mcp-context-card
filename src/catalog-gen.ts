@@ -15,7 +15,8 @@
  *
  * Why `{name}-{kind}`: AI Catalog v0.9 reads `urn:air:{publisher}:{name}[:{kind}]`,
  * while earlier drafts read the same shape as `{namespace}:{name}`. One segment
- * after the publisher reads the same in both. Catalogs published before v0.9
+ * after the publisher can't be read the wrong way round: v0.9 reads it as a name
+ * with no kind. Catalogs published before v0.9
  * used `urn:air:{publisher}:{kind}:{name}`; {@link CatalogOptions.formerIds}
  * records that id on each entry (`<reverse-DNS publisher>.former-identifiers`).
  *
