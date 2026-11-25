@@ -11,7 +11,7 @@
  * in `serverInfo`, so the card never contradicts runtime.
  */
 import { SUPPORTED_PROTOCOL_VERSIONS } from "@modelcontextprotocol/server";
-import { MODERN_PROTOCOL_VERSIONS } from "./constants.js";
+import { DRAFT_PROTOCOL_VERSIONS, MODERN_PROTOCOL_VERSIONS } from "./constants.js";
 import {
   DESCRIPTION,
   MCP_PATH,
@@ -44,7 +44,7 @@ export function serverCard(opts: ServerCardOptions = {}) {
             {
               type: "streamable-http" as const,
               url: `${opts.origin}${MCP_PATH}`,
-              supportedProtocolVersions: [...MODERN_PROTOCOL_VERSIONS, ...SUPPORTED_PROTOCOL_VERSIONS],
+              supportedProtocolVersions: [...MODERN_PROTOCOL_VERSIONS, ...SUPPORTED_PROTOCOL_VERSIONS].filter((v) => !DRAFT_PROTOCOL_VERSIONS.includes(v)),
             },
           ],
         }

@@ -10,7 +10,7 @@
  * publisher domain and short name taken from the project's own `.fafa`
  * ({@link catalogPublisher}). Served over HTTP without a `.fafa` domain, the
  * request host is the publisher (whoever serves it controls that domain). The
- * committed static file with no domain uses plain `{name}:{namespace}` ids:
+ * committed static file with no domain uses plain `{name}:{kind}` ids:
  * the spec treats unknown schemes as opaque, and no domain is ever invented.
  *
  * Why `{name}-{kind}`: AI Catalog v0.9 reads `urn:air:{publisher}:{name}[:{kind}]`,
@@ -28,6 +28,7 @@
  * job `catalog:check` regenerates the static file and fails on any diff.
  */
 import { writeFileSync } from "node:fs";
+import { isIP } from "node:net";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { bodySections, parseAgentsMd } from "./agents-md.js";
@@ -69,10 +70,13 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
   const publisher = domain ?? (opts.origin ? new URL(opts.origin).hostname.toLowerCase() : undefined);
   const id = (kind: string) =>
     publisher ? `urn:air:${publisher}:${handle}-${kind}` : `${handle}:${kind}`;
-  // The pre-v0.9 id, recorded on request for catalogs published before v0.9.
-  const formerKey = publisher ? `${publisher.split(".").reverse().join(".")}.former-identifiers` : "";
+  // The pre-v0.9 id, recorded on request for catalogs published before v0.9. The key is the
+  // publisher's reverse-DNS (§ Extensions: Format and Key Naming), so only a dotted domain name
+  // gets one: never `localhost` or an IP host from the request.
+  const named = !!publisher && publisher.includes(".") && !isIP(publisher.replace(/^\[|\]$/g, ""));
+  const formerKey = named ? `${publisher!.split(".").reverse().join(".")}.former-identifiers` : "";
   const former = (kind: string) =>
-    opts.formerIds && publisher ? { [formerKey]: [`urn:air:${publisher}:${kind}:${handle}`] } : {};
+    opts.formerIds && named ? { [formerKey]: [`urn:air:${publisher}:${kind}:${handle}`] } : {};
   const withFormer = (kind: string, extensions: Record<string, unknown> = {}) => {
     const all = { ...extensions, ...former(kind) };
     return Object.keys(all).length ? { extensions: all } : {};

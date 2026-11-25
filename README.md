@@ -259,7 +259,7 @@ server used `urn:air:{domain}:{kind}:{name}`; if you published one, set
 
 With no `.fafa`, no domain is invented: the served catalog uses the host it's
 served from (`localhost` when you run it locally), and the static
-`.well-known/ai-catalog.json` uses plain `<short-name>:<namespace>` IDs.
+`.well-known/ai-catalog.json` uses plain `<short-name>:<kind>` IDs.
 
 ## Why
 
