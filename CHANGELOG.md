@@ -2,7 +2,7 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 1.10.0 — 2026-11-24
 
 Follows AI Catalog v0.9.0 (2026-11-22, the v1.0 release candidate). **Generated catalog ids change.**
 
