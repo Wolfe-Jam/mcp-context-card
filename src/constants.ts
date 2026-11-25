@@ -31,10 +31,10 @@ export const LEGACY_SERVER_CARD_PATH = "/.well-known/mcp/server-card";
  */
 export const PUBLISH_MEMORY_ENV = "MCP_CONTEXT_CARD_PUBLISH_MEMORY";
 /**
- * Set to `1` to record each catalog entry's pre-v0.9 identifier
- * (`urn:air:{domain}:{kind}:{name}`) under `<reverse-DNS domain>.former-identifiers`.
- * For servers that published catalogs before AI Catalog v0.9: their ids moved to
- * `urn:air:{domain}:{name}-{kind}`. Off by default: new catalogs have no former ids.
+ * Set to `1` to record each catalog entry's earlier identifier
+ * (`urn:air:{domain}:{kind}:{name}`, what this server wrote before 1.10.0) under
+ * `<reverse-DNS domain>.former-identifiers`. For servers that published a catalog
+ * before 1.10.0: their ids moved to `urn:air:{domain}:{name}-{kind}`. Off by default: new catalogs have no former ids.
  */
 export const FORMER_IDS_ENV = "MCP_CONTEXT_CARD_FORMER_IDS";
 /** Extra Host names the HTTP server accepts (comma-separated), e.g. a reverse proxy's public name. */
