@@ -247,8 +247,8 @@ Each catalog entry is named `urn:air:{domain}:{name}-{kind}`
 (`urn:air:example.com:<short-name>-context` and so on), and the domain is yours.
 It comes from your project's `.fafa`: run `npx faf-cli card init` (or
 `--domain example.com`), and its `agent.id` carries your domain; the short name
-is `agent.name`. No code to change. This repo's own `.fafa` says `faf.one`;
-that's our example, and yours says yours.
+is `agent.name`. No code to change. In this example we used `faf.one`; use
+your own.
 
 One segment after the domain reads the same under AI Catalog v0.9
 (`urn:air:{publisher}:{name}[:{kind}]`) and the drafts before it, which read
