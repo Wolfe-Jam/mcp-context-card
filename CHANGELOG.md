@@ -2,6 +2,15 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+Follows AI Catalog v0.9.0 (2026-11-22, the v1.0 release candidate). **Generated catalog ids change.**
+
+- **Catalog ids are now `urn:air:{domain}:{name}-{kind}`** (`urn:air:example.com:weather-context`), not `urn:air:{domain}:{kind}:{name}`. v0.9 reads `urn:air:{publisher}:{name}[:{kind}]`, so the old ids read the other way round there (name `context`, kind `weather`); one segment after the domain reads the same in v0.9 and the drafts before it. The static file without a domain keeps its plain `{name}:{kind}` ids.
+- **New `MCP_CONTEXT_CARD_FORMER_IDS=1`** (and `formerIds` in `buildCatalog`): each entry records its earlier id under `<reverse-DNS domain>.former-identifiers`, for servers that published a catalog before this release. Off by default, so new catalogs carry no former ids.
+- **`specVersion` is `"0.9"`**, and the conformance check's identifier rule follows v0.9's `urn:air:{publisher-domain}:{name}[:{kind}]`.
+- This repo's own `.fafa` id is `urn:air:faf.one:mcp-context-card-agent`. The catalog reads only the domain from `agent.id`, so either form works in yours.
+
 ## 1.9.6
 
 - **`author_agents_md` uses `agents-md-facts` 0.2.0.** The facts block now

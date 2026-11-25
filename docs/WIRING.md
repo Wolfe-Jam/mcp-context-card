@@ -101,10 +101,9 @@ To serve *your* artifacts:
    — with your own, or point `MCP_CONTEXT_CARD_ROOT` at a directory that has them.
    `AGENTS.md` is the one with a real standard; the other two are swappable.
 2. **Set your domain in your `.fafa`, not in code.** The AI Catalog identifiers
-   (`urn:air:{domain}:{namespace}:{name}`) take the domain and short name from
-   your project's `.fafa`: `npx faf-cli card init` (or `--domain example.com`)
-   writes `agent.id: urn:air:example.com:agent:<short-name>`, and the catalog
-   follows it. No `.fafa`, no invented domain: the served catalog uses the host
+   (`urn:air:{domain}:{name}-{kind}`) take the domain from your `.fafa`'s
+   `agent.id` and the short name from `agent.name`: `npx faf-cli card init`
+   (or `--domain example.com`) writes both, and the catalog follows them. No `.fafa`, no invented domain: the served catalog uses the host
    it's served from, and the static file uses plain IDs. Only the Server Card
    `_meta` key namespace (`io.github.Wolfe-Jam.mcp-context-card/*`,
    `META_NS` in `src/identity.ts`) is a code constant. Change it if you fork

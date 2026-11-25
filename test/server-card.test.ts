@@ -1,5 +1,5 @@
 /**
- * MCP Server Cards (SEP-2127, Final) + AI Catalog (specVersion 1.0) — one test per
+ * MCP Server Cards (SEP-2127, Final) + AI Catalog (specVersion 0.9) — one test per
  * requirement in PLANET-FAF's compliance list (rows A1–A13, B1–B5, C1–C10).
  * The card is validated against the official v1 JSON Schema from
  * modelcontextprotocol/experimental-ext-server-card@526201bb (the SEP's snapshot).
@@ -176,7 +176,7 @@ const catalog = async () => (await get("/.well-known/ai-catalog.json")).json() a
 
 test("C1–C3: specVersion, entries and host.displayName are present", async () => {
   const c = await catalog();
-  assert.equal(c.specVersion, "1.0");
+  assert.equal(c.specVersion, "0.9");
   assert.ok(Array.isArray(c.entries));
   assert.ok(c.host.displayName);
 });
@@ -199,9 +199,9 @@ test("C4: the static catalog carries the Server Card inline as data, schema-vali
 test("C5: identifiers use the publisher domain from the project's .fafa (faf.one here)", async () => {
   const ids = (await catalog()).entries.map((x: any) => x.identifier);
   assert.deepEqual(ids, [
-    "urn:air:faf.one:mcp:mcp-context-card",
-    "urn:air:faf.one:context:mcp-context-card",
-    "urn:air:faf.one:identity:mcp-context-card",
+    "urn:air:faf.one:mcp-context-card-mcp",
+    "urn:air:faf.one:mcp-context-card-context",
+    "urn:air:faf.one:mcp-context-card-identity",
   ]);
 });
 
@@ -211,7 +211,7 @@ test("C5: with no .fafa domain, served = request host, static = plain ids (never
     const f = join(root, ".well-known/fafa");
     writeFileSync(f, readFileSync(f, "utf8").replace(/^\s*id: .*$/m, ""));
     const served = buildCatalog(root, { origin: "https://ctx.acme.dev" }).entries.map((x) => x.identifier);
-    assert.equal(served[0], "urn:air:ctx.acme.dev:mcp:mcp-context-card");
+    assert.equal(served[0], "urn:air:ctx.acme.dev:mcp-context-card-mcp");
     const stat = buildCatalog(root).entries.map((x) => x.identifier);
     assert.equal(stat[0], "mcp-context-card:mcp");
     assert.ok(stat.every((i) => !i.includes("faf.one")));

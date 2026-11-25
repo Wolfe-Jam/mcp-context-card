@@ -23,7 +23,9 @@ export const AI_CATALOG_TYPE = "application/ai-catalog+json";
 
 const NAME_RE = /^[a-zA-Z0-9.-]+\/[a-zA-Z0-9._-]+$/;
 const EXT_KEY_RE = /^(https?:\/\/\S+|[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+)$/;
-const URN_RE = /^urn:air:[^:]+\.[^:]+:[^:]+:[^:]+$/i;
+// urn:air:{publisher-domain}:{name}[:{kind}] (AI Catalog v0.9): neither the name nor the optional kind
+// contains a colon, so one or two segments follow the publisher.
+const URN_RE = /^urn:air:[^:]+\.[^:]+:[^:]+(?::[^:]+)?$/i;
 const SECRET_RE = /(api[_-]?key|secret|password|bearer\s|token["']?\s*:)/i;
 const PRIVATE_HOST_RE =
   /\b(localhost|127\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)\b/i;
@@ -269,7 +271,7 @@ export async function checkDiscovery(
     ["must", "catalog.host", "host.displayName is present when host is"],
     ["must", "catalog.entry-fields", "Every entry has identifier and type"],
     ["must", "catalog.entry-one-of", "Every entry has exactly one of url or data"],
-    ["should", "catalog.identifiers", "Identifiers use urn:air:{publisher-domain}:{namespace}:{name}"],
+    ["should", "catalog.identifiers", "Identifiers use urn:air:{publisher-domain}:{name}[:{kind}]"],
     ["should", "catalog.extensions", "Custom data sits in extensions under URL or reverse-DNS keys"],
     ["should", "catalog.card-entry", "The catalog lists the Server Card"],
     ["should", "catalog.card-entry-lean", "The card entry repeats no displayName, description or version"],

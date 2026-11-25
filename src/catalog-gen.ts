@@ -1,17 +1,23 @@
 /**
- * catalog-gen — the AI Catalog (`application/ai-catalog+json`, spec 1.0) for
+ * catalog-gen — the AI Catalog (`application/ai-catalog+json`, v0.9) for
  * this server: its MCP Server Card, plus the sources that also back the Server
  * Card `_meta` block: `AGENTS.md` and `.fafa`, and `project.fafm` only when the
  * project opts in ({@link CatalogOptions.publishMemory}). Memory is written
  * during sessions, and SEP-2127 rules user- or session-specific data out of
  * public discovery documents, so it is left out by default.
  *
- * Identifiers follow `urn:air:{publisher}:{namespace}:{name}`, with the
+ * Identifiers follow `urn:air:{publisher}:{name}-{kind}`, with the
  * publisher domain and short name taken from the project's own `.fafa`
  * ({@link catalogPublisher}). Served over HTTP without a `.fafa` domain, the
  * request host is the publisher (whoever serves it controls that domain). The
  * committed static file with no domain uses plain `{name}:{namespace}` ids:
  * the spec treats unknown schemes as opaque, and no domain is ever invented.
+ *
+ * Why `{name}-{kind}`: AI Catalog v0.9 reads `urn:air:{publisher}:{name}[:{kind}]`,
+ * while earlier drafts read the same shape as `{namespace}:{name}`. One segment
+ * after the publisher reads the same in both. Catalogs published before v0.9
+ * used `urn:air:{publisher}:{kind}:{name}`; {@link CatalogOptions.formerIds}
+ * records that id on each entry (`<reverse-DNS publisher>.former-identifiers`).
  *
  * Served (an origin is known): entries point at absolute URLs and the card
  * entry links `<origin>/mcp/server-card`. Static: relative URLs and the card
@@ -38,6 +44,19 @@ export interface CatalogOptions {
   origin?: string;
   /** List the memory file (`project.fafm`). Default: off. */
   publishMemory?: boolean;
+  /** Record each entry's pre-v0.9 id (`urn:air:{publisher}:{kind}:{name}`). Default: off. */
+  formerIds?: boolean;
+}
+
+/** One AI Catalog entry, as this generator writes it. */
+export interface CatalogEntry {
+  identifier: string;
+  type: string;
+  displayName?: string;
+  description?: string;
+  url?: string;
+  data?: ReturnType<typeof serverCard>;
+  extensions?: Record<string, unknown>;
 }
 
 export function buildCatalog(root: string, opts: CatalogOptions = {}) {
@@ -48,26 +67,35 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
 
   const { domain, handle } = catalogPublisher(root);
   const publisher = domain ?? (opts.origin ? new URL(opts.origin).hostname.toLowerCase() : undefined);
-  const id = (namespace: string) =>
-    publisher ? `urn:air:${publisher}:${namespace}:${handle}` : `${handle}:${namespace}`;
+  const id = (kind: string) =>
+    publisher ? `urn:air:${publisher}:${handle}-${kind}` : `${handle}:${kind}`;
+  // The pre-v0.9 id, recorded on request for catalogs published before v0.9.
+  const formerKey = publisher ? `${publisher.split(".").reverse().join(".")}.former-identifiers` : "";
+  const former = (kind: string) =>
+    opts.formerIds && publisher ? { [formerKey]: [`urn:air:${publisher}:${kind}:${handle}`] } : {};
+  const withFormer = (kind: string, extensions: Record<string, unknown> = {}) => {
+    const all = { ...extensions, ...former(kind) };
+    return Object.keys(all).length ? { extensions: all } : {};
+  };
   const at = (path: string) => (opts.origin ? `${opts.origin}/${path}` : `./${path}`);
   const ext = (type: string) => ({ extensions: { [META_NS]: { iana: iana(type) } } });
 
   const host = fafa?.displayName ?? fafa?.name ?? "mcp-context-card";
 
   return {
-    specVersion: "1.0",
+    specVersion: "0.9",
     host: {
       displayName: host,
       identifier: "https://github.com/Wolfe-Jam/mcp-context-card",
     },
-    entries: [
+    entries: <CatalogEntry[]>[
       {
         // The card carries its own title, description and version, so the
         // entry repeats none of them (AI Catalog: avoid drift).
         identifier: id("mcp"),
         type: SERVER_CARD_MEDIA_TYPE,
         ...(opts.origin ? { url: `${opts.origin}${SERVER_CARD_PATH}` } : { data: serverCard() }),
+        ...withFormer("mcp"),
       },
       {
         identifier: id("context"),
@@ -82,6 +110,7 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
             })()
           : "Agent instructions for this project (AGENTS.md — not present).",
         url: at("AGENTS.md"),
+        ...withFormer("context"),
       },
       ...(opts.publishMemory ? [{
         identifier: id("memory"),
@@ -91,7 +120,7 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
           fafm.profile ?? "?"
         }". Recall survives a process restart. No de-facto standard for this concern yet.`,
         url: at("project.fafm"),
-        ...ext("application/vnd.fafm+yaml"),
+        ...withFormer("memory", ext("application/vnd.fafm+yaml").extensions),
       }] : []),
       {
         identifier: id("identity"),
@@ -101,7 +130,7 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
           fafa?.description ??
           `Agent identity card (status: ${fafa?.status ?? "unknown"}).`,
         url: at(".well-known/fafa"),
-        ...ext("application/vnd.fafa+yaml"),
+        ...withFormer("identity", ext("application/vnd.fafa+yaml").extensions),
       },
     ],
   };

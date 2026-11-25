@@ -63,8 +63,8 @@ export function resolveIdentity(root: string): AgentIdentity | null {
 
 /**
  * Who publishes this project's catalog entries: the domain and short name from
- * the project's own `.fafa`. `faf card init` writes them into `agent.id` as
- * `urn:air:{domain}:agent:{short name}` (short name also in `agent.name`).
+ * the project's own `.fafa`: the domain from `agent.id` (any `urn:air:{domain}:…`
+ * form, e.g. `urn:air:{domain}:{short name}-agent`), the short name from `agent.name`.
  * No `.fafa` domain → `domain` is undefined; callers then fall back to the HTTP
  * host or a plain identifier. A domain is never invented here: each project
  * publishes under its own (AI Catalog: "the domain name of the organization

@@ -30,11 +30,19 @@ export const LEGACY_SERVER_CARD_PATH = "/.well-known/mcp/server-card";
  * discovery documents must not carry user- or session-specific data (SEP-2127).
  */
 export const PUBLISH_MEMORY_ENV = "MCP_CONTEXT_CARD_PUBLISH_MEMORY";
+/**
+ * Set to `1` to record each catalog entry's pre-v0.9 identifier
+ * (`urn:air:{domain}:{kind}:{name}`) under `<reverse-DNS domain>.former-identifiers`.
+ * For servers that published catalogs before AI Catalog v0.9: their ids moved to
+ * `urn:air:{domain}:{name}-{kind}`. Off by default: new catalogs have no former ids.
+ */
+export const FORMER_IDS_ENV = "MCP_CONTEXT_CARD_FORMER_IDS";
 /** Extra Host names the HTTP server accepts (comma-separated), e.g. a reverse proxy's public name. */
 export const ALLOWED_HOSTS_ENV = "MCP_CONTEXT_CARD_ALLOWED_HOSTS";
 /** Browser origins allowed to call the HTTP server (comma-separated). */
 export const ALLOWED_ORIGINS_ENV = "MCP_CONTEXT_CARD_ALLOWED_ORIGINS";
 export const publishMemoryFromEnv = (env: NodeJS.ProcessEnv = process.env) => env[PUBLISH_MEMORY_ENV] === "1";
+export const formerIdsFromEnv = (env: NodeJS.ProcessEnv = process.env) => env[FORMER_IDS_ENV] === "1";
 
 /** What the ui:// card carries for an MCP Apps host. `helper` (the default):
  *  the official MCP Apps helper, so the card reports its size (~700 KB).
