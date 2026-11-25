@@ -119,9 +119,9 @@ with `MCP_CONTEXT_CARD_PUBLISH_MEMORY=1`.
   entry without knowing this publisher.
 - **`identifier` is a `urn:air:` URN** scoped to the publisher
   (`urn:air:{domain}:{name}-{kind}`). The domain is the one your `.fafa`
-  declares (`faf card init` writes it into `agent.id`); `faf.one` above is this
-  repo's. With no `.fafa` domain, the served catalog uses the serving host and
-  the static file uses plain IDs. No domain is ever invented. In ai-catalog's
+  declares (`faf card init` writes it into `agent.id`). In this example we used
+  `faf.one`; use your own. With no `.fafa` domain, the served catalog uses the
+  serving host and the static file uses plain IDs. No domain is ever invented. In ai-catalog's
   [trust‑manifest ADRs](https://github.com/Agent-Card/ai-catalog/tree/main/adr),
   `urn:air` identifiers carry a publisher‑domain‑aligned trust manifest, so the
   domain in the identifier is the one a publisher would sign with.
