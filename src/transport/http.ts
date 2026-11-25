@@ -65,7 +65,7 @@ const PUBLIC_PATHS = [SERVER_CARD_PATH, LEGACY_SERVER_CARD_PATH, "/.well-known/a
 export interface HttpAppOptions {
   /** Serve `project.fafm` and list it in the catalog. Default: the env switch. */
   publishMemory?: boolean;
-  /** Record each catalog entry's pre-v0.9 id. Default: the env switch. */
+  /** Record each catalog entry's earlier id (before 1.10.0). Default: the env switch. */
   formerIds?: boolean;
   /**
    * `local` (default): only loopback Host names are served, and the card shows

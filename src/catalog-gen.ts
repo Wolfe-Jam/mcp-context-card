@@ -15,7 +15,8 @@
  *
  * Why `{name}-{kind}`: AI Catalog v0.9 reads `urn:air:{publisher}:{name}[:{kind}]`,
  * while earlier drafts read the same shape as `{namespace}:{name}`. One segment
- * after the publisher reads the same in both. Catalogs published before v0.9
+ * after the publisher can't be read the wrong way round: v0.9 reads it as a name
+ * with no kind. Catalogs this server wrote before 1.10.0
  * used `urn:air:{publisher}:{kind}:{name}`; {@link CatalogOptions.formerIds}
  * records that id on each entry (`<reverse-DNS publisher>.former-identifiers`).
  *
@@ -45,7 +46,7 @@ export interface CatalogOptions {
   origin?: string;
   /** List the memory file (`project.fafm`). Default: off. */
   publishMemory?: boolean;
-  /** Record each entry's pre-v0.9 id (`urn:air:{publisher}:{kind}:{name}`). Default: off. */
+  /** Record each entry's earlier id (`urn:air:{publisher}:{kind}:{name}`, written before 1.10.0). Default: off. */
   formerIds?: boolean;
 }
 
@@ -70,7 +71,7 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
   const publisher = domain ?? (opts.origin ? new URL(opts.origin).hostname.toLowerCase() : undefined);
   const id = (kind: string) =>
     publisher ? `urn:air:${publisher}:${handle}-${kind}` : `${handle}:${kind}`;
-  // The pre-v0.9 id, recorded on request for catalogs published before v0.9. The key is the
+  // The earlier id, recorded on request for catalogs this server wrote before 1.10.0. The key is the
   // publisher's reverse-DNS (§ Extensions: Format and Key Naming), so only a dotted domain name
   // gets one: never `localhost` or an IP host from the request.
   const named = !!publisher && publisher.includes(".") && !isIP(publisher.replace(/^\[|\]$/g, ""));

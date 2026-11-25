@@ -61,9 +61,9 @@ ENV
                           and show its facts on an exposed /card (off: memory
                           is session data). HTTP has no auth
   MCP_CONTEXT_CARD_FORMER_IDS=1
-                          HTTP: record each AI Catalog entry's pre-v0.9 id
-                          (catalogs published before v0.9; ids are now
-                          urn:air:{domain}:{name}-{kind})
+                          HTTP: record each AI Catalog entry's earlier id
+                          (catalogs this server wrote before 1.10.0; ids are
+                          now urn:air:{domain}:{name}-{kind})
 
 A bare run is an stdio server: it waits for a host to speak JSON-RPC on stdin,
 so it looks idle at a terminal. Try \`card\` (opens your context in a browser) or \`--http\`.
