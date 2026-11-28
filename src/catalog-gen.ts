@@ -143,7 +143,9 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
         description:
           fafa?.description ??
           `Agent identity card (status: ${fafa?.status ?? "unknown"}).`,
-        url: at(".well-known/fafa"),
+        // Served at /.well-known/fafa; relative, it points at the file itself, so it also
+        // resolves in a repo browser (`agent.fafa` at the root, or `.well-known/fafa`).
+        url: opts.origin || !file ? at(".well-known/fafa") : file === join(root, "agent.fafa") ? "../agent.fafa" : "./fafa",
         ...withFormer("identity", ext("application/vnd.fafa+yaml").extensions),
       }] : []),
     ],

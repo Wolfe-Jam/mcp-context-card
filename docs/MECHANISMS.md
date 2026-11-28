@@ -25,7 +25,8 @@ GET /mcp/server-card                             # out of band (http transport; 
                                                  # /.well-known/mcp/server-card still answers)
 ```
 
-Both return the card below (over HTTP it also carries `remotes`, the
+Both return the card below (over HTTP, when the host is vouched (loopback on a
+local bind, or listed in `MCP_CONTEXT_CARD_ALLOWED_HOSTS`), it also carries `remotes`, the
 Streamable HTTP endpoint at `<origin>/mcp` and its protocol versions):
 
 ```jsonc

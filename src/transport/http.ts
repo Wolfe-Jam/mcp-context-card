@@ -130,7 +130,10 @@ export function requestOrigin(
   const fwdProto = last(c.req.header("x-forwarded-proto"))?.toLowerCase();
   const protoOk = vouched && (fwdProto === "http" || fwdProto === "https");
   const proto = protoOk ? fwdProto! : url.protocol.replace(":", "");
-  return { origin: `${proto}://${useFwd ? parsed.hostname : parsed.host}`, vouched };
+  // Only a loopback name keeps its port (a local server on :3000). A public name is listed
+  // without one and the host check matches the name only, so a client-sent port is dropped.
+  const keepPort = !useFwd && isLoopbackHostname(name);
+  return { origin: `${proto}://${keepPort ? parsed.host : parsed.hostname}`, vouched };
 }
 
 /** The public origin of this request when it is vouched for, else undefined (see {@link requestOrigin}). */
