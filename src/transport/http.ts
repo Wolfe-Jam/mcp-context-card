@@ -53,7 +53,7 @@ import {
   ALLOWED_ORIGINS_ENV,
   SERVER_CARD_PATH,
 } from "../constants.js";
-import { hostGuard, hostnameOf, listFromEnv, originGuard } from "./guard.js";
+import { hostGuard, hostnameOf, isLoopbackHostname, listFromEnv, originGuard } from "./guard.js";
 
 /**
  * Public-by-design discovery documents: the Server Card spec requires them to
@@ -89,21 +89,41 @@ const discoveryCors = cors({
 });
 
 /**
- * The public origin of this request. A reverse proxy's `X-Forwarded-Host` (and its
- * `X-Forwarded-Proto`) is honoured only when the forwarded name is one of `trusted`
- * (MCP_CONTEXT_CARD_ALLOWED_HOSTS): any client can send the header, and the origin
- * becomes the catalog's publisher and the card's remote URL.
+ * The public origin of this request, and whether its host is vouched for.
+ *
+ * - A reverse proxy's `X-Forwarded-Host` counts only when that name is in `trusted`
+ *   (MCP_CONTEXT_CARD_ALLOWED_HOSTS): any client can send the header.
+ * - The host is always re-serialised from the parsed URL, never echoed from a header.
+ * - `vouched` = the effective host is loopback or in `trusted`. Only then is
+ *   `X-Forwarded-Proto` honoured (`http` or `https`; never beside a refused
+ *   `X-Forwarded-Host`), and only then may the host
+ *   stand as the catalog's publisher.
  */
-export function originOf(c: Context, trusted: readonly string[] = []): string {
+export function requestOrigin(c: Context, trusted: readonly string[] = []): { origin: string; vouched: boolean } {
   const url = new URL(c.req.url);
   const first = (v: string | undefined) => v?.split(",")[0].trim();
+  const allow = trusted.map((h) => h.toLowerCase());
   const fwdHost = first(c.req.header("x-forwarded-host"));
-  const fwdName = fwdHost ? hostnameOf(fwdHost) : undefined;
-  const useFwd = !!fwdName && trusted.map((h) => h.toLowerCase()).includes(fwdName);
-  const proto = (useFwd && first(c.req.header("x-forwarded-proto"))) || url.protocol.replace(":", "");
-  const host = (useFwd ? fwdHost : first(c.req.header("host"))) || url.host;
-  return `${proto}://${host}`;
+  const fwdName = fwdHost ? hostnameOf(fwdHost) : null;
+  const useFwd = !!fwdName && allow.includes(fwdName);
+  const raw = (useFwd ? fwdHost : first(c.req.header("host"))) || url.host;
+  let parsed: URL;
+  try {
+    parsed = new URL(`http://${raw}`);
+  } catch {
+    parsed = url;
+  }
+  const name = parsed.hostname.toLowerCase();
+  const vouched = isLoopbackHostname(name) || allow.includes(name);
+  const fwdProto = first(c.req.header("x-forwarded-proto"))?.toLowerCase();
+  // A forwarded host that was refused takes its forwarded proto with it.
+  const protoOk = vouched && (useFwd || !fwdHost) && (fwdProto === "http" || fwdProto === "https");
+  const proto = protoOk ? fwdProto! : url.protocol.replace(":", "");
+  return { origin: `${proto}://${parsed.host}`, vouched };
 }
+
+/** The public origin of this request (see {@link requestOrigin}). */
+export const originOf = (c: Context, trusted: readonly string[] = []): string => requestOrigin(c, trusted).origin;
 
 /** A cacheable discovery response: Content-Type, Cache-Control, ETag, and 304 on a match. */
 function discovery(c: Context, body: string, contentType: string): Response {
@@ -169,7 +189,7 @@ export function httpApp(root: string = ROOT, opts: HttpAppOptions = {}): Hono {
   app.get(LEGACY_SERVER_CARD_PATH, card);
 
   app.get("/.well-known/ai-catalog.json", (c) =>
-    discovery(c, JSON.stringify(buildCatalog(root, { origin: originOf(c, allowedHosts), publishMemory, formerIds }), null, 2), AI_CATALOG_MEDIA_TYPE),
+    discovery(c, JSON.stringify(buildCatalog(root, { ...(({ origin, vouched }) => ({ origin, originVouched: vouched }))(requestOrigin(c, allowedHosts)), publishMemory, formerIds }), null, 2), AI_CATALOG_MEDIA_TYPE),
   );
 
   // The files the catalog links to, each with the type its entry declares.

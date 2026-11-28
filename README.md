@@ -260,9 +260,10 @@ server used `urn:air:{domain}:{kind}:{name}`; if you published one, set
 With no `.fafa`, no domain is invented: the served catalog uses the host it's
 served from (`localhost` when you run it locally; an IP address gives plain IDs),
 and the static `.well-known/ai-catalog.json` uses plain `<short-name>:<kind>` IDs.
-Behind a reverse proxy, list the public name in `MCP_CONTEXT_CARD_ALLOWED_HOSTS`:
-a proxy's `X-Forwarded-Host` counts only for a name on that list, since any client
-can send the header. The catalog lists only the files the server actually serves.
+On a deploy reached by a public name, list that name in `MCP_CONTEXT_CARD_ALLOWED_HOSTS`
+(names only, no port). Only a loopback or listed host can stand as the publisher, and a
+proxy's `X-Forwarded-Host` / `X-Forwarded-Proto` count only for a listed name: any client
+can send those headers. The catalog lists only the files the server actually serves.
 
 ## Why
 

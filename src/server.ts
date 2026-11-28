@@ -10,9 +10,9 @@
  * ...exposed through the two mechanisms already in the ecosystem:
  *
  *   1. Server Card `_meta` — the `mcp-context-card://server-card` resource (in band)
- *      and `GET /.well-known/mcp/server-card` (out of band, http transport).
- *   2. ai-catalog — `GET /.well-known/ai-catalog.json`, three sibling entries
- *      keyed by media type (see catalog-gen.ts).
+ *      and `GET /mcp/server-card` (out of band, http transport).
+ *   2. ai-catalog — `GET /.well-known/ai-catalog.json`: the card, plus one entry
+ *      per file present, keyed by media type (see catalog-gen.ts).
  *
  * Both protocol eras are served: 2026-07-28 (`server/discover`, a `_meta`
  * envelope on every request) and 2025 (`initialize`). See docs/TRANSPORT.md.

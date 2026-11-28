@@ -160,6 +160,19 @@ test("buildCatalog: lists only files that exist, so every entry URL resolves", (
   }
 });
 
+test("buildCatalog: memory is listed only when project.fafm exists; a trailing dot is dropped", () => {
+  const dir = mkdtempSync(join(tmpdir(), "mcp-context-card-nomem-"));
+  try {
+    const cat = buildCatalog(dir, { publishMemory: true, origin: "https://ctx.example.com." });
+    assert.equal(cat.entries.find((e) => e.type === "application/vnd.fafm+yaml"), undefined);
+    assert.equal(cat.host.identifier, "ctx.example.com");
+    assert.match(cat.entries[0].identifier, /^urn:air:ctx\.example\.com:/);
+    assert.equal("identifier" in buildCatalog(dir, { origin: "https://ctx.example.com", originVouched: false }).host, false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("buildCatalog: host.identifier is the publisher's domain, or left out", () => {
   const dir = mkdtempSync(join(tmpdir(), "mcp-context-card-host-"));
   try {

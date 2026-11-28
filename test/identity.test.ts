@@ -219,3 +219,15 @@ test("catalogPublisher: a name that an id can't carry is made safe (spaces, colo
     cleanup();
   }
 });
+
+test("catalogPublisher: letters outside ASCII are kept; the raw name is returned too", async () => {
+  const { catalogPublisher } = await import("../src/identity.js");
+  const { root, cleanup } = rootWith({ "agent.fafa": `${card('"Ünï Agent"')}  id: urn:air:example.com:x\n` });
+  try {
+    const { handle, name } = catalogPublisher(root);
+    assert.equal(handle, "Ünï-Agent");
+    assert.equal(name, "Ünï Agent");
+  } finally {
+    cleanup();
+  }
+});

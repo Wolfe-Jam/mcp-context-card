@@ -28,7 +28,7 @@
  * the agent's own description), not hand-written blurbs that drift. The CI
  * job `catalog:check` regenerates the static file and fails on any diff.
  */
-import { writeFileSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
 import { isIP } from "node:net";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -46,6 +46,12 @@ export interface CatalogOptions {
   origin?: string;
   /** List the memory file (`project.fafm`). Default: off. */
   publishMemory?: boolean;
+  /**
+   * Whether `origin`'s host is vouched for (loopback, or in MCP_CONTEXT_CARD_ALLOWED_HOSTS).
+   * Only a vouched host may stand as the publisher; any client can send a Host header.
+   * Default: true (a caller that passes `origin` directly is stating it).
+   */
+  originVouched?: boolean;
   /** Record each entry's earlier id (`urn:air:{publisher}:{kind}:{name}`, written before 1.10.0). Default: off. */
   formerIds?: boolean;
 }
@@ -67,11 +73,12 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
   const file = fafaFile(root);
   const fafa = file ? parseFafa(file) : null;
 
-  const { domain, handle } = catalogPublisher(root);
-  // Served without a `.fafa` domain, the request host is the publisher (`localhost` included).
+  const { domain, handle, name } = catalogPublisher(root);
+  // Served without a `.fafa` domain, a vouched request host is the publisher (`localhost` included).
   // An IP literal can't sit in a urn:air id (`[::1]` carries colons), so it gives plain ids.
-  const servedHost = opts.origin ? new URL(opts.origin).hostname.toLowerCase() : undefined;
-  const publisher = domain ?? (servedHost && !isIP(servedHost.replace(/^\[|\]$/g, "")) ? servedHost : undefined);
+  const servedHost = opts.origin ? new URL(opts.origin).hostname.toLowerCase().replace(/\.$/, "") : undefined;
+  const usable = !!servedHost && opts.originVouched !== false && !isIP(servedHost.replace(/^\[|\]$/g, ""));
+  const publisher = domain ?? (usable ? servedHost : undefined);
   const id = (kind: string) =>
     publisher ? `urn:air:${publisher}:${handle}-${kind}` : `${handle}:${kind}`;
   // The earlier id, recorded on request for catalogs this server wrote before 1.10.0. The key is the
@@ -80,7 +87,7 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
   const named = !!publisher && publisher.includes(".") && !isIP(publisher.replace(/^\[|\]$/g, ""));
   const formerKey = named ? `${publisher!.split(".").reverse().join(".")}.former-identifiers` : "";
   const former = (kind: string) =>
-    opts.formerIds && named ? { [formerKey]: [`urn:air:${publisher}:${kind}:${handle}`] } : {};
+    opts.formerIds && named ? { [formerKey]: [`urn:air:${publisher}:${kind}:${name}`] } : {};
   const withFormer = (kind: string, extensions: Record<string, unknown> = {}) => {
     const all = { ...extensions, ...former(kind) };
     return Object.keys(all).length ? { extensions: all } : {};
@@ -121,7 +128,7 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
         url: at("AGENTS.md"),
         ...withFormer("context"),
       }] : []),
-      ...(opts.publishMemory ? [{
+      ...(opts.publishMemory && existsSync(join(root, "project.fafm")) ? [{
         identifier: id("memory"),
         displayName: `${host} — persistent memory (.fafm)`,
         type: "application/vnd.fafm+yaml",

@@ -6,7 +6,8 @@
  */
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { AddressInfo } from "node:net";
 import { serve } from "@hono/node-server";
@@ -94,6 +95,40 @@ test("A9: a trusted proxy's forwarded host and proto become the advertised origi
   }));
   const c = (await res.json()) as Record<string, any>;
   assert.equal(c.remotes[0].url, "https://ctx.example.com/mcp");
+});
+
+test("A9c: a trusted Host keeps X-Forwarded-Proto without X-Forwarded-Host", async () => {
+  const app = httpApp(fx.root, { allowedHosts: ["ctx.example.com"] });
+  const res = await app.fetch(new Request("http://ctx.example.com/mcp/server-card", {
+    headers: { host: "ctx.example.com", "x-forwarded-proto": "https" },
+  }));
+  assert.equal(((await res.json()) as any).remotes[0].url, "https://ctx.example.com/mcp");
+});
+
+test("A9d: the origin is built from the parsed host, never the raw header; odd protos are ignored", async () => {
+  const app = httpApp(fx.root, { allowedHosts: ["ctx.example.com"] });
+  const res = await app.fetch(new Request("http://127.0.0.1/mcp/server-card", {
+    headers: { "x-forwarded-host": "ctx.example.com\\@evil.example", "x-forwarded-proto": "ftp" },
+  }));
+  const url = ((await res.json()) as any).remotes[0].url as string;
+  assert.doesNotMatch(url, /evil|@|\\|^ftp/);
+});
+
+test("A9e: on an exposed deploy, an unlisted Host is not the publisher (no .fafa domain)", async () => {
+  const bare = mkdtempSync(join(tmpdir(), "mcc-bare-")); // no .fafa: the request host would be the publisher
+  try {
+    const get = async (host: string, allowedHosts: string[] = []) =>
+      (await (await httpApp(bare, { exposure: "exposed", allowedHosts }).fetch(
+        new Request(`http://${host}/.well-known/ai-catalog.json`, { headers: { host } }),
+      )).json()) as Record<string, any>;
+    const cat = await get("evil.example");
+    assert.doesNotMatch(JSON.stringify(cat.host), /evil/);
+    for (const e of cat.entries) assert.doesNotMatch(String(e.identifier), /evil/);
+    const listed = await get("ctx.example.com", ["ctx.example.com"]);
+    assert.equal(listed.host.identifier, "ctx.example.com");
+  } finally {
+    rmSync(bare, { recursive: true, force: true });
+  }
 });
 
 test("A9b: a forwarded host that isn't allowed is ignored (any client can send the header)", async () => {

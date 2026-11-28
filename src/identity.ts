@@ -70,13 +70,15 @@ export function resolveIdentity(root: string): AgentIdentity | null {
  * publishes under its own (AI Catalog: "the domain name of the organization
  * publishing the artifact").
  */
-export function catalogPublisher(root: string): { domain?: string; handle: string } {
+export function catalogPublisher(root: string): { domain?: string; handle: string; name: string } {
   const id = identity(root);
   const m = /^urn:air:([^:]+):/i.exec(id?.id ?? "");
   const domain = m && m[1].includes(".") ? m[1].toLowerCase() : undefined;
-  // The name goes into the id as one segment: characters an id can't carry become `-`.
-  const handle = (id?.name ?? "").trim().replace(/[^A-Za-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "mcp-context-card";
-  return { domain, handle };
+  // The name goes into the id as one segment: a colon (the separator) and whitespace become `-`;
+  // everything else is kept as written. `name` is the raw name, as 1.10.0 wrote it into ids.
+  const name = (id?.name ?? "").trim() || "mcp-context-card";
+  const handle = name.replace(/[\s:]+/g, "-").replace(/^-+|-+$/g, "") || "mcp-context-card";
+  return { domain, handle, name };
 }
 
 /** Human-readable one-liner for the `whoami` tool. */

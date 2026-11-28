@@ -85,12 +85,12 @@ publisher lists artifacts, each entry keyed by its **media type** (`type`).
 GET /.well-known/ai-catalog.json
 ```
 
-Served from `https://ctx.example.com` (1.10.1, this repo's own files):
+Served from `https://ctx.example.com` (1.10.2, this repo's own files):
 
 ```jsonc
 {
   "specVersion": "0.9",
-  "host": { "displayName": "mcp-context-card", "identifier": "https://github.com/Wolfe-Jam/mcp-context-card" },
+  "host": { "displayName": "mcp-context-card", "identifier": "faf.one" },
   "entries": [
     { "identifier": "urn:air:faf.one:mcp-context-card-mcp", "type": "application/mcp-server-card+json",
       "url": "https://ctx.example.com/mcp/server-card" },
