@@ -145,12 +145,13 @@ test("A9f: a bogus X-Forwarded-Host can't downgrade a listed deploy; the last pr
   assert.equal(await url({ "x-forwarded-proto": "http, https" }), "https://ctx.example.com/mcp");
 });
 
-test("A9g: a forwarded host loses its port; the real Host keeps its own", async () => {
+test("A9g: a public name is published without a port; a loopback name keeps its own", async () => {
   const app = httpApp(fx.root, { allowedHosts: ["ctx.example.com"] });
   const url = async (h: Record<string, string>) =>
     ((await (await app.fetch(new Request("http://127.0.0.1/mcp/server-card", { headers: h }))).json()) as any).remotes[0].url as string;
   assert.equal(await url({ "x-forwarded-host": "a@ctx.example.com:8443", "x-forwarded-proto": "https" }), "https://ctx.example.com/mcp");
-  assert.equal(await url({ host: "ctx.example.com:9999" }), "http://ctx.example.com:9999/mcp");
+  assert.equal(await url({ host: "ctx.example.com:9999" }), "http://ctx.example.com/mcp"); // a public name: no port
+  assert.equal(await url({ host: "localhost:3000" }), "http://localhost:3000/mcp"); // loopback keeps its port
 });
 
 test("A9h: an unlisted X-Forwarded-Host makes a local bind unvouched (no localhost published)", async () => {

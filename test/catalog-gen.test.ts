@@ -172,6 +172,19 @@ test("buildCatalog: memory is listed only when project.fafm exists; a trailing d
   }
 });
 
+test("buildCatalog: the identity URL points at the file itself when relative (agent.fafa or .well-known/fafa)", () => {
+  const dir = mkdtempSync(join(tmpdir(), "mcp-context-card-fafa-"));
+  try {
+    writeFileSync(join(dir, "agent.fafa"), `version: "1.0"\nagent:\n  name: a\n`);
+    const rel = buildCatalog(dir).entries.find((e) => e.type === "application/vnd.fafa+yaml")!;
+    assert.equal(rel.url, "../agent.fafa");
+    const served = buildCatalog(dir, { origin: "https://ctx.example.com" }).entries.find((e) => e.type === "application/vnd.fafa+yaml")!;
+    assert.equal(served.url, "https://ctx.example.com/.well-known/fafa");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("buildCatalog: host.identifier is the publisher's domain, or left out", () => {
   const dir = mkdtempSync(join(tmpdir(), "mcp-context-card-host-"));
   try {

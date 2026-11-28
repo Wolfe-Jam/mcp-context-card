@@ -189,9 +189,9 @@ if (entryPath && import.meta.url === pathToFileURL(entryPath).href) {
           (process.env.MCP_CONTEXT_CARD_ALLOWED_HOSTS?.trim()
             ? ""
             : local
-              ? "\n  behind a proxy? list its public name in MCP_CONTEXT_CARD_ALLOWED_HOSTS (and have the proxy pass Host or set X-Forwarded-Host), or the card and catalog name no host"
+              ? "\n  behind a proxy? list the name it sends (Host or X-Forwarded-Host) in MCP_CONTEXT_CARD_ALLOWED_HOSTS; until then the card and catalog name no public host"
               : "\n  no MCP_CONTEXT_CARD_ALLOWED_HOSTS: the card and catalog name no host from the request (relative URLs)") +
-          ((process.env.MCP_CONTEXT_CARD_ALLOWED_HOSTS ?? "").split(",").some((h) => h.includes(":"))
+          ((process.env.MCP_CONTEXT_CARD_ALLOWED_HOSTS ?? "").split(",").some((h) => !h.trim().startsWith("[") && h.includes(":"))
             ? "\n  MCP_CONTEXT_CARD_ALLOWED_HOSTS takes names only, no port: an entry with a port never matches"
             : ""),
       ),

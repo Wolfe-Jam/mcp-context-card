@@ -18,8 +18,12 @@ block to run against the server's own bundled files.
 
 ```bash
 docker build -f examples/Dockerfile -t mcp-context-card .
-docker run -p 3000:3000 mcp-context-card
+docker run -p 3000:3000 -e MCP_CONTEXT_CARD_ALLOWED_HOSTS=localhost mcp-context-card
 ```
+
+The container binds `0.0.0.0`, so only names in `MCP_CONTEXT_CARD_ALLOWED_HOSTS` are
+published: `localhost` here; your public name in a deploy. Without it, the card has no
+`remotes` and the catalog uses relative URLs.
 
 The three discovery routes need no MCP handshake:
 
