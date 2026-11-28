@@ -29,17 +29,9 @@ hosts that support MCP Apps, as Markdown elsewhere. Name a place to choose:
 that list MCP prompts also offer it as the prompt `show`; in Claude Code type
 `/contextcard:show`.
 
-**context** — the project's `AGENTS.md`, served whole or one section at a time.
-
-![the back's Context tab — AGENTS.md, section nav, read_agents_md](./docs/img/card-context.png)
-
-**memory** — facts that persist across sessions, in a file.
-
-![the back's Memory tab — real, tagged, verified facts](./docs/img/card-memory.png)
-
-**identity** — what this server is, from its own `.fafa` (`agent.fafa`, else `.well-known/fafa`).
-
-![the back's About tab — the identity in full](./docs/img/card-identity.png)
+- **context** — the project's `AGENTS.md`, served whole or one section at a time.
+- **memory** — facts that persist across sessions, in a file.
+- **identity** — what this server is, from its own `.fafa` (`agent.fafa`, else `.well-known/fafa`).
 
 Discovery goes through two surfaces already in the ecosystem: the Server Card
 `_meta` block and `ai-catalog.json` sibling entries.
@@ -88,6 +80,10 @@ no search.
 The screenshot at the top of this page is exactly this: the same sources
 rendered as a **business card** in one self‑contained HTML page. The view for
 people: read it, screenshot it, drop it in a PR, put it on a status page.
+
+| Context | Memory | About |
+|---|---|---|
+| ![the back's Context tab — AGENTS.md, section nav, read_agents_md](./docs/img/card-context.png) | ![the back's Memory tab — real, tagged, verified facts](./docs/img/card-memory.png) | ![the back's About tab — the identity in full](./docs/img/card-identity.png) |
 
 - **Front:** the name, a title (what it is and its version: "MCP server", "A2A
   agent", from where the project's `.fafa` says it runs) and a one-liner (the
