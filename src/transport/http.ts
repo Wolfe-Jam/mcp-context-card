@@ -53,7 +53,7 @@ import {
   ALLOWED_ORIGINS_ENV,
   SERVER_CARD_PATH,
 } from "../constants.js";
-import { hostGuard, listFromEnv, originGuard } from "./guard.js";
+import { hostGuard, hostnameOf, listFromEnv, originGuard } from "./guard.js";
 
 /**
  * Public-by-design discovery documents: the Server Card spec requires them to
@@ -88,11 +88,20 @@ const discoveryCors = cors({
   exposeHeaders: ["ETag"],
 });
 
-/** The public origin of this request, honouring a reverse proxy's forwarded headers. */
-export function originOf(c: Context): string {
+/**
+ * The public origin of this request. A reverse proxy's `X-Forwarded-Host` (and its
+ * `X-Forwarded-Proto`) is honoured only when the forwarded name is one of `trusted`
+ * (MCP_CONTEXT_CARD_ALLOWED_HOSTS): any client can send the header, and the origin
+ * becomes the catalog's publisher and the card's remote URL.
+ */
+export function originOf(c: Context, trusted: readonly string[] = []): string {
   const url = new URL(c.req.url);
-  const proto = (c.req.header("x-forwarded-proto") ?? url.protocol.replace(":", "")).split(",")[0].trim();
-  const host = (c.req.header("x-forwarded-host") ?? c.req.header("host") ?? url.host).split(",")[0].trim();
+  const first = (v: string | undefined) => v?.split(",")[0].trim();
+  const fwdHost = first(c.req.header("x-forwarded-host"));
+  const fwdName = fwdHost ? hostnameOf(fwdHost) : undefined;
+  const useFwd = !!fwdName && trusted.map((h) => h.toLowerCase()).includes(fwdName);
+  const proto = (useFwd && first(c.req.header("x-forwarded-proto"))) || url.protocol.replace(":", "");
+  const host = (useFwd ? fwdHost : first(c.req.header("host"))) || url.host;
   return `${proto}://${host}`;
 }
 
@@ -155,12 +164,12 @@ export function httpApp(root: string = ROOT, opts: HttpAppOptions = {}): Hono {
 
   // ── Discovery documents ─────────────────────────────────────────────
   const card = (c: Context) =>
-    discovery(c, JSON.stringify(serverCard({ origin: originOf(c) }), null, 2), SERVER_CARD_MEDIA_TYPE);
+    discovery(c, JSON.stringify(serverCard({ origin: originOf(c, allowedHosts) }), null, 2), SERVER_CARD_MEDIA_TYPE);
   app.get(SERVER_CARD_PATH, card);
   app.get(LEGACY_SERVER_CARD_PATH, card);
 
   app.get("/.well-known/ai-catalog.json", (c) =>
-    discovery(c, JSON.stringify(buildCatalog(root, { origin: originOf(c), publishMemory, formerIds }), null, 2), AI_CATALOG_MEDIA_TYPE),
+    discovery(c, JSON.stringify(buildCatalog(root, { origin: originOf(c, allowedHosts), publishMemory, formerIds }), null, 2), AI_CATALOG_MEDIA_TYPE),
   );
 
   // The files the catalog links to, each with the type its entry declares.

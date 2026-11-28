@@ -74,7 +74,8 @@ export function catalogPublisher(root: string): { domain?: string; handle: strin
   const id = identity(root);
   const m = /^urn:air:([^:]+):/i.exec(id?.id ?? "");
   const domain = m && m[1].includes(".") ? m[1].toLowerCase() : undefined;
-  const handle = (id?.name ?? "").trim() || "mcp-context-card";
+  // The name goes into the id as one segment: characters an id can't carry become `-`.
+  const handle = (id?.name ?? "").trim().replace(/[^A-Za-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "mcp-context-card";
   return { domain, handle };
 }
 

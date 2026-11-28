@@ -39,7 +39,7 @@ function forbidden(c: Context, message: string): Response {
   return c.json({ jsonrpc: "2.0", error: { code: -32000, message }, id: null }, 403);
 }
 
-function hostnameOf(hostHeader: string): string | null {
+export function hostnameOf(hostHeader: string): string | null {
   try {
     return new URL(`http://${hostHeader}`).hostname.toLowerCase();
   } catch {

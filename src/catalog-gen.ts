@@ -68,7 +68,10 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
   const fafa = file ? parseFafa(file) : null;
 
   const { domain, handle } = catalogPublisher(root);
-  const publisher = domain ?? (opts.origin ? new URL(opts.origin).hostname.toLowerCase() : undefined);
+  // Served without a `.fafa` domain, the request host is the publisher (`localhost` included).
+  // An IP literal can't sit in a urn:air id (`[::1]` carries colons), so it gives plain ids.
+  const servedHost = opts.origin ? new URL(opts.origin).hostname.toLowerCase() : undefined;
+  const publisher = domain ?? (servedHost && !isIP(servedHost.replace(/^\[|\]$/g, "")) ? servedHost : undefined);
   const id = (kind: string) =>
     publisher ? `urn:air:${publisher}:${handle}-${kind}` : `${handle}:${kind}`;
   // The earlier id, recorded on request for catalogs this server wrote before 1.10.0. The key is the
@@ -89,9 +92,11 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
 
   return {
     specVersion: "0.9",
+    // Host Info identifies the catalog's operator (§ Host Info), so its identifier is the publisher's
+    // domain when there is one; it is optional, and left out otherwise.
     host: {
       displayName: host,
-      identifier: "https://github.com/Wolfe-Jam/mcp-context-card",
+      ...(named ? { identifier: publisher } : {}),
     },
     entries: <CatalogEntry[]>[
       {
@@ -102,21 +107,20 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
         ...(opts.origin ? { url: `${opts.origin}${SERVER_CARD_PATH}` } : { data: serverCard() }),
         ...withFormer("mcp"),
       },
-      {
+      // An entry only for a file this server actually serves, so every entry URL resolves.
+      ...(agents ? [{
         identifier: id("context"),
         displayName: `${host} — project context (AGENTS.md)`,
         type: "text/markdown",
-        description: agents
-          ? (() => {
-              const h = bodySections(agents).map((s) => s.heading);
+        description: (() => {
+              const h = bodySections(agents!).map((s) => s.heading);
               return `Agent instructions for this project — ${h.length} section(s): ${h
                 .slice(0, 6)
                 .join(", ")}${h.length > 6 ? ", …" : ""}.`;
-            })()
-          : "Agent instructions for this project (AGENTS.md — not present).",
+            })(),
         url: at("AGENTS.md"),
         ...withFormer("context"),
-      },
+      }] : []),
       ...(opts.publishMemory ? [{
         identifier: id("memory"),
         displayName: `${host} — persistent memory (.fafm)`,
@@ -127,7 +131,7 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
         url: at("project.fafm"),
         ...withFormer("memory", ext("application/vnd.fafm+yaml").extensions),
       }] : []),
-      {
+      ...(file ? [{
         identifier: id("identity"),
         displayName: `${host} — agent identity (.fafa)`,
         type: "application/vnd.fafa+yaml",
@@ -136,7 +140,7 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
           `Agent identity card (status: ${fafa?.status ?? "unknown"}).`,
         url: at(".well-known/fafa"),
         ...withFormer("identity", ext("application/vnd.fafa+yaml").extensions),
-      },
+      }] : []),
     ],
   };
 }

@@ -258,8 +258,11 @@ server used `urn:air:{domain}:{kind}:{name}`; if you published one, set
 `<your reverse-DNS domain>.former-identifiers`.
 
 With no `.fafa`, no domain is invented: the served catalog uses the host it's
-served from (`localhost` when you run it locally), and the static
-`.well-known/ai-catalog.json` uses plain `<short-name>:<kind>` IDs.
+served from (`localhost` when you run it locally; an IP address gives plain IDs),
+and the static `.well-known/ai-catalog.json` uses plain `<short-name>:<kind>` IDs.
+Behind a reverse proxy, list the public name in `MCP_CONTEXT_CARD_ALLOWED_HOSTS`:
+a proxy's `X-Forwarded-Host` counts only for a name on that list, since any client
+can send the header. The catalog lists only the files the server actually serves.
 
 ## Why
 

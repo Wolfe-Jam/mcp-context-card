@@ -86,12 +86,24 @@ test("A9: over HTTP the card advertises the streamable-http remote at <origin>/m
   assert.equal(serverCard().remotes, undefined); // no origin known → no remote claimed
 });
 
-test("A9: a reverse proxy's forwarded host and proto become the advertised origin", async () => {
+test("A9: a trusted proxy's forwarded host and proto become the advertised origin", async () => {
+  // Trusted = listed in allowedHosts (MCP_CONTEXT_CARD_ALLOWED_HOSTS).
+  const app = httpApp(fx.root, { allowedHosts: ["ctx.example.com"] });
+  const res = await app.fetch(new Request("http://127.0.0.1/mcp/server-card", {
+    headers: { "x-forwarded-proto": "https", "x-forwarded-host": "ctx.example.com" },
+  }));
+  const c = (await res.json()) as Record<string, any>;
+  assert.equal(c.remotes[0].url, "https://ctx.example.com/mcp");
+});
+
+test("A9b: a forwarded host that isn't allowed is ignored (any client can send the header)", async () => {
   const c = (await (await get("/mcp/server-card", {
     "x-forwarded-proto": "https",
-    "x-forwarded-host": "ctx.example.com",
+    "x-forwarded-host": "evil.example",
   })).json()) as Record<string, any>;
-  assert.equal(c.remotes[0].url, "https://ctx.example.com/mcp");
+  assert.equal(c.remotes[0].url, `${base}/mcp`);
+  const cat = (await (await get("/.well-known/ai-catalog.json", { "x-forwarded-host": "evil.example" })).json()) as Record<string, any>;
+  for (const e of cat.entries) assert.doesNotMatch(String(e.identifier), /evil\.example/);
 });
 
 test("A10: _meta keys are namespaced (labels, dots, one slash)", async () => {

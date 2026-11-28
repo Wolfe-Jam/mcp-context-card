@@ -104,7 +104,8 @@ To serve *your* artifacts:
    (`urn:air:{domain}:{name}-{kind}`) take the domain from your `.fafa`'s
    `agent.id` and the short name from `agent.name`: `npx faf-cli card init`
    (or `--domain example.com`) writes both, and the catalog follows them. No `.fafa`, no invented domain: the served catalog uses the host
-   it's served from, and the static file uses plain IDs. Only the Server Card
+   it's served from (behind a proxy, list the public name in `MCP_CONTEXT_CARD_ALLOWED_HOSTS`),
+   and the static file uses plain IDs. Only the Server Card
    `_meta` key namespace (`io.github.Wolfe-Jam.mcp-context-card/*`,
    `META_NS` in `src/identity.ts`) is a code constant. Change it if you fork
    ([MECHANISMS.md](./MECHANISMS.md)).

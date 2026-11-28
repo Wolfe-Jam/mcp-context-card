@@ -207,3 +207,15 @@ test("identity: no agent.id, no Agent ID line", async () => {
     cleanup();
   }
 });
+
+test("catalogPublisher: a name that an id can't carry is made safe (spaces, colons)", async () => {
+  const { catalogPublisher } = await import("../src/identity.js");
+  const { root, cleanup } = rootWith({ "agent.fafa": `${card('"My Agent: v2"')}  id: urn:air:example.com:my-agent\n` });
+  try {
+    const { domain, handle } = catalogPublisher(root);
+    assert.equal(domain, "example.com");
+    assert.equal(handle, "My-Agent-v2");
+  } finally {
+    cleanup();
+  }
+});

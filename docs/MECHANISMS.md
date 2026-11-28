@@ -129,9 +129,11 @@ with `MCP_CONTEXT_CARD_PUBLISH_MEMORY=1`.
 - **`description` is derived from real content** — the live AGENTS.md heading
   list, the current fact count, the agent's own description — not a blurb that
   drifts. See `buildCatalog()` in [`src/catalog-gen.ts`](../src/catalog-gen.ts).
-- **`url` is absolute when served** (against the request's origin, honouring a
-  reverse proxy's forwarded headers) and relative in the static file, so it also
-  resolves in a repo browser.
+- **`url` is absolute when served** (against the request's origin; a reverse
+  proxy's forwarded headers count only for a name in `MCP_CONTEXT_CARD_ALLOWED_HOSTS`)
+  and relative in the static file, so it also resolves in a repo browser.
+- **Only files that exist are listed:** no AGENTS.md, no context entry; no `.fafa`,
+  no identity entry. Memory is listed only when published (`MCP_CONTEXT_CARD_PUBLISH_MEMORY`).
 
 ---
 
@@ -148,7 +150,7 @@ The same three sources back **both** discovery mechanisms:
 ```
 AGENTS.md      ─┐
 project.fafm   ─┼─→  Server Card _meta   (context · memory · identity)
-.well-known/   ─┘ └─→ ai-catalog.json     (3 sibling entries, keyed by media type)
+.well-known/   ─┘ └─→ ai-catalog.json     (the card + one entry per file present; memory opt-in)
   fafa
 ```
 
@@ -165,7 +167,7 @@ consumer speaks.**
 
 **Server Card** is what this server has: `AGENTS.md`, a memory file, an
 identity block — read in-band as an MCP resource, or out-of-band at
-`GET /.well-known/mcp/server-card`.
+`GET /mcp/server-card` (the 1.x path `/.well-known/mcp/server-card` still answers).
 
 **A2A's [AgentCard](https://a2a-protocol.org/latest/specification/)** is
 different: a live agent you can hand a task to — an endpoint, `capabilities`,

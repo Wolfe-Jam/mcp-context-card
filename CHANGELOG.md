@@ -6,7 +6,7 @@ All notable changes to this project. Adheres to [Semantic Versioning](https://se
 
 Wording only; the generated catalog is the same as 1.10.0's (apart from the version).
 
-- **Claims about AI Catalog v0.9 match its text.** A one-segment id "can't be read the wrong way round" (v0.9 reads it as a name with no kind); it doesn't "read the same" in v0.9 and the drafts before it, which gave every id a namespace. MECHANISMS.md: Trust Manifests are optional; under the `did:web` Publisher Profile the signer is exactly `did:web:` plus the id's publisher domain. README, CHANGELOG 1.10.0 and `catalog-gen.ts` follow.
+- **Claims about AI Catalog v0.9 match its text.** A one-segment id "can't be read the wrong way round" (v0.9 reads it as a name with no kind); it doesn't "read the same" in v0.9 and the drafts before it, whose stated format was `urn:air:{publisher}:{namespace}:{name}`. MECHANISMS.md: Trust Manifests are optional; under the `did:web` Publisher Profile the signer is exactly `did:web:` plus the id's publisher domain. README, CHANGELOG 1.10.0 and `catalog-gen.ts` follow.
 
 ## 1.10.0 — 2026-11-25
 
