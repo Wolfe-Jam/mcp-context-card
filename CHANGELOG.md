@@ -2,7 +2,7 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 1.10.2 — 2026-11-27
 
 **Behaviour change:** a deploy reached by a public name lists it in `MCP_CONTEXT_CARD_ALLOWED_HOSTS`. Without that (and whenever a proxy sends an unlisted `X-Forwarded-Host`, even to a local bind), the served card has no `remotes` and the served catalog names no host from the request: relative URLs, as in the static file. Any client can send `Host` and `X-Forwarded-*`. The server says so at startup. A listed name also turns the Host check on: requests by another name or a bare IP (a health check, say) get 403, so list every name the server is reached by.
 
