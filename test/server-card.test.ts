@@ -153,12 +153,38 @@ test("A9g: a forwarded host loses its port; the real Host keeps its own", async 
   assert.equal(await url({ host: "ctx.example.com:9999" }), "http://ctx.example.com:9999/mcp");
 });
 
+test("A9h: an unlisted X-Forwarded-Host makes a local bind unvouched (no localhost published)", async () => {
+  const app = httpApp(fx.root); // local, no allowlist
+  const res = await app.fetch(new Request("http://localhost:3000/mcp/server-card", {
+    headers: { host: "localhost:3000", "x-forwarded-host": "ctx.example.com", "x-forwarded-proto": "https" },
+  }));
+  const card = (await res.json()) as Record<string, any>;
+  assert.equal(card.remotes, undefined);
+  const cat = (await (await app.fetch(new Request("http://localhost:3000/.well-known/ai-catalog.json", {
+    headers: { host: "localhost:3000", "x-forwarded-host": "ctx.example.com" },
+  }))).json()) as Record<string, any>;
+  assert.doesNotMatch(JSON.stringify(cat), /localhost|ctx\.example/);
+});
+
+test("A9i: every relative catalog URL resolves, against the catalog's own URL, to a file that loads", async () => {
+  const app = httpApp(fx.root, { publishMemory: true, exposure: "exposed" }); // unvouched → relative URLs
+  const base = "http://ctx.example.com/.well-known/ai-catalog.json";
+  const cat = (await (await app.fetch(new Request(base, { headers: { host: "ctx.example.com" } }))).json()) as Record<string, any>;
+  const urls = cat.entries.map((e: any) => e.url).filter(Boolean) as string[];
+  assert.ok(urls.length >= 2);
+  for (const u of urls) {
+    assert.doesNotMatch(u, /^https?:/);
+    const r = await app.fetch(new Request(new URL(u, base), { headers: { host: "ctx.example.com" } }));
+    assert.equal(r.status, 200, `${u} → ${new URL(u, base).pathname}`);
+  }
+});
+
 test("A9b: a forwarded host that isn't allowed is ignored (any client can send the header)", async () => {
   const c = (await (await get("/mcp/server-card", {
     "x-forwarded-proto": "https",
     "x-forwarded-host": "evil.example",
   })).json()) as Record<string, any>;
-  assert.equal(new URL(c.remotes[0].url).host, new URL(base).host);
+  assert.equal(c.remotes, undefined); // loopback Host + unlisted forwarded host: unvouched
   const cat = (await (await get("/.well-known/ai-catalog.json", { "x-forwarded-host": "evil.example" })).json()) as Record<string, any>;
   for (const e of cat.entries) assert.doesNotMatch(String(e.identifier), /evil\.example/);
 });

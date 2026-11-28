@@ -43,14 +43,14 @@
       "displayName": "mcp-context-card — project context (AGENTS.md)",
       "type": "text/markdown",
       "description": "Agent instructions for this project — 9 section(s): Setup, Build, Test, Layout, Conventions, The invariant, ….",
-      "url": "./AGENTS.md"
+      "url": "../AGENTS.md"
     },
     {
       "identifier": "urn:air:faf.one:mcp-context-card-identity",
       "displayName": "mcp-context-card — agent identity (.fafa)",
       "type": "application/vnd.fafa+yaml",
       "description": "The essential MCP components for a project's context (AGENTS.md), cross-session memory, and identity — a base MCP on its own, or a drop-in extension for any existing MCP server, discoverable through the Server Card _meta block and a self-published ai-catalog.json.",
-      "url": "./.well-known/fafa",
+      "url": "./fafa",
       "extensions": {
         "io.github.Wolfe-Jam.mcp-context-card": {
           "iana": "https://www.iana.org/assignments/media-types/application/vnd.fafa+yaml"

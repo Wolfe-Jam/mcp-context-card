@@ -4,11 +4,12 @@ All notable changes to this project. Adheres to [Semantic Versioning](https://se
 
 ## Unreleased
 
-**Behaviour change:** a deploy reached by a public name lists it in `MCP_CONTEXT_CARD_ALLOWED_HOSTS`. Without that, the served card has no `remotes` and the served catalog matches the static file (relative URLs, plain ids), because any client can send `Host` and `X-Forwarded-*`. The server says so at startup.
+**Behaviour change:** a deploy reached by a public name lists it in `MCP_CONTEXT_CARD_ALLOWED_HOSTS`. Without that (and whenever a proxy sends an unlisted `X-Forwarded-Host`, even to a local bind), the served card has no `remotes` and the served catalog names no host from the request: relative URLs, as in the static file. Any client can send `Host` and `X-Forwarded-*`. The server says so at startup. A listed name also turns the Host check on: requests by another name or a bare IP (a health check, say) get 403, so list every name the server is reached by.
 
 - **Only a vouched host is used.** Loopback or listed hosts give the origin and, with no `.fafa` domain, the publisher. `X-Forwarded-Host` counts only for a listed name (its port dropped); `X-Forwarded-Proto` (`http`/`https`, last value) only for a vouched host. The origin is rebuilt from the parsed host.
 - **`host.identifier` is the operator:** the publisher's domain, or left out (it named this repository).
-- **Only files that exist are listed:** no AGENTS.md, `.fafa` or `project.fafm`, no entry. IP-literal hosts give plain ids; a trailing dot is dropped.
+- **Only files that exist are listed:** no AGENTS.md, `.fafa` or `project.fafm`, no entry. IP-literal hosts give plain ids; `buildCatalog()` drops a trailing dot from an origin it is given.
+- **Relative URLs resolve.** Relative to the catalog itself (`../AGENTS.md`, `./fafa`), so they work served at `/.well-known/ai-catalog.json` and in a repo browser; `./AGENTS.md` pointed inside `.well-known/`.
 - **Names in ids:** colons and whitespace in `agent.name` become `-`; former ids keep the raw name.
 - Docs: "three sibling entries", the 1.x route and the stated pre-v0.9 id format corrected.
 

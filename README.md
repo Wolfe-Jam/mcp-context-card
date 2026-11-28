@@ -264,10 +264,13 @@ static `.well-known/ai-catalog.json` uses plain `<short-name>:<kind>` IDs.
 
 On a deploy reached by a public name, list that name in `MCP_CONTEXT_CARD_ALLOWED_HOSTS`
 (names only, no port). Any client can send a `Host` or `X-Forwarded-*` header, so an
-unlisted host is never echoed: the card has no `remotes` and the catalog is served as
-the static file is (relative URLs, plain IDs). A proxy's `X-Forwarded-Host` counts only
-for a listed name (its port is dropped), and `X-Forwarded-Proto` only for a loopback or
-listed host. The catalog lists only the files the server actually serves.
+unlisted host is never echoed: the card has no `remotes` and the catalog names no host
+from the request (relative URLs, as in the static file). A proxy's `X-Forwarded-Host`
+counts only for a listed name (its port is dropped); an unlisted one makes the request
+unvouched, even on a local bind. `X-Forwarded-Proto` counts only for a vouched host:
+have your TLS proxy set it, not append to it. Listing a name turns the Host check on, so
+list every name the server is reached by (a health check by IP gets 403). The catalog
+lists only the files the server actually serves.
 
 ## Why
 
