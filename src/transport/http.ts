@@ -95,7 +95,7 @@ const discoveryCors = cors({
  *   (MCP_CONTEXT_CARD_ALLOWED_HOSTS): any client can send the header.
  * - The host is always re-serialised from the parsed URL, never echoed from a header.
  * - A forwarded host loses its port: only the name is listed, not the port.
- * - `vouched` = the effective host is loopback or in `trusted`. Only then is
+ * - `vouched` = the effective host is in `trusted`, or loopback with no unlisted `X-Forwarded-Host`. Only then is
  *   `X-Forwarded-Proto` honoured (`http` or `https`, the last value: the one the
  *   nearest proxy added), and only then is the origin used at all. An unvouched
  *   request gets the card without `remotes` and the catalog with relative URLs.
@@ -116,7 +116,11 @@ export function requestOrigin(c: Context, trusted: readonly string[] = []): { or
     parsed = url;
   }
   const name = parsed.hostname.toLowerCase();
-  const vouched = isLoopbackHostname(name) || allow.includes(name);
+  // A loopback Host beside an unlisted forwarded host is a local bind behind a proxy we
+  // can't name: not vouched (it would publish `localhost` for a public deploy). A listed
+  // Host ignores a stray forwarded host, so a client can't strip a listed deploy's card.
+  const loopback = isLoopbackHostname(name) && (!fwdHost || useFwd);
+  const vouched = loopback || allow.includes(name);
   const fwdProto = last(c.req.header("x-forwarded-proto"))?.toLowerCase();
   const protoOk = vouched && (fwdProto === "http" || fwdProto === "https");
   const proto = protoOk ? fwdProto! : url.protocol.replace(":", "");

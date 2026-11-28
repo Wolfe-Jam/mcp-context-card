@@ -25,7 +25,7 @@ test("buildCatalog: the Server Card + AGENTS.md + .fafa; memory only when the pr
     );
     for (const e of cat.entries as Record<string, any>[]) {
       assert.ok(e.identifier.startsWith("urn:air:faf.one:"));
-      if (e.url) assert.ok(e.url.startsWith("./"));
+      if (e.url) assert.match(e.url, /^\.\.?\//);
       assert.equal(e.mediaType, undefined);
     }
     // only the two IANA-registered artifacts carry an iana anchor, under extensions

@@ -87,7 +87,10 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
     const all = { ...extensions, ...former(kind) };
     return Object.keys(all).length ? { extensions: all } : {};
   };
-  const at = (path: string) => (opts.origin ? `${opts.origin}/${path}` : `./${path}`);
+  // Without an origin, URLs are relative to the catalog itself (`/.well-known/ai-catalog.json`),
+  // so they resolve both when served and in a repo browser: `../AGENTS.md`, `./fafa`.
+  const at = (path: string) =>
+    opts.origin ? `${opts.origin}/${path}` : path.startsWith(".well-known/") ? `./${path.slice(".well-known/".length)}` : `../${path}`;
   const ext = (type: string) => ({ extensions: { [META_NS]: { iana: iana(type) } } });
 
   const host = fafa?.displayName ?? fafa?.name ?? "mcp-context-card";

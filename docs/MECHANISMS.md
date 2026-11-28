@@ -131,7 +131,8 @@ with `MCP_CONTEXT_CARD_PUBLISH_MEMORY=1`.
   drifts. See `buildCatalog()` in [`src/catalog-gen.ts`](../src/catalog-gen.ts).
 - **`url` is absolute when served** (against the request's origin; a reverse
   proxy's forwarded headers count only for a name in `MCP_CONTEXT_CARD_ALLOWED_HOSTS`)
-  and relative in the static file, so it also resolves in a repo browser.
+  and, in the static file, relative to the catalog itself (`../AGENTS.md`, `./fafa`), so it
+  resolves both when served at `/.well-known/ai-catalog.json` and in a repo browser.
 - **Only files that exist are listed:** no AGENTS.md, no context entry; no `.fafa`,
   no identity entry. Memory is listed only when published (`MCP_CONTEXT_CARD_PUBLISH_MEMORY`).
 
