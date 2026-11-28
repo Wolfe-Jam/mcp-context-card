@@ -77,7 +77,7 @@ no search.
 
 ## The card
 
-The screenshot at the top of this page is exactly this: the same sources
+The screenshots at the top of this page are exactly this: the same sources
 rendered as a **business card** in one self‑contained HTML page. The view for
 people: read it, screenshot it, drop it in a PR, put it on a status page.
 
