@@ -100,12 +100,17 @@ const discoveryCors = cors({
  *   nearest proxy added), and only then is the origin used at all. An unvouched
  *   request gets the card without `remotes` and the catalog with relative URLs.
  */
-export function requestOrigin(c: Context, trusted: readonly string[] = []): { origin: string; vouched: boolean } {
+export function requestOrigin(
+  c: Context,
+  trusted: readonly string[] = [],
+  exposed = false,
+): { origin: string; vouched: boolean } {
   const url = new URL(c.req.url);
   const first = (v: string | undefined) => v?.split(",")[0].trim();
   const last = (v: string | undefined) => v?.split(",").pop()?.trim();
   const allow = trusted.map((h) => h.toLowerCase());
-  const fwdHost = first(c.req.header("x-forwarded-host"));
+  // The last value is the one the nearest proxy added; earlier ones may come from the client.
+  const fwdHost = last(c.req.header("x-forwarded-host"));
   const fwdName = fwdHost ? hostnameOf(fwdHost) : null;
   const useFwd = !!fwdName && allow.includes(fwdName);
   const raw = (useFwd ? fwdHost : first(c.req.header("host"))) || url.host;
@@ -119,7 +124,8 @@ export function requestOrigin(c: Context, trusted: readonly string[] = []): { or
   // A loopback Host beside an unlisted forwarded host is a local bind behind a proxy we
   // can't name: not vouched (it would publish `localhost` for a public deploy). A listed
   // Host ignores a stray forwarded host, so a client can't strip a listed deploy's card.
-  const loopback = isLoopbackHostname(name) && (!fwdHost || useFwd);
+  // On an exposed bind a client can send `Host: localhost`, so there only listed names count.
+  const loopback = !exposed && isLoopbackHostname(name) && (!fwdHost || useFwd);
   const vouched = loopback || allow.includes(name);
   const fwdProto = last(c.req.header("x-forwarded-proto"))?.toLowerCase();
   const protoOk = vouched && (fwdProto === "http" || fwdProto === "https");
@@ -128,8 +134,8 @@ export function requestOrigin(c: Context, trusted: readonly string[] = []): { or
 }
 
 /** The public origin of this request when it is vouched for, else undefined (see {@link requestOrigin}). */
-export const originOf = (c: Context, trusted: readonly string[] = []): string | undefined => {
-  const { origin, vouched } = requestOrigin(c, trusted);
+export const originOf = (c: Context, trusted: readonly string[] = [], exposed = false): string | undefined => {
+  const { origin, vouched } = requestOrigin(c, trusted, exposed);
   return vouched ? origin : undefined;
 };
 
@@ -137,6 +143,8 @@ export const originOf = (c: Context, trusted: readonly string[] = []): string | 
 function discovery(c: Context, body: string, contentType: string): Response {
   const etag = `"${createHash("sha256").update(body).digest("base64url").slice(0, 27)}"`;
   c.header("Cache-Control", "public, max-age=3600");
+  // The body depends on these request headers (the origin), so a shared cache must key on them.
+  c.header("Vary", "Host, X-Forwarded-Host, X-Forwarded-Proto");
   c.header("ETag", etag);
   const match = c.req.header("if-none-match");
   if (match && match.split(",").some((t) => t.trim().replace(/^W\//, "") === etag)) {
@@ -192,12 +200,12 @@ export function httpApp(root: string = ROOT, opts: HttpAppOptions = {}): Hono {
 
   // ── Discovery documents ─────────────────────────────────────────────
   const card = (c: Context) =>
-    discovery(c, JSON.stringify(serverCard({ origin: originOf(c, allowedHosts) }), null, 2), SERVER_CARD_MEDIA_TYPE);
+    discovery(c, JSON.stringify(serverCard({ origin: originOf(c, allowedHosts, exposure === "exposed") }), null, 2), SERVER_CARD_MEDIA_TYPE);
   app.get(SERVER_CARD_PATH, card);
   app.get(LEGACY_SERVER_CARD_PATH, card);
 
   app.get("/.well-known/ai-catalog.json", (c) =>
-    discovery(c, JSON.stringify(buildCatalog(root, { origin: originOf(c, allowedHosts), publishMemory, formerIds }), null, 2), AI_CATALOG_MEDIA_TYPE),
+    discovery(c, JSON.stringify(buildCatalog(root, { origin: originOf(c, allowedHosts, exposure === "exposed"), publishMemory, formerIds }), null, 2), AI_CATALOG_MEDIA_TYPE),
   );
 
   // The files the catalog links to, each with the type its entry declares.

@@ -9,6 +9,7 @@ All notable changes to this project. Adheres to [Semantic Versioning](https://se
 - **Only a vouched host is used.** Loopback or listed hosts give the origin and, with no `.fafa` domain, the publisher. `X-Forwarded-Host` counts only for a listed name (its port dropped); `X-Forwarded-Proto` (`http`/`https`, last value) only for a vouched host. The origin is rebuilt from the parsed host.
 - **`host.identifier` is the operator:** the publisher's domain, or left out (it named this repository).
 - **Only files that exist are listed:** no AGENTS.md, `.fafa` or `project.fafm`, no entry. IP-literal hosts give plain ids; `buildCatalog()` drops a trailing dot from an origin it is given.
+- **Forwarded headers take their last value** (the nearest proxy's); on an exposed bind only listed names are vouched (a client can send `Host: localhost`); discovery responses carry `Vary: Host, X-Forwarded-Host, X-Forwarded-Proto`. A proxy must pass `Host` through or set `X-Forwarded-Host`; the startup line says so, and warns about an allowlist entry with a port.
 - **Relative URLs resolve.** Relative to the catalog itself (`../AGENTS.md`, `./fafa`), so they work served at `/.well-known/ai-catalog.json` and in a repo browser; `./AGENTS.md` pointed inside `.well-known/`.
 - **Names in ids:** colons and whitespace in `agent.name` become `-`; former ids keep the raw name.
 - Docs: "three sibling entries", the 1.x route and the stated pre-v0.9 id format corrected.

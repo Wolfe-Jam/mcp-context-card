@@ -179,6 +179,27 @@ test("A9i: every relative catalog URL resolves, against the catalog's own URL, t
   }
 });
 
+test("A9j: behind an appending proxy, the last X-Forwarded-Host counts (a client can't strip the card)", async () => {
+  const app = httpApp(fx.root, { allowedHosts: ["ctx.example.com"] }); // local bind
+  const res = await app.fetch(new Request("http://127.0.0.1:3000/mcp/server-card", {
+    headers: { host: "127.0.0.1:3000", "x-forwarded-host": "evil.com, ctx.example.com", "x-forwarded-proto": "https" },
+  }));
+  assert.equal(((await res.json()) as any).remotes[0].url, "https://ctx.example.com/mcp");
+});
+
+test("A9k: on an exposed bind, Host: localhost is not vouched", async () => {
+  const app = httpApp(fx.root, { exposure: "exposed", allowedHosts: ["ctx.example.com"] });
+  const res = await app.fetch(new Request("http://localhost:1/mcp/server-card", { headers: { host: "localhost:1" } }));
+  assert.equal(((await res.json()) as any).remotes, undefined);
+});
+
+test("A9l: discovery responses Vary on the headers the origin comes from", async () => {
+  for (const p of ["/mcp/server-card", "/.well-known/ai-catalog.json"]) {
+    const v = (await get(p)).headers.get("vary") ?? "";
+    for (const h of ["host", "x-forwarded-host", "x-forwarded-proto"]) assert.ok(v.toLowerCase().includes(h), `${p}: ${v}`);
+  }
+});
+
 test("A9b: a forwarded host that isn't allowed is ignored (any client can send the header)", async () => {
   const c = (await (await get("/mcp/server-card", {
     "x-forwarded-proto": "https",
