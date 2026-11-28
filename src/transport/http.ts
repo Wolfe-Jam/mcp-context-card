@@ -53,7 +53,7 @@ import {
   ALLOWED_ORIGINS_ENV,
   SERVER_CARD_PATH,
 } from "../constants.js";
-import { hostGuard, listFromEnv, originGuard } from "./guard.js";
+import { hostGuard, hostnameOf, isLoopbackHostname, listFromEnv, originGuard } from "./guard.js";
 
 /**
  * Public-by-design discovery documents: the Server Card spec requires them to
@@ -88,13 +88,46 @@ const discoveryCors = cors({
   exposeHeaders: ["ETag"],
 });
 
-/** The public origin of this request, honouring a reverse proxy's forwarded headers. */
-export function originOf(c: Context): string {
+/**
+ * The public origin of this request, and whether its host is vouched for.
+ *
+ * - A reverse proxy's `X-Forwarded-Host` counts only when that name is in `trusted`
+ *   (MCP_CONTEXT_CARD_ALLOWED_HOSTS): any client can send the header.
+ * - The host is always re-serialised from the parsed URL, never echoed from a header.
+ * - A forwarded host loses its port: only the name is listed, not the port.
+ * - `vouched` = the effective host is loopback or in `trusted`. Only then is
+ *   `X-Forwarded-Proto` honoured (`http` or `https`, the last value: the one the
+ *   nearest proxy added), and only then is the origin used at all. An unvouched
+ *   request gets the card without `remotes` and the catalog with relative URLs.
+ */
+export function requestOrigin(c: Context, trusted: readonly string[] = []): { origin: string; vouched: boolean } {
   const url = new URL(c.req.url);
-  const proto = (c.req.header("x-forwarded-proto") ?? url.protocol.replace(":", "")).split(",")[0].trim();
-  const host = (c.req.header("x-forwarded-host") ?? c.req.header("host") ?? url.host).split(",")[0].trim();
-  return `${proto}://${host}`;
+  const first = (v: string | undefined) => v?.split(",")[0].trim();
+  const last = (v: string | undefined) => v?.split(",").pop()?.trim();
+  const allow = trusted.map((h) => h.toLowerCase());
+  const fwdHost = first(c.req.header("x-forwarded-host"));
+  const fwdName = fwdHost ? hostnameOf(fwdHost) : null;
+  const useFwd = !!fwdName && allow.includes(fwdName);
+  const raw = (useFwd ? fwdHost : first(c.req.header("host"))) || url.host;
+  let parsed: URL;
+  try {
+    parsed = new URL(`http://${raw}`);
+  } catch {
+    parsed = url;
+  }
+  const name = parsed.hostname.toLowerCase();
+  const vouched = isLoopbackHostname(name) || allow.includes(name);
+  const fwdProto = last(c.req.header("x-forwarded-proto"))?.toLowerCase();
+  const protoOk = vouched && (fwdProto === "http" || fwdProto === "https");
+  const proto = protoOk ? fwdProto! : url.protocol.replace(":", "");
+  return { origin: `${proto}://${useFwd ? parsed.hostname : parsed.host}`, vouched };
 }
+
+/** The public origin of this request when it is vouched for, else undefined (see {@link requestOrigin}). */
+export const originOf = (c: Context, trusted: readonly string[] = []): string | undefined => {
+  const { origin, vouched } = requestOrigin(c, trusted);
+  return vouched ? origin : undefined;
+};
 
 /** A cacheable discovery response: Content-Type, Cache-Control, ETag, and 304 on a match. */
 function discovery(c: Context, body: string, contentType: string): Response {
@@ -155,12 +188,12 @@ export function httpApp(root: string = ROOT, opts: HttpAppOptions = {}): Hono {
 
   // ── Discovery documents ─────────────────────────────────────────────
   const card = (c: Context) =>
-    discovery(c, JSON.stringify(serverCard({ origin: originOf(c) }), null, 2), SERVER_CARD_MEDIA_TYPE);
+    discovery(c, JSON.stringify(serverCard({ origin: originOf(c, allowedHosts) }), null, 2), SERVER_CARD_MEDIA_TYPE);
   app.get(SERVER_CARD_PATH, card);
   app.get(LEGACY_SERVER_CARD_PATH, card);
 
   app.get("/.well-known/ai-catalog.json", (c) =>
-    discovery(c, JSON.stringify(buildCatalog(root, { origin: originOf(c), publishMemory, formerIds }), null, 2), AI_CATALOG_MEDIA_TYPE),
+    discovery(c, JSON.stringify(buildCatalog(root, { origin: originOf(c, allowedHosts), publishMemory, formerIds }), null, 2), AI_CATALOG_MEDIA_TYPE),
   );
 
   // The files the catalog links to, each with the type its entry declares.

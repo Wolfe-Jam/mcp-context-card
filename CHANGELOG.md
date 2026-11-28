@@ -2,11 +2,21 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+**Behaviour change:** a deploy reached by a public name lists it in `MCP_CONTEXT_CARD_ALLOWED_HOSTS`. Without that, the served card has no `remotes` and the served catalog matches the static file (relative URLs, plain ids), because any client can send `Host` and `X-Forwarded-*`. The server says so at startup.
+
+- **Only a vouched host is used.** Loopback or listed hosts give the origin and, with no `.fafa` domain, the publisher. `X-Forwarded-Host` counts only for a listed name (its port dropped); `X-Forwarded-Proto` (`http`/`https`, last value) only for a vouched host. The origin is rebuilt from the parsed host.
+- **`host.identifier` is the operator:** the publisher's domain, or left out (it named this repository).
+- **Only files that exist are listed:** no AGENTS.md, `.fafa` or `project.fafm`, no entry. IP-literal hosts give plain ids; a trailing dot is dropped.
+- **Names in ids:** colons and whitespace in `agent.name` become `-`; former ids keep the raw name.
+- Docs: "three sibling entries", the 1.x route and the stated pre-v0.9 id format corrected.
+
 ## 1.10.1 — 2026-11-25
 
 Wording only; the generated catalog is the same as 1.10.0's (apart from the version).
 
-- **Claims about AI Catalog v0.9 match its text.** A one-segment id "can't be read the wrong way round" (v0.9 reads it as a name with no kind); it doesn't "read the same" in v0.9 and the drafts before it, which gave every id a namespace. MECHANISMS.md: Trust Manifests are optional; under the `did:web` Publisher Profile the signer is exactly `did:web:` plus the id's publisher domain. README, CHANGELOG 1.10.0 and `catalog-gen.ts` follow.
+- **Claims about AI Catalog v0.9 match its text.** A one-segment id "can't be read the wrong way round" (v0.9 reads it as a name with no kind); it doesn't "read the same" in v0.9 and the drafts before it, whose stated format was `urn:air:{publisher}:{namespace}:{name}`. MECHANISMS.md: Trust Manifests are optional; under the `did:web` Publisher Profile the signer is exactly `did:web:` plus the id's publisher domain. README, CHANGELOG 1.10.0 and `catalog-gen.ts` follow.
 
 ## 1.10.0 — 2026-11-25
 

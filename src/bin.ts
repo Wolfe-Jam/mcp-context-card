@@ -185,7 +185,10 @@ if (entryPath && import.meta.url === pathToFileURL(entryPath).href) {
         `${NAME} · http · ${host.includes(":") ? `[${host}]` : host}:${port}  (POST /mcp · GET /card · GET /.well-known/*)` +
           (local
             ? "  · local only (HOST=0.0.0.0 to expose)"
-            : "  · EXPOSED beyond this machine, no authentication: put it behind your own"),
+            : "  · EXPOSED beyond this machine, no authentication: put it behind your own" +
+              (process.env.MCP_CONTEXT_CARD_ALLOWED_HOSTS?.trim()
+                ? ""
+                : "\n  no MCP_CONTEXT_CARD_ALLOWED_HOSTS: the card and catalog name no host (relative URLs, plain ids)")),
       ),
     );
   } else {

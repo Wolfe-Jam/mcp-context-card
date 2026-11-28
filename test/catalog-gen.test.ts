@@ -143,21 +143,55 @@ test("buildCatalog: reflects a change to a source file", () => {
   }
 });
 
-test("buildCatalog: synthesises descriptions when sources are absent", () => {
+test("buildCatalog: lists only files that exist, so every entry URL resolves", () => {
   const dir = mkdtempSync(join(tmpdir(), "mcp-context-card-bare-"));
   try {
     // no AGENTS.md, no fafa; minimal fafm
     writeFileSync(join(dir, "project.fafm"), `version: "1.1"\n`);
     const cat = buildCatalog(dir, { publishMemory: true });
 
-    const ctx = cat.entries.find((e) => e.type === "text/markdown")!;
-    assert.match(ctx.description!, /not present/);
+    assert.equal(cat.entries.find((e) => e.type === "text/markdown"), undefined);
+    assert.equal(cat.entries.find((e) => e.type === "application/vnd.fafa+yaml"), undefined);
 
     const mem = cat.entries.find((e) => e.type === "application/vnd.fafm+yaml")!;
     assert.match(mem.description!, /\b0 fact\(s\)/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
 
-    const id = cat.entries.find((e) => e.type === "application/vnd.fafa+yaml")!;
-    assert.match(id.description!, /status: unknown/);
+test("buildCatalog: memory is listed only when project.fafm exists; a trailing dot is dropped", () => {
+  const dir = mkdtempSync(join(tmpdir(), "mcp-context-card-nomem-"));
+  try {
+    const cat = buildCatalog(dir, { publishMemory: true, origin: "https://ctx.example.com." });
+    assert.equal(cat.entries.find((e) => e.type === "application/vnd.fafm+yaml"), undefined);
+    assert.equal(cat.host.identifier, "ctx.example.com");
+    assert.match(cat.entries[0].identifier, /^urn:air:ctx\.example\.com:/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("buildCatalog: host.identifier is the publisher's domain, or left out", () => {
+  const dir = mkdtempSync(join(tmpdir(), "mcp-context-card-host-"));
+  try {
+    assert.equal(buildCatalog(dir, { origin: "https://ctx.example.com" }).host.identifier, "ctx.example.com");
+    assert.equal("identifier" in buildCatalog(dir, { origin: "http://localhost:3000" }).host, false);
+    assert.equal("identifier" in buildCatalog(dir).host, false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("buildCatalog: an IP-literal host gives plain ids; localhost stays the publisher", () => {
+  const dir = mkdtempSync(join(tmpdir(), "mcp-context-card-ip-"));
+  try {
+    const v6 = buildCatalog(dir, { origin: "http://[::1]:9" });
+    for (const e of v6.entries) assert.doesNotMatch(e.identifier, /^urn:air:/);
+    const v4 = buildCatalog(dir, { origin: "http://127.0.0.1:9" });
+    for (const e of v4.entries) assert.doesNotMatch(e.identifier, /^urn:air:/);
+    const lh = buildCatalog(dir, { origin: "http://localhost:3000" });
+    assert.match(lh.entries[0].identifier, /^urn:air:localhost:/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

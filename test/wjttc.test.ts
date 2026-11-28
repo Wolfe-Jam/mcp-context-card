@@ -142,7 +142,7 @@ describe("Tier 5: Security", () => {
   });
 
   test("a project that opts in publishes memory: served with its type and listed", async () => {
-    const app = httpApp(fx.root, { publishMemory: true, exposure: "exposed" });
+    const app = httpApp(fx.root, { publishMemory: true, exposure: "exposed", allowedHosts: ["ctx.example.com"] });
     const r = await app.fetch(new Request("http://ctx.example.com/project.fafm"));
     assert.equal(r.status, 200);
     assert.equal(r.headers.get("content-type"), "application/vnd.fafm+yaml");

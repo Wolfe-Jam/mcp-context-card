@@ -6,7 +6,8 @@
  */
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { AddressInfo } from "node:net";
 import { serve } from "@hono/node-server";
@@ -86,12 +87,80 @@ test("A9: over HTTP the card advertises the streamable-http remote at <origin>/m
   assert.equal(serverCard().remotes, undefined); // no origin known → no remote claimed
 });
 
-test("A9: a reverse proxy's forwarded host and proto become the advertised origin", async () => {
+test("A9: a trusted proxy's forwarded host and proto become the advertised origin", async () => {
+  // Trusted = listed in allowedHosts (MCP_CONTEXT_CARD_ALLOWED_HOSTS).
+  const app = httpApp(fx.root, { allowedHosts: ["ctx.example.com"] });
+  const res = await app.fetch(new Request("http://127.0.0.1/mcp/server-card", {
+    headers: { "x-forwarded-proto": "https", "x-forwarded-host": "ctx.example.com" },
+  }));
+  const c = (await res.json()) as Record<string, any>;
+  assert.equal(c.remotes[0].url, "https://ctx.example.com/mcp");
+});
+
+test("A9c: a trusted Host keeps X-Forwarded-Proto without X-Forwarded-Host", async () => {
+  const app = httpApp(fx.root, { allowedHosts: ["ctx.example.com"] });
+  const res = await app.fetch(new Request("http://ctx.example.com/mcp/server-card", {
+    headers: { host: "ctx.example.com", "x-forwarded-proto": "https" },
+  }));
+  assert.equal(((await res.json()) as any).remotes[0].url, "https://ctx.example.com/mcp");
+});
+
+test("A9d: the origin is built from the parsed host, never the raw header; odd protos are ignored", async () => {
+  const app = httpApp(fx.root, { allowedHosts: ["ctx.example.com"] });
+  const res = await app.fetch(new Request("http://127.0.0.1/mcp/server-card", {
+    headers: { "x-forwarded-host": "ctx.example.com\\@evil.example", "x-forwarded-proto": "ftp" },
+  }));
+  const url = ((await res.json()) as any).remotes[0].url as string;
+  assert.doesNotMatch(url, /evil|@|\\|^ftp/);
+});
+
+test("A9e: on an exposed deploy, an unlisted Host is not the publisher (no .fafa domain)", async () => {
+  const bare = mkdtempSync(join(tmpdir(), "mcc-bare-")); // no .fafa: the request host would be the publisher
+  try {
+    const get = async (host: string, allowedHosts: string[] = []) =>
+      (await (await httpApp(bare, { exposure: "exposed", allowedHosts }).fetch(
+        new Request(`http://${host}/.well-known/ai-catalog.json`, { headers: { host } }),
+      )).json()) as Record<string, any>;
+    const cat = await get("evil.example");
+    assert.doesNotMatch(JSON.stringify(cat), /evil/); // ids, host and every url
+    assert.ok(cat.entries[0].data, "the card is inline, as in the static file");
+    const card = (await (await httpApp(bare, { exposure: "exposed" }).fetch(
+      new Request("http://evil.example/mcp/server-card", { headers: { host: "evil.example" } }),
+    )).json()) as Record<string, any>;
+    assert.equal(card.remotes, undefined);
+    assert.doesNotMatch(JSON.stringify(card), /evil/);
+    const listed = await get("ctx.example.com", ["ctx.example.com"]);
+    assert.equal(listed.host.identifier, "ctx.example.com");
+  } finally {
+    rmSync(bare, { recursive: true, force: true });
+  }
+});
+
+test("A9f: a bogus X-Forwarded-Host can't downgrade a listed deploy; the last proto wins", async () => {
+  const app = httpApp(fx.root, { allowedHosts: ["ctx.example.com"] });
+  const url = async (h: Record<string, string>) =>
+    ((await (await app.fetch(new Request("http://ctx.example.com/mcp/server-card", { headers: { host: "ctx.example.com", ...h } }))).json()) as any)
+      .remotes[0].url as string;
+  assert.equal(await url({ "x-forwarded-proto": "https", "x-forwarded-host": "evil.example" }), "https://ctx.example.com/mcp");
+  assert.equal(await url({ "x-forwarded-proto": "http, https" }), "https://ctx.example.com/mcp");
+});
+
+test("A9g: a forwarded host loses its port; the real Host keeps its own", async () => {
+  const app = httpApp(fx.root, { allowedHosts: ["ctx.example.com"] });
+  const url = async (h: Record<string, string>) =>
+    ((await (await app.fetch(new Request("http://127.0.0.1/mcp/server-card", { headers: h }))).json()) as any).remotes[0].url as string;
+  assert.equal(await url({ "x-forwarded-host": "a@ctx.example.com:8443", "x-forwarded-proto": "https" }), "https://ctx.example.com/mcp");
+  assert.equal(await url({ host: "ctx.example.com:9999" }), "http://ctx.example.com:9999/mcp");
+});
+
+test("A9b: a forwarded host that isn't allowed is ignored (any client can send the header)", async () => {
   const c = (await (await get("/mcp/server-card", {
     "x-forwarded-proto": "https",
-    "x-forwarded-host": "ctx.example.com",
+    "x-forwarded-host": "evil.example",
   })).json()) as Record<string, any>;
-  assert.equal(c.remotes[0].url, "https://ctx.example.com/mcp");
+  assert.equal(new URL(c.remotes[0].url).host, new URL(base).host);
+  const cat = (await (await get("/.well-known/ai-catalog.json", { "x-forwarded-host": "evil.example" })).json()) as Record<string, any>;
+  for (const e of cat.entries) assert.doesNotMatch(String(e.identifier), /evil\.example/);
 });
 
 test("A10: _meta keys are namespaced (labels, dots, one slash)", async () => {

@@ -28,7 +28,7 @@
  * the agent's own description), not hand-written blurbs that drift. The CI
  * job `catalog:check` regenerates the static file and fails on any diff.
  */
-import { writeFileSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
 import { isIP } from "node:net";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -67,8 +67,13 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
   const file = fafaFile(root);
   const fafa = file ? parseFafa(file) : null;
 
-  const { domain, handle } = catalogPublisher(root);
-  const publisher = domain ?? (opts.origin ? new URL(opts.origin).hostname.toLowerCase() : undefined);
+  const { domain, handle, name } = catalogPublisher(root);
+  // Served without a `.fafa` domain, the origin's host is the publisher (`localhost` included).
+  // Over HTTP, an origin is passed only for a vouched host (loopback or allowlisted).
+  // An IP literal can't sit in a urn:air id (`[::1]` carries colons), so it gives plain ids.
+  const servedHost = opts.origin ? new URL(opts.origin).hostname.toLowerCase().replace(/\.$/, "") : undefined;
+  const usable = !!servedHost && !isIP(servedHost.replace(/^\[|\]$/g, ""));
+  const publisher = domain ?? (usable ? servedHost : undefined);
   const id = (kind: string) =>
     publisher ? `urn:air:${publisher}:${handle}-${kind}` : `${handle}:${kind}`;
   // The earlier id, recorded on request for catalogs this server wrote before 1.10.0. The key is the
@@ -77,7 +82,7 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
   const named = !!publisher && publisher.includes(".") && !isIP(publisher.replace(/^\[|\]$/g, ""));
   const formerKey = named ? `${publisher!.split(".").reverse().join(".")}.former-identifiers` : "";
   const former = (kind: string) =>
-    opts.formerIds && named ? { [formerKey]: [`urn:air:${publisher}:${kind}:${handle}`] } : {};
+    opts.formerIds && named ? { [formerKey]: [`urn:air:${publisher}:${kind}:${name}`] } : {};
   const withFormer = (kind: string, extensions: Record<string, unknown> = {}) => {
     const all = { ...extensions, ...former(kind) };
     return Object.keys(all).length ? { extensions: all } : {};
@@ -89,9 +94,11 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
 
   return {
     specVersion: "0.9",
+    // Host Info identifies the catalog's operator (§ Host Info), so its identifier is the publisher's
+    // domain when there is one; it is optional, and left out otherwise.
     host: {
       displayName: host,
-      identifier: "https://github.com/Wolfe-Jam/mcp-context-card",
+      ...(named ? { identifier: publisher } : {}),
     },
     entries: <CatalogEntry[]>[
       {
@@ -102,22 +109,21 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
         ...(opts.origin ? { url: `${opts.origin}${SERVER_CARD_PATH}` } : { data: serverCard() }),
         ...withFormer("mcp"),
       },
-      {
+      // An entry only for a file this server actually serves, so every entry URL resolves.
+      ...(agents ? [{
         identifier: id("context"),
         displayName: `${host} — project context (AGENTS.md)`,
         type: "text/markdown",
-        description: agents
-          ? (() => {
-              const h = bodySections(agents).map((s) => s.heading);
+        description: (() => {
+              const h = bodySections(agents!).map((s) => s.heading);
               return `Agent instructions for this project — ${h.length} section(s): ${h
                 .slice(0, 6)
                 .join(", ")}${h.length > 6 ? ", …" : ""}.`;
-            })()
-          : "Agent instructions for this project (AGENTS.md — not present).",
+            })(),
         url: at("AGENTS.md"),
         ...withFormer("context"),
-      },
-      ...(opts.publishMemory ? [{
+      }] : []),
+      ...(opts.publishMemory && existsSync(join(root, "project.fafm")) ? [{
         identifier: id("memory"),
         displayName: `${host} — persistent memory (.fafm)`,
         type: "application/vnd.fafm+yaml",
@@ -127,7 +133,7 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
         url: at("project.fafm"),
         ...withFormer("memory", ext("application/vnd.fafm+yaml").extensions),
       }] : []),
-      {
+      ...(file ? [{
         identifier: id("identity"),
         displayName: `${host} — agent identity (.fafa)`,
         type: "application/vnd.fafa+yaml",
@@ -136,7 +142,7 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
           `Agent identity card (status: ${fafa?.status ?? "unknown"}).`,
         url: at(".well-known/fafa"),
         ...withFormer("identity", ext("application/vnd.fafa+yaml").extensions),
-      },
+      }] : []),
     ],
   };
 }
