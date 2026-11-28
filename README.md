@@ -206,7 +206,9 @@ folder), then falls back to the directory it was started in if that has an
 reports which project it picked and how. To pin one project instead, set
 `"env": { "MCP_CONTEXT_CARD_ROOT": "/abs/path/to/your/project" }`; that always
 wins. Identity is optional. Over HTTP instead:
-`PORT=8080 npx mcp-context-card`. Requires Node ≥22.
+`MCP_CONTEXT_CARD_ROOT=/abs/path/to/your/project PORT=8080 npx mcp-context-card`.
+HTTP has no roots and no start-directory fallback: without `MCP_CONTEXT_CARD_ROOT`
+it serves this package's own files. Requires Node ≥22.
 
 HTTP mode is local by default, as the MCP transports spec asks: it binds
 `127.0.0.1`, refuses foreign browser origins with 403, and refuses DNS names
@@ -340,7 +342,7 @@ over both transports:
 4. **Discovery** — `list_context_sources()`, then the same server over stateless
    HTTP with its `.well-known` routes and `GET /card`.
 
-264 tests on Linux, macOS, and Windows, coverage‑gated in CI.
+281 tests on Linux, macOS, and Windows, coverage‑gated in CI.
 `npm run wjttc` runs the WJTTC certification suite (seven tiers, from protocol
 and Server Card conformance to stdio/HTTP parity and the shipped package). Two spawn a real
 child process and check a remembered fact survives the restart — one against

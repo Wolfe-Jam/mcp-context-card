@@ -2,7 +2,7 @@
 
 All notable changes to this project. Adheres to [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 1.10.2 — 2026-11-27
 
 **Behaviour change:** a deploy reached by a public name lists it in `MCP_CONTEXT_CARD_ALLOWED_HOSTS`. Without that (and whenever a proxy sends an unlisted `X-Forwarded-Host`, even to a local bind), the served card has no `remotes` and the served catalog names no host from the request: relative URLs, as in the static file. Any client can send `Host` and `X-Forwarded-*`. The server says so at startup. A listed name also turns the Host check on: requests by another name or a bare IP (a health check, say) get 403, so list every name the server is reached by.
 
@@ -13,7 +13,7 @@ All notable changes to this project. Adheres to [Semantic Versioning](https://se
 - **A public name is published without a port**; only a loopback name keeps one. The Docker example now sets `MCP_CONTEXT_CARD_ALLOWED_HOSTS=localhost`.
 - **Relative URLs resolve.** Relative to the catalog itself (`../AGENTS.md`, `./fafa`, or `../agent.fafa` when that is the identity file), so they work served at `/.well-known/ai-catalog.json` and in a repo browser; `./AGENTS.md` pointed inside `.well-known/`.
 - **Names in ids:** colons and whitespace in `agent.name` become `-`; former ids keep the raw name.
-- Docs: "three sibling entries", the 1.x route and the stated pre-v0.9 id format corrected.
+- Docs: "three sibling entries", the 1.x route and the stated pre-v0.9 id format corrected; the README says HTTP serves `MCP_CONTEXT_CARD_ROOT` (unset: this package's own files), not the start directory.
 
 ## 1.10.1 — 2026-11-25
 

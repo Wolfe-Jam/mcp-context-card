@@ -33,7 +33,7 @@ Streamable HTTP endpoint at `<origin>/mcp` and its protocol versions):
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
   "name": "io.github.Wolfe-Jam/mcp-context-card",
-  "version": "1.10.1",
+  "version": "1.10.2",
   "title": "MCP Context Card",
   "description": "MCP server for a project's context (AGENTS.md), memory, and identity — base or drop-in extension.",
   "websiteUrl": "https://github.com/Wolfe-Jam/mcp-context-card",
