@@ -206,7 +206,9 @@ folder), then falls back to the directory it was started in if that has an
 reports which project it picked and how. To pin one project instead, set
 `"env": { "MCP_CONTEXT_CARD_ROOT": "/abs/path/to/your/project" }`; that always
 wins. Identity is optional. Over HTTP instead:
-`PORT=8080 npx mcp-context-card`. Requires Node ≥22.
+`MCP_CONTEXT_CARD_ROOT=/abs/path/to/your/project PORT=8080 npx mcp-context-card`.
+HTTP has no roots and no start-directory fallback: without `MCP_CONTEXT_CARD_ROOT`
+it serves this package's own files. Requires Node ≥22.
 
 HTTP mode is local by default, as the MCP transports spec asks: it binds
 `127.0.0.1`, refuses foreign browser origins with 403, and refuses DNS names
