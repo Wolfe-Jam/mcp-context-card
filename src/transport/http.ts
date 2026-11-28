@@ -94,14 +94,16 @@ const discoveryCors = cors({
  * - A reverse proxy's `X-Forwarded-Host` counts only when that name is in `trusted`
  *   (MCP_CONTEXT_CARD_ALLOWED_HOSTS): any client can send the header.
  * - The host is always re-serialised from the parsed URL, never echoed from a header.
+ * - A forwarded host loses its port: only the name is listed, not the port.
  * - `vouched` = the effective host is loopback or in `trusted`. Only then is
- *   `X-Forwarded-Proto` honoured (`http` or `https`; never beside a refused
- *   `X-Forwarded-Host`), and only then may the host
- *   stand as the catalog's publisher.
+ *   `X-Forwarded-Proto` honoured (`http` or `https`, the last value: the one the
+ *   nearest proxy added), and only then is the origin used at all. An unvouched
+ *   request gets the card without `remotes` and the catalog with relative URLs.
  */
 export function requestOrigin(c: Context, trusted: readonly string[] = []): { origin: string; vouched: boolean } {
   const url = new URL(c.req.url);
   const first = (v: string | undefined) => v?.split(",")[0].trim();
+  const last = (v: string | undefined) => v?.split(",").pop()?.trim();
   const allow = trusted.map((h) => h.toLowerCase());
   const fwdHost = first(c.req.header("x-forwarded-host"));
   const fwdName = fwdHost ? hostnameOf(fwdHost) : null;
@@ -115,15 +117,17 @@ export function requestOrigin(c: Context, trusted: readonly string[] = []): { or
   }
   const name = parsed.hostname.toLowerCase();
   const vouched = isLoopbackHostname(name) || allow.includes(name);
-  const fwdProto = first(c.req.header("x-forwarded-proto"))?.toLowerCase();
-  // A forwarded host that was refused takes its forwarded proto with it.
-  const protoOk = vouched && (useFwd || !fwdHost) && (fwdProto === "http" || fwdProto === "https");
+  const fwdProto = last(c.req.header("x-forwarded-proto"))?.toLowerCase();
+  const protoOk = vouched && (fwdProto === "http" || fwdProto === "https");
   const proto = protoOk ? fwdProto! : url.protocol.replace(":", "");
-  return { origin: `${proto}://${parsed.host}`, vouched };
+  return { origin: `${proto}://${useFwd ? parsed.hostname : parsed.host}`, vouched };
 }
 
-/** The public origin of this request (see {@link requestOrigin}). */
-export const originOf = (c: Context, trusted: readonly string[] = []): string => requestOrigin(c, trusted).origin;
+/** The public origin of this request when it is vouched for, else undefined (see {@link requestOrigin}). */
+export const originOf = (c: Context, trusted: readonly string[] = []): string | undefined => {
+  const { origin, vouched } = requestOrigin(c, trusted);
+  return vouched ? origin : undefined;
+};
 
 /** A cacheable discovery response: Content-Type, Cache-Control, ETag, and 304 on a match. */
 function discovery(c: Context, body: string, contentType: string): Response {
@@ -189,7 +193,7 @@ export function httpApp(root: string = ROOT, opts: HttpAppOptions = {}): Hono {
   app.get(LEGACY_SERVER_CARD_PATH, card);
 
   app.get("/.well-known/ai-catalog.json", (c) =>
-    discovery(c, JSON.stringify(buildCatalog(root, { ...(({ origin, vouched }) => ({ origin, originVouched: vouched }))(requestOrigin(c, allowedHosts)), publishMemory, formerIds }), null, 2), AI_CATALOG_MEDIA_TYPE),
+    discovery(c, JSON.stringify(buildCatalog(root, { origin: originOf(c, allowedHosts), publishMemory, formerIds }), null, 2), AI_CATALOG_MEDIA_TYPE),
   );
 
   // The files the catalog links to, each with the type its entry declares.

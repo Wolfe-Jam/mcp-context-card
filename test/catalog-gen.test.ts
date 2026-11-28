@@ -167,7 +167,6 @@ test("buildCatalog: memory is listed only when project.fafm exists; a trailing d
     assert.equal(cat.entries.find((e) => e.type === "application/vnd.fafm+yaml"), undefined);
     assert.equal(cat.host.identifier, "ctx.example.com");
     assert.match(cat.entries[0].identifier, /^urn:air:ctx\.example\.com:/);
-    assert.equal("identifier" in buildCatalog(dir, { origin: "https://ctx.example.com", originVouched: false }).host, false);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

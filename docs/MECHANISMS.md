@@ -85,7 +85,7 @@ publisher lists artifacts, each entry keyed by its **media type** (`type`).
 GET /.well-known/ai-catalog.json
 ```
 
-Served from `https://ctx.example.com` (1.10.2, this repo's own files):
+Served from `https://ctx.example.com`, listed in `MCP_CONTEXT_CARD_ALLOWED_HOSTS` (this repo's own files):
 
 ```jsonc
 {

@@ -46,12 +46,6 @@ export interface CatalogOptions {
   origin?: string;
   /** List the memory file (`project.fafm`). Default: off. */
   publishMemory?: boolean;
-  /**
-   * Whether `origin`'s host is vouched for (loopback, or in MCP_CONTEXT_CARD_ALLOWED_HOSTS).
-   * Only a vouched host may stand as the publisher; any client can send a Host header.
-   * Default: true (a caller that passes `origin` directly is stating it).
-   */
-  originVouched?: boolean;
   /** Record each entry's earlier id (`urn:air:{publisher}:{kind}:{name}`, written before 1.10.0). Default: off. */
   formerIds?: boolean;
 }
@@ -74,10 +68,11 @@ export function buildCatalog(root: string, opts: CatalogOptions = {}) {
   const fafa = file ? parseFafa(file) : null;
 
   const { domain, handle, name } = catalogPublisher(root);
-  // Served without a `.fafa` domain, a vouched request host is the publisher (`localhost` included).
+  // Served without a `.fafa` domain, the origin's host is the publisher (`localhost` included).
+  // Over HTTP, an origin is passed only for a vouched host (loopback or allowlisted).
   // An IP literal can't sit in a urn:air id (`[::1]` carries colons), so it gives plain ids.
   const servedHost = opts.origin ? new URL(opts.origin).hostname.toLowerCase().replace(/\.$/, "") : undefined;
-  const usable = !!servedHost && opts.originVouched !== false && !isIP(servedHost.replace(/^\[|\]$/g, ""));
+  const usable = !!servedHost && !isIP(servedHost.replace(/^\[|\]$/g, ""));
   const publisher = domain ?? (usable ? servedHost : undefined);
   const id = (kind: string) =>
     publisher ? `urn:air:${publisher}:${handle}-${kind}` : `${handle}:${kind}`;

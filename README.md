@@ -258,12 +258,16 @@ server used `urn:air:{domain}:{kind}:{name}`; if you published one, set
 `<your reverse-DNS domain>.former-identifiers`.
 
 With no `.fafa`, no domain is invented: the served catalog uses the host it's
-served from (`localhost` when you run it locally; an IP address gives plain IDs),
-and the static `.well-known/ai-catalog.json` uses plain `<short-name>:<kind>` IDs.
+served from when that host is loopback (`localhost` when you run it locally) or
+listed in `MCP_CONTEXT_CARD_ALLOWED_HOSTS`; an IP address gives plain IDs. The
+static `.well-known/ai-catalog.json` uses plain `<short-name>:<kind>` IDs.
+
 On a deploy reached by a public name, list that name in `MCP_CONTEXT_CARD_ALLOWED_HOSTS`
-(names only, no port). Only a loopback or listed host can stand as the publisher, and a
-proxy's `X-Forwarded-Host` / `X-Forwarded-Proto` count only for a listed name: any client
-can send those headers. The catalog lists only the files the server actually serves.
+(names only, no port). Any client can send a `Host` or `X-Forwarded-*` header, so an
+unlisted host is never echoed: the card has no `remotes` and the catalog is served as
+the static file is (relative URLs, plain IDs). A proxy's `X-Forwarded-Host` counts only
+for a listed name (its port is dropped), and `X-Forwarded-Proto` only for a loopback or
+listed host. The catalog lists only the files the server actually serves.
 
 ## Why
 
